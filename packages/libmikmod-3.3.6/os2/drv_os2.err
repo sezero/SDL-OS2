@@ -1,0 +1,6 @@
+D:\dev\OS2TK45\h\libc\stdlib.h(544): Warning! W138: No newline at end of file
+D:\dev\OS2TK45\h\libc\string.h(378): Warning! W138: No newline at end of file
+D:\dev\OS2TK45\h\libc\process.h(215): Warning! W138: No newline at end of file
+D:\dev\OS2TK45\h\libc\stdarg.h(83): Warning! W138: No newline at end of file
+D:\dev\OS2TK45\h\libc\stdlib.h(544): Warning! W138: No newline at end of file
+..\drivers\drv_os2.c(264): Warning! W131: No prototype found for function '_beginthread'

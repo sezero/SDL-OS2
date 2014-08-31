@@ -1,0 +1,24 @@
+SDL.c(22): Error! E1055: Unable to open 'SDL_config.h'
+SDL.c(26): Error! E1055: Unable to open 'SDL.h'
+SDL_fatal.h(22): Error! E1055: Unable to open 'SDL_config.h'
+video/SDL_leaks.h(22): Error! E1055: Unable to open 'SDL_config.h'
+SDL.c(52): Error! E1022: Missing or misspelled data type near 'SDL_version'
+SDL.c(52): Warning! W305: Type 'int' assumed in declaration of 'version'
+SDL.c(53): Error! E1011: Symbol 'SDL_MAJOR_VERSION' has not been declared
+SDL.c(53): Error! E1054: Expression must be constant
+SDL.c(53): Error! E1175: Too many initializers
+SDL.c(56): Error! E1022: Missing or misspelled data type near 'Uint32'
+SDL.c(56): Warning! W305: Type 'int' assumed in declaration of 'SDL_initialized'
+SDL.c(58): Error! E1022: Missing or misspelled data type near 'Uint32'
+SDL.c(58): Warning! W305: Type 'int' assumed in declaration of 'ticks_started'
+SDL.c(65): Error! E1009: Expecting ',' but found 'flags'
+SDL.c(73): Error! E1011: Symbol 'flags' has not been declared
+SDL.c(73): Error! E1011: Symbol 'SDL_INIT_TIMER' has not been declared
+SDL.c(88): Error! E1011: Symbol 'SDL_INIT_VIDEO' has not been declared
+SDL.c(90): Error! E1011: Symbol 'SDL_INIT_EVENTTHREAD' has not been declared
+SDL.c(104): Error! E1011: Symbol 'SDL_INIT_AUDIO' has not been declared
+SDL.c(119): Error! E1011: Symbol 'SDL_INIT_JOYSTICK' has not been declared
+SDL.c(135): Error! E1011: Symbol 'SDL_INIT_CDROM' has not been declared
+SDL.c(150): Error! E1009: Expecting ',' but found 'flags'
+SDL.c(162): Error! E1011: Symbol 'flags' has not been declared
+SDL.c(167): Error! E1147: Too many errors: compilation aborted

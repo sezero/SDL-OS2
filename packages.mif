@@ -6,7 +6,7 @@ LIBHOME = $(%LIBHOME)
 # for ex.: LIBHOME = $(%HOME)\projects\port\LIBS
 # --------------------------------------------------------------------------
 
-##LIBHOME=
+LIBHOME=$(%HOME)\projects\port\SDL
 
 # --------------------------------------------------------------------------
 #
@@ -56,7 +56,7 @@ LNKFILE = $(EXENAME).lnk
 LNKFILE = $(LIBNAME).lnk
 !endif
 
-CFLAGS_DEF = -i=$(INCPATH) -bt=os2 -d0 -q -ot -bm
+CFLAGS_DEF = -i=$(INCPATH) -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier
 
 CFLAGS_DLL = $(CFLAGS_DEF) -bd
 CFLAGS_STATIC = $(CFLAGS_DEF)

@@ -38,7 +38,11 @@ void SDLCALL Play_MPEGaudioSDL(void *udata, Uint8 *stream, int len);
 void Play_MPEGaudioSDL(void *udata, Uint8 *stream, int len);
 #endif
 #ifdef THREADED_AUDIO
+  #ifdef __WATCOMC__
+    int SDLCALL Decode_MPEGaudio(void *udata);
+  #else
     int Decode_MPEGaudio(void *udata);
+  #endif
 #endif
 
 class MPEGstream;

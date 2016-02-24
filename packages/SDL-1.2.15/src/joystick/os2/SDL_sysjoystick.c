@@ -38,7 +38,7 @@
 #include "../SDL_sysjoystick.h"
 #include "../SDL_joystick_c.h"
 
-HFILE hJoyPort = NULL;		/* Joystick GAME$ Port Address */
+HFILE hJoyPort = NULLHANDLE;		/* Joystick GAME$ Port Address */
 #define MAX_JOYSTICKS	2	/* Maximum of two joysticks */
 #define MAX_AXES	4			/* each joystick can have up to 4 axes */
 #define MAX_BUTTONS	8		/* 8 buttons */
@@ -555,7 +555,7 @@ ULONG			ulVersion;		/* Version of joystick driver */
 ULONG			ulDataLen;		/* Size of version data */
 
 /* Verifies if joyport is not already open... */
-if (*hGame != NULL) return 0;
+if (*hGame != NULLHANDLE) return 0;
 /* Open GAME$ for read */
 rc = DosOpen((PSZ)GAMEPDDNAME, hGame, &ulAction, 0, FILE_READONLY,
 	FILE_OPEN, OPEN_ACCESS_READONLY | OPEN_SHARE_DENYNONE, NULL);
@@ -592,8 +592,8 @@ return 0;
 /****************************/
 void joyPortClose(HFILE * hGame)
 {
-if (*hGame != NULL) DosClose(*hGame);
-*hGame = NULL;
+if (*hGame != NULLHANDLE) DosClose(*hGame);
+*hGame = NULLHANDLE;
 }
 
 

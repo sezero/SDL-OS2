@@ -50,24 +50,62 @@
 
 #endif // DEBUG_BUILD
 
-#define _NUM_SOUND_BUFFERS	4
+int os2iniGetBool(char *pszSwitch, int iDefault);
+void os2iniOpen();
 
-
-LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG ulFlags)
+LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pMixBuffer,
+                         ULONG ulFlags)
 {
-  SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pBuffer->ulUserParm;
+  SDL_PrivateAudioData	*pPAData =
+                           (SDL_PrivateAudioData *)pMixBuffer->ulUserParm;
   ULONG			ulRC;
+  PINPUTBUF		pInputBuf;
 
-  if ( ulFlags != MIX_WRITE_COMPLETE )
-    return 0; // It seems, return value not matter.
-
-  ulRC = DosRequestMutexSem( pPAData->hmtxLock, SEM_INDEFINITE_WAIT );
-  if ( ulRC == NO_ERROR )
+  ulRC = DosRequestMutexSem( pPAData->hmtxLock, 1000/*SEM_INDEFINITE_WAIT*/ );
+  if ( ulRC != NO_ERROR )
+    debug( "DosRequestMutexSem(), rc = %u", ulRC );
+  else
   {
-    if ( pPAData->ulBufInUseCnt > 0 )
-      pPAData->ulBufInUseCnt--;
-    DosPostEventSem( pPAData->hevBufReady );
-    DosReleaseMutexSem( pPAData->hmtxLock );
+    HEV			hevBufReady = pPAData->hevBufReady;
+ 
+    if ( ulFlags != MIX_WRITE_COMPLETE )
+      debug( "flags is 0x%X", ulFlags );
+
+    if ( pPAData->lAudioDeviceId != -1 ) // Prevent work in close state
+    {
+      pInputBuf = pPAData->pReadyBuf;
+      if ( pInputBuf != NULL )
+      {
+        // Copy data from input buffer to the mixer's buffer.
+        memcpy( pMixBuffer->pBuffer, &pInputBuf->acData,
+                pPAData->sMCIBuffer.ulBufferSize );
+
+        // Cut readed input buffer from the list "ready"
+        if ( pInputBuf->pNext == NULL )
+          pPAData->ppLastReadyBuf = &pPAData->pReadyBuf;
+        pPAData->pReadyBuf = pInputBuf->pNext;
+
+        // Add it to the list "free"
+        pInputBuf->pNext = NULL;
+        *pPAData->ppLastFreeBuf = pInputBuf;
+        pPAData->ppLastFreeBuf = &pInputBuf->pNext;
+      }
+      else
+        debug( "Have no input buffers" );
+
+      // Return mixer's buffer to play.
+      ulRC = pPAData->sMCIMixSetup.pmixWrite(
+                  pPAData->sMCIMixSetup.ulMixHandle, pMixBuffer, 1 );
+      if ( ulRC != MCIERR_SUCCESS )
+        debug( "pmixWrite() failed" );
+
+      hevBufReady = pPAData->hevBufReady;
+      DosReleaseMutexSem( pPAData->hmtxLock );
+    }
+
+    ulRC = DosPostEventSem( hevBufReady );
+    if ( ulRC != NO_ERROR && ulRC != ERROR_ALREADY_POSTED )
+      debug( "DosPostEventSem(%u), rc = %u", hevBufReady, ulRC );
   }
 
   return 1;
@@ -83,7 +121,7 @@ static VOID _MCIError(PSZ pszFunc, ULONG ulResult)
 }
 
 static ULONG _mixSetup(SDL_PrivateAudioData *pPAData, ULONG ulBPS, ULONG ulFreq,
-                      ULONG ulChannels)
+                       ULONG ulChannels)
 {
   ULONG			ulRC;
 
@@ -105,68 +143,41 @@ static ULONG _mixSetup(SDL_PrivateAudioData *pPAData, ULONG ulBPS, ULONG ulFreq,
   return ulRC;
 }
 
-
 /* This function waits until it is possible to write a full sound buffer */
 
 static void DART_WaitAudio(SDL_AudioDevice *pDevice)
 {
   SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pDevice->hidden;
-  HEV			hevBufReady;
   ULONG			ulRC;
-
-  ulRC = DosRequestMutexSem( pPAData->hmtxLock, SEM_INDEFINITE_WAIT );
+  HEV			hevBufReady;
+ 
+  ulRC = DosRequestMutexSem( pPAData->hmtxLock, 1000/*SEM_INDEFINITE_WAIT*/ );
   if ( ulRC != NO_ERROR )
   {
-    debug( "DosRequestMutexSem(), rc = %u", ulRC );
+    debug( "#1 DosRequestMutexSem(), rc = %u", ulRC );
     return;
   }
+  hevBufReady = pPAData->hevBufReady;
 
-  while( pPAData->ulBufInUseCnt == pPAData->sMCIBuffer.ulNumBuffers )
+  // Wait until no buffers in list "free".
+  while( pPAData->hevBufReady != NULLHANDLE && pPAData->pFreeBuf == NULL )
   {
-    hevBufReady = pPAData->hevBufReady;
-    DosResetEventSem( hevBufReady, &ulRC );
     DosReleaseMutexSem( pPAData->hmtxLock );
 
-    ulRC = DosWaitEventSem( hevBufReady, SEM_INDEFINITE_WAIT );
+    ulRC = DosWaitEventSem( hevBufReady, 2000/*SEM_INDEFINITE_WAIT*/ );
     if ( ulRC != NO_ERROR )
     {
       debug( "DosWaitEventSem(), rc = %u", ulRC );
       return;
     }
 
-    ulRC = DosRequestMutexSem( pPAData->hmtxLock, SEM_INDEFINITE_WAIT );
+    ulRC = DosRequestMutexSem( pPAData->hmtxLock, 1000/*SEM_INDEFINITE_WAIT*/ );
     if ( ulRC != NO_ERROR )
     {
-      debug( "DosRequestMutexSem(), rc = %u", ulRC );
+      debug( "#2 DosRequestMutexSem(), rc = %u", ulRC );
       return;
     }
   }
-
-  DosReleaseMutexSem( pPAData->hmtxLock );
-}
-
-static void DART_PlayAudio(SDL_AudioDevice *pDevice)
-{
-  SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pDevice->hidden;
-  PMCI_MIX_BUFFER	pBufList;
-  ULONG			ulRC;
-
-  ulRC = DosRequestMutexSem( pPAData->hmtxLock, SEM_INDEFINITE_WAIT );
-  if ( ulRC != NO_ERROR )
-  {
-    debug( "DosRequestMutexSem(), rc = %u", ulRC );
-    return;
-  }
-
-  pBufList = pPAData->sMCIBuffer.pBufList;
-  ulRC = pPAData->sMCIMixSetup.pmixWrite( pPAData->sMCIMixSetup.ulMixHandle,
-                                          &pBufList[pPAData->ulNextBufIdx], 1 );
-  if ( ulRC != MCIERR_SUCCESS )
-    _MCIError( "pmixWrite()", ulRC );
-
-  pPAData->ulNextBufIdx = ( pPAData->ulNextBufIdx + 1 ) %
-                          pPAData->sMCIBuffer.ulNumBuffers;
-  pPAData->ulBufInUseCnt++;
 
   DosReleaseMutexSem( pPAData->hmtxLock );
 }
@@ -175,64 +186,85 @@ static Uint8 *DART_GetAudioBuf(SDL_AudioDevice *pDevice)
 {
   SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pDevice->hidden;
   ULONG			ulRC;
-  Uint8			*puBuf;
-
-  ulRC = DosRequestMutexSem( pPAData->hmtxLock, SEM_INDEFINITE_WAIT );
+  Uint8			*puBuf = NULL;
+ 
+  ulRC = DosRequestMutexSem( pPAData->hmtxLock, 1000/*SEM_INDEFINITE_WAIT*/ );
   if ( ulRC != NO_ERROR )
-  {
     debug( "DosRequestMutexSem(), rc = %u", ulRC );
-    return NULL;
-  }
-
-  if ( pPAData->ulBufInUseCnt == pPAData->sMCIBuffer.ulNumBuffers )
-  {
-    debug( "No buffers available" );
-    puBuf = NULL;
-  }
   else
   {
-    PMCI_MIX_BUFFER	pBufList = pPAData->sMCIBuffer.pBufList;
-    puBuf = (Uint8 *)pBufList[pPAData->ulNextBufIdx].pBuffer;
+    // Return pointer to the data of first free buffer (if we have it)
+    if ( pPAData->pFreeBuf != NULL )
+      puBuf = (Uint8 *)&pPAData->pFreeBuf->acData;
+
+    DosReleaseMutexSem( pPAData->hmtxLock );
   }
 
-  DosReleaseMutexSem( pPAData->hmtxLock );
   return puBuf;
+}
+
+static void DART_PlayAudio(SDL_AudioDevice *pDevice)
+{
+  SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pDevice->hidden;
+  ULONG			ulRC;
+  PINPUTBUF		pInputBuf;
+
+  ulRC = DosRequestMutexSem( pPAData->hmtxLock, 1000/*SEM_INDEFINITE_WAIT*/ );
+  if ( ulRC != NO_ERROR )
+    debug( "DosRequestMutexSem(), rc = %u", ulRC );
+  else
+  {
+    pInputBuf = pPAData->pFreeBuf;
+    if ( pInputBuf == NULL )
+      debug( "Have no free buffers" );
+    else
+    {
+      // Cut readed input buffer from the list "free"
+      if ( pInputBuf->pNext == NULL )
+        pPAData->ppLastFreeBuf = &pPAData->pFreeBuf;
+      pPAData->pFreeBuf = pInputBuf->pNext;
+
+      // Add it to the list "ready"
+      pInputBuf->pNext = NULL;
+      *pPAData->ppLastReadyBuf = pInputBuf;
+      pPAData->ppLastReadyBuf = &pInputBuf->pNext;
+    }
+
+    DosReleaseMutexSem( pPAData->hmtxLock );
+  }
 }
 
 static void DART_WaitDone(SDL_AudioDevice *pDevice)
 {
   SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pDevice->hidden;
-  HEV			hevBufReady;
   ULONG			ulRC;
-  ULONG			ulIdx;
-
+  HEV			hevBufReady;
+ 
   debug( "Enter" );
-  ulRC = DosRequestMutexSem( pPAData->hmtxLock, SEM_INDEFINITE_WAIT );
+  ulRC = DosRequestMutexSem( pPAData->hmtxLock, 1000/*SEM_INDEFINITE_WAIT*/ );
   if ( ulRC != NO_ERROR )
   {
-    debug( "DosRequestMutexSem(), rc = %u", ulRC );
+    debug( "#1 DosRequestMutexSem(), rc = %u", ulRC );
     return;
   }
+  hevBufReady = pPAData->hevBufReady;
 
-  for( ulIdx = 0;
-       ulIdx < pPAData->sMCIBuffer.ulNumBuffers && pPAData->ulBufInUseCnt > 0;
-       ulIdx++ )
+  // Look forward to when all the input buffers have been readed
+  while( pPAData->pReadyBuf != NULL )
   {
-    hevBufReady = pPAData->hevBufReady;
-    DosResetEventSem( hevBufReady, &ulRC );
     DosReleaseMutexSem( pPAData->hmtxLock );
 
-    ulRC = DosWaitEventSem( hevBufReady, 1000 );
+    ulRC = DosWaitEventSem( hevBufReady, 2000/*SEM_INDEFINITE_WAIT*/ );
     if ( ulRC != NO_ERROR )
     {
       debug( "DosWaitEventSem(), rc = %u", ulRC );
       return;
     }
 
-    ulRC = DosRequestMutexSem( pPAData->hmtxLock, SEM_INDEFINITE_WAIT );
+    ulRC = DosRequestMutexSem( pPAData->hmtxLock, 1000/*SEM_INDEFINITE_WAIT*/ );
     if ( ulRC != NO_ERROR )
     {
-      debug( "DosRequestMutexSem(), rc = %u", ulRC );
+      debug( "#2 DosRequestMutexSem(), rc = %u", ulRC );
       return;
     }
   }
@@ -249,7 +281,10 @@ static int DART_OpenAudio(SDL_AudioDevice *pDevice, SDL_AudioSpec *pSDLSpec)
   PMCI_MIX_BUFFER	pBufList;
   ULONG			ulIdx;
   Uint16		uiFormat;
-  MCI_GENERIC_PARMS	sMCIGeneric = { 0 };
+  BOOL			fSharedDevice = os2iniGetBool( "AudioShared", FALSE );
+  PINPUTBUF		pInputBuf;
+
+  debug( "Sound device is %s", fSharedDevice ? "shared" : "not shared" );
 
   for( uiFormat = SDL_FirstAudioFormat( pSDLSpec->format );
        uiFormat != 0; uiFormat = SDL_NextAudioFormat() )
@@ -271,7 +306,7 @@ static int DART_OpenAudio(SDL_AudioDevice *pDevice, SDL_AudioSpec *pSDLSpec)
     return -1;
   }
 
-  ulRC = DosCreateEventSem( NULL, &pPAData->hevBufReady, 0, FALSE );
+  ulRC = DosCreateEventSem( NULL, &pPAData->hevBufReady, DCE_AUTORESET, FALSE );
   if ( ulRC != NO_ERROR )
   {
     SDL_SetError( "DosCreateEventSem(), rc = %u", ulRC );
@@ -282,8 +317,11 @@ static int DART_OpenAudio(SDL_AudioDevice *pDevice, SDL_AudioSpec *pSDLSpec)
   memset( &sMCIAmpOpen, 0, sizeof(MCI_AMP_OPEN_PARMS) );
   sMCIAmpOpen.usDeviceID = 0;
   sMCIAmpOpen.pszDeviceType = (PSZ)MCI_DEVTYPE_AUDIO_AMPMIX;
-  ulRC = mciSendCommand( 0, MCI_OPEN, MCI_WAIT | MCI_OPEN_TYPE_ID,
-                         &sMCIAmpOpen,  0 );
+  ulRC = mciSendCommand(
+           0, MCI_OPEN,
+           fSharedDevice ? MCI_WAIT | MCI_OPEN_TYPE_ID | MCI_OPEN_SHAREABLE :
+                           MCI_WAIT | MCI_OPEN_TYPE_ID,
+           &sMCIAmpOpen,  0 );
   if ( ulRC != MCIERR_SUCCESS )
   {
     _MCIError( "MCI_OPEN", ulRC );
@@ -319,7 +357,24 @@ static int DART_OpenAudio(SDL_AudioDevice *pDevice, SDL_AudioSpec *pSDLSpec)
   /* Update the fragment size as size in bytes and "silence" value */
   SDL_CalculateAudioSpec( pSDLSpec );
 
-  pBufList = SDL_malloc( _NUM_SOUND_BUFFERS * sizeof(MCI_MIX_BUFFER) );
+  // Allocate input buffers
+  pPAData->ppLastFreeBuf = &pPAData->pFreeBuf;
+  for( ulIdx = 0; ulIdx < DART_INPUT_BUFFERS; ulIdx++ )
+  {
+    pInputBuf = SDL_malloc( sizeof(INPUTBUF) - 1 + pSDLSpec->size );
+    if ( pInputBuf == NULL )
+    {
+      SDL_NotEnoughMemory();
+      DART_CloseAudio( pDevice );
+      return NULL;
+    }
+    pInputBuf->pNext = NULL;
+    *pPAData->ppLastFreeBuf = pInputBuf;
+    pPAData->ppLastFreeBuf = &pInputBuf->pNext;
+  }
+  pPAData->ppLastReadyBuf = &pPAData->pReadyBuf;
+
+  pBufList = SDL_malloc( DART_AUDIO_BUFFERS * sizeof(MCI_MIX_BUFFER) );
   if ( pBufList == NULL )
   {
     SDL_NotEnoughMemory();
@@ -328,7 +383,7 @@ static int DART_OpenAudio(SDL_AudioDevice *pDevice, SDL_AudioSpec *pSDLSpec)
   }
 
   pPAData->sMCIBuffer.ulBufferSize = pSDLSpec->size;
-  pPAData->sMCIBuffer.ulNumBuffers = _NUM_SOUND_BUFFERS;
+  pPAData->sMCIBuffer.ulNumBuffers = DART_AUDIO_BUFFERS;
   pPAData->sMCIBuffer.pBufList = pBufList;
   debug( "Buffer size: %u, Number: %u",
          pPAData->sMCIBuffer.ulBufferSize, pPAData->sMCIBuffer.ulNumBuffers );
@@ -344,7 +399,7 @@ static int DART_OpenAudio(SDL_AudioDevice *pDevice, SDL_AudioSpec *pSDLSpec)
   }
 
   // Fill all device buffers with data
-  for( ulIdx = 0; ulIdx < pPAData->sMCIBuffer.ulNumBuffers; ulIdx++ )
+  for( ulIdx = 0; ulIdx < DART_AUDIO_BUFFERS; ulIdx++ )
   {
     pBufList[ulIdx].ulFlags        = 0;
     pBufList[ulIdx].ulBufferLength = pPAData->sMCIBuffer.ulBufferSize;
@@ -354,12 +409,26 @@ static int DART_OpenAudio(SDL_AudioDevice *pDevice, SDL_AudioSpec *pSDLSpec)
             pPAData->sMCIBuffer.ulBufferSize );
   }
 
-  /* grab exclusive rights to device instance (not entire device) */
-  ulRC = mciSendCommand( sMCIAmpOpen.usDeviceID, MCI_ACQUIREDEVICE,
-                         MCI_EXCLUSIVE_INSTANCE, &sMCIGeneric, 0 );
-  if ( ulRC != MCIERR_SUCCESS )
-    _MCIError( "MCI_ACQUIREDEVICE", ulRC );
+/*
+  if ( !fSharedDevice )
+  {
+    MCI_GENERIC_PARMS	sMCIGeneric = { 0 };
 
+    // Grab exclusive rights to device instance (not entire device)
+    ulRC = mciSendCommand( sMCIAmpOpen.usDeviceID, MCI_ACQUIREDEVICE,
+                           MCI_EXCLUSIVE_INSTANCE, &sMCIGeneric, 0 );
+    if ( ulRC != MCIERR_SUCCESS )
+      _MCIError( "MCI_ACQUIREDEVICE", ulRC );
+  }
+*/
+
+  // Write buffers to start
+  ulRC = pPAData->sMCIMixSetup.pmixWrite( pPAData->sMCIMixSetup.ulMixHandle,
+                                          pBufList, DART_AUDIO_BUFFERS );
+  if ( ulRC != MCIERR_SUCCESS )
+    _MCIError( "pmixWrite()", ulRC );
+
+  debug( "Done" );
   return 0;
 }
 
@@ -368,47 +437,55 @@ static void DART_CloseAudio(SDL_AudioDevice *pDevice)
   SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pDevice->hidden;
   MCI_GENERIC_PARMS	sMCIGeneric = { 0 };
   ULONG			ulRC;
+  PINPUTBUF		pInputBuf;
 
-  if ( pPAData->lAudioDeviceId != -1 )
+  if ( pPAData->lAudioDeviceId == -1 )
+    debug( "Audio was not opened or already closed" );
+  else
   {
-    ulRC = mciSendCommand( pPAData->lAudioDeviceId, MCI_STOP, MCI_WAIT,
+    LONG	lAudioDeviceId = pPAData->lAudioDeviceId;
+
+    debug( "Close device" );
+
+    pPAData->lAudioDeviceId = -1;
+    ulRC = mciSendCommand( lAudioDeviceId, MCI_STOP, MCI_WAIT,
                            &sMCIGeneric, 0);
     _MCIDebugError( "MCI_STOP", ulRC );
 
-    ulRC = mciSendCommand( pPAData->lAudioDeviceId, MCI_RELEASEDEVICE,
+    ulRC = mciSendCommand( lAudioDeviceId, MCI_RELEASEDEVICE,
                            MCI_RETURN_RESOURCE, &sMCIGeneric, 0 );
     _MCIDebugError( "MCI_RELEASEDEVICE", ulRC );
-  }
 
-  if ( pPAData->sMCIBuffer.pBufList != NULL )
-  {
-    ulRC = mciSendCommand( pPAData->lAudioDeviceId, MCI_BUFFER,
-                   MCI_WAIT | MCI_DEALLOCATE_MEMORY, &pPAData->sMCIBuffer, 0 );
-    _MCIDebugError( "MCI_BUFFER, MCI_DEALLOCATE_MEMORY", ulRC );
-    SDL_free( pPAData->sMCIBuffer.pBufList );
-    pPAData->sMCIBuffer.pBufList = NULL;
-  }
+    if ( pPAData->sMCIMixSetup.ulBitsPerSample != 0 )
+    {
+      ulRC = mciSendCommand( lAudioDeviceId, MCI_MIXSETUP,
+                       MCI_WAIT | MCI_MIXSETUP_DEINIT, &pPAData->sMCIMixSetup, 0 );
+      _MCIDebugError( "MCI_MIXSETUP, MCI_MIXSETUP_DEINIT", ulRC );
+      pPAData->sMCIMixSetup.ulBitsPerSample = 0; // We use it as mixer initialized sine
+    }
 
-  if ( pPAData->sMCIMixSetup.ulBitsPerSample != 0 )
-  {
-    ulRC = mciSendCommand( pPAData->lAudioDeviceId, MCI_MIXSETUP,
-                     MCI_WAIT | MCI_MIXSETUP_DEINIT, &pPAData->sMCIMixSetup, 0 );
-    _MCIDebugError( "MCI_MIXSETUP, MCI_MIXSETUP_DEINIT", ulRC );
-    pPAData->sMCIMixSetup.ulBitsPerSample = 0; // We use it as mixer initialized sine
-  }
+    if ( pPAData->sMCIBuffer.pBufList != NULL )
+    {
+      ulRC = mciSendCommand( lAudioDeviceId, MCI_BUFFER,
+                     MCI_WAIT | MCI_DEALLOCATE_MEMORY, &pPAData->sMCIBuffer, 0 );
+      _MCIDebugError( "MCI_BUFFER, MCI_DEALLOCATE_MEMORY", ulRC );
+      SDL_free( pPAData->sMCIBuffer.pBufList );
+      pPAData->sMCIBuffer.pBufList = NULL;
+    }
 
-  if ( pPAData->lAudioDeviceId != -1 )
-  {
-    ulRC = mciSendCommand( pPAData->lAudioDeviceId, MCI_CLOSE, MCI_WAIT,
+    ulRC = mciSendCommand( lAudioDeviceId, MCI_CLOSE, MCI_WAIT,
                            &sMCIGeneric, 0 );
     _MCIDebugError( "MCI_CLOSE", ulRC );
-    pPAData->lAudioDeviceId = -1;
+    debug( "Done" );
   }
 
   if ( pPAData->hmtxLock != NULLHANDLE )
   {
-    DosCloseEventSem( pPAData->hevBufReady );
+    HEV		hevBufReady = pPAData->hevBufReady;
+
     pPAData->hevBufReady = NULLHANDLE;
+    DosPostEventSem( hevBufReady ); // Prevent lock DART_WaitAudio()
+    DosCloseEventSem( hevBufReady );
   }
 
   if ( pPAData->hmtxLock != NULLHANDLE )
@@ -417,8 +494,19 @@ static void DART_CloseAudio(SDL_AudioDevice *pDevice)
     pPAData->hmtxLock = NULLHANDLE;
   }
 
-  pPAData->ulNextBufIdx = 0;
-  pPAData->ulBufInUseCnt = 0;
+  while( pPAData->pReadyBuf != NULL )
+  {
+    pInputBuf = pPAData->pReadyBuf->pNext;
+    SDL_free( pPAData->pReadyBuf );
+    pPAData->pReadyBuf = pInputBuf;
+  }
+
+  while( pPAData->pFreeBuf != NULL )
+  {
+    pInputBuf = pPAData->pFreeBuf->pNext;
+    SDL_free( pPAData->pFreeBuf );
+    pPAData->pFreeBuf = pInputBuf;
+  }
 }
 
 
@@ -433,15 +521,19 @@ static void Audio_DeleteDevice(SDL_AudioDevice *pDevice)
 {
   SDL_PrivateAudioData	*pPAData = (SDL_PrivateAudioData *)pDevice->hidden;
 
+  debug( "Enter" );
   DART_CloseAudio( pDevice );
   SDL_free( pPAData );
   SDL_free( pDevice );
+  debug( "Done" );
 }
 
 static SDL_AudioDevice *Audio_CreateDevice(int iDevIndex)
 {
   SDL_AudioDevice	*pDevice;
   SDL_PrivateAudioData	*pPAData;
+
+  os2iniOpen();
 
   // Create private audio data
 

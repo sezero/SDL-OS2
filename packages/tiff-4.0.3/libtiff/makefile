@@ -20,6 +20,9 @@ $(LIBFILE_STATIC): $(OBJS)
   @echo * Create library: $@...
   @for %f in ($(OBJS)) do @wlib -b -q $* +%f >nul
 
+tif_read.obj: tif_read.c
+  @wcc386 $(CFLAGS) -wcd=136 $<
+
 .c.obj:
   @wcc386 $(CFLAGS) $<
 

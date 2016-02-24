@@ -19,6 +19,10 @@
 #if defined(_WIN32)
 #include <windows.h>
 #endif
+#if defined(__OS2__)
+#define INCL_DOSPROCESS
+#include <os2.h>
+#endif
 
 #define MY_PI 3.14159265358979323846
 
@@ -353,13 +357,19 @@ bool MPEGaudio::run( int frames, double *timestamp)
 }
 
 #ifdef THREADED_AUDIO
+#ifdef __WATCOMC__
+int SDLCALL Decode_MPEGaudio(void *udata)
+#else
 int Decode_MPEGaudio(void *udata)
+#endif
 {
     MPEGaudio *audio = (MPEGaudio *)udata;
     double timestamp;
 
 #if defined(_WIN32)
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+#elif defined(__OS2__)
+    DosSetPriority( PRTYS_THREAD, PRTYC_TIMECRITICAL, PRTYD_MAXIMUM - 1, 0 );
 #endif
 
     audio->force_exit = false;
@@ -371,6 +381,9 @@ int Decode_MPEGaudio(void *udata)
             /* Sam 10/5/2000 - Added while to prevent empty buffer in ring */
             while ( audio->run(1, &timestamp) &&
                     (audio->rawdatawriteoffset == 0) ) {
+#if defined(__OS2__)
+                DosSleep( 1 )
+#endif
                 /* Keep looping */ ;
             }
             if((Uint32)audio->rawdatawriteoffset*2 <= audio->ring->BufferSize())
@@ -448,7 +461,11 @@ int Play_MPEGaudio(MPEGaudio *audio, Uint8 *stream, int len)
 	if (audio->timestamp[0] != -1){
 	    double timeshift = audio->Time() - audio->timestamp[0];
 	    double correction = 0;
+#ifndef __WATCOMC__
+            // What's the point ? timestamp is an array of type 'double'.
+            // Watcom Warning W354: pointer expression is always >= 0
 	    assert(audio->timestamp >= 0);
+#endif
 	    if (fabs(timeshift) > 1.0){
 	        correction = -timeshift;
 #ifdef DEBUG_TIMESTAMP_SYNC

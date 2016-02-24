@@ -18,7 +18,7 @@ rem	sdlttf.lib
 rem
 rem Use path %LIBHOME%\h\SDL for include files.
 rem
-rem 2014, Vasilkin Andrey
+rem Andrey Vasilkin, 2014
 rem digi@os2.snc.ru
 rem
 
@@ -26,15 +26,24 @@ rem Specify the path to a directory where this script is located.
 rem for ex.: SET LIBHOME = %HOME%\projects\port\LIBS
 rem -------------------------------------------------------------------------
 
-SET LIBHOME=
+rem SET LIBHOME=%HOME%\projects\port\SDL
 
 rem -------------------------------------------------------------------------
 
 
 if .%LIBHOME%.==.. goto sethome
+set makeSW=
 if .%1.==.clean. goto l01
 if .%1.==.make. goto l02
-goto usage
+
+echo Usage: SDL_make.cmd [make or clean]
+echo    make     Build all libraries for SDL
+echo    clean    Delete all generated files
+exit 1
+
+:sethome
+echo You should set variable LIBHOME in the file SDL_make.cmd.
+exit 1
 
 :l01
 set makeSW=clean
@@ -72,19 +81,10 @@ cd %LIBHOME%\packages\SDL_image-1.2.12
   wmake %makeSW% /h
 cd %LIBHOME%\packages\freetype-2.5.3
   wmake %makeSW% /h
-cd %LIBHOME%\\packages\SDL_ttf-2.0.10
+cd %LIBHOME%\packages\SDL_ttf-2.0.10
+  wmake %makeSW% /h
+cd %LIBHOME%\packages\SDL_sound-1.0.3
   wmake %makeSW% /h
 cd %LIBHOME%\packages\SDL-1.2.15\test
   wmake %makeSW% /h
-
-exit
-
-:usage
-echo Usage: SDL_make.cmd [make or clean]
-echo    make     Build all libraries for SDL
-echo    clean    Delete all generated files
-exit
-
-:sethome
-echo You must set variable LIBHOME in this file.
-exit
+cd %LIBHOME%

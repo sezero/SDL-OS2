@@ -46,6 +46,9 @@ $(LNKFILE):
     @%append $@ OPTION OSNAME='OS/2 and eComStation'
     @%append $@ OPTION SHOWDEAD
 
+stream_decoder.obj: stream_decoder.c
+  @wcc386 $(CFLAGS) -wcd=136 $<
+
 .c.obj:
   @wcc386 $(CFLAGS) $<
 

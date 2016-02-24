@@ -35,12 +35,12 @@
 
 void *SDL_LoadObject(const char *sofile)
 {
-    HMODULE handle = NULL;
+    HMODULE handle = NULLHANDLE;
     char buf[512];
     APIRET ulrc = DosLoadModule(buf, sizeof (buf), (char *) sofile, &handle);
 
     /* Generate an error message if all loads failed */
-    if ((ulrc != NO_ERROR) || (handle == NULL))
+    if ((ulrc != NO_ERROR) || (handle == NULLHANDLE))
         SDL_SetError("Failed loading %s: %s", sofile, buf);
 
     return((void *) handle);

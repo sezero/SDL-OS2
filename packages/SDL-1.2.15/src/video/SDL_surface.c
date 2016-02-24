@@ -29,7 +29,6 @@
 #include "SDL_pixels_c.h"
 #include "SDL_leaks.h"
 
-
 /* Public routines */
 /*
  * Create an empty RGB surface of the appropriate depth

@@ -24,7 +24,8 @@ TROBJECTS= jpegtran.obj rdswitch.obj cdjpeg.obj transupp.obj
 # Added switch -ei for compatibility with SDL: 
 # Function like jpeg_CreateDecompress() check the size of given structure that
 # must be same at compile time and at runtime.
-CFLAGS = $(CFLAGS_STATIC) -ei -4r -ort -wcd=136
+CFLAGS = $(CFLAGS_STATIC) -ei -wcd=136
+# -4r -ort
 
 all: $(LIBFILE_STATIC) $(EXEPATH)\cjpeg.exe $(EXEPATH)\djpeg.exe
 

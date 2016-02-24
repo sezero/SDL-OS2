@@ -7,7 +7,8 @@ SRCS = SDL_ttf.c
 
 LIBS = freetype_static.lib sdl12.lib
 
-CFLAGS  = $(CFLAGS_DLL) -6r -s -ei -j -fp6 -fpi87 -DBUILD_SDL
+#CFLAGS  = $(CFLAGS_DLL) -6r -s -ei -j -fp6 -fpi87 -DBUILD_SDL
+CFLAGS  = $(CFLAGS_DLL) -ei -j -DBUILD_SDL
 
 OBJS = $(SRCS:.c=.obj)
 

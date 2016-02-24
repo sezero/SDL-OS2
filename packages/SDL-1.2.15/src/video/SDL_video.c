@@ -120,9 +120,8 @@ static VideoBootStrap *bootstrap[] = {
 #if SDL_VIDEO_DRIVER_OS2FS
 	&OS2FSLib_bootstrap,
 #endif
-#if SDL_VIDEO_DRIVER_OS2ALT
-	&OS2DIVE_bootstrap,
-	&OS2VMAN_bootstrap,
+#if SDL_VIDEO_DRIVER_OS2GROP
+	&OS2GROP_bootstrap,
 #endif
 #if SDL_VIDEO_DRIVER_AALIB
 	&AALIB_bootstrap,

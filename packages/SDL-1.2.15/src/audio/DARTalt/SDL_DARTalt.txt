@@ -1,0 +1,4 @@
+It is no longer used. I rewrote cross-platform code SDL_audio.c and
+replaced it with SDL_audio_os2.c for OS/2.
+
+Digi, 2014

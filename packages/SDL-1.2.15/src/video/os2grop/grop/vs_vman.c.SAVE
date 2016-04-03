@@ -693,7 +693,7 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
 
     PRECTL   prectlDst, prectlScan;
     HPS      hps;
-    HRGN     hrgnUpdate;
+    HRGN     hrgnDest, hrgnUpdate;
     RGNRECT  rgnCtl;
     RECTL    rectlDef;
 
@@ -726,11 +726,15 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
     }
 
     hps = WinGetPS( pGrop->hwnd );
-    // Make destination region to update.
-    hrgnUpdate = GpiCreateRegion( hps, cRect, prectlDst );
+    // Make region to update.
+    hrgnUpdate = GpiCreateRegion( hps, 0, NULL );
+    // Make destination region.
+    hrgnDest = GpiCreateRegion( hps, cRect, prectlDst );
+
     // "AND" on visible and destination regions, result is update region.
-    GpiCombineRegion( hps, hrgnUpdate, hrgnUpdate, pVMANData->hrgnVisible,
+    GpiCombineRegion( hps, hrgnUpdate, hrgnDest, pVMANData->hrgnVisible,
                       CRGN_AND );
+    GpiDestroyRegion( hps, hrgnDest );
 
     // Get rectangles of region to update.
     rgnCtl.ircStart     = 1;
@@ -745,7 +749,7 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
       WinReleasePS( hps );
       return TRUE;
     }
-    // We don't need prectlDst, use it again to store rects of update region.
+    // We don't need prectlDst, use it again to store update regions.
     prectl = debugReAlloc( prectlDst, rgnCtl.crcReturned * sizeof(RECTL) );
     if ( prectl == NULL )
     {
@@ -767,29 +771,35 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
 
     // Make lists for blitting from update regions.
 
-    pbrDst = debugMAlloc( cRect * sizeof(BLTRECT) );
-    if ( pbrDst == NULL )
+    pptlSrcOrg = debugMAlloc( cRect * sizeof(POINTL) );
+    if ( pptlSrcOrg == NULL )
     {
       debug( "Not enough memory" );
       debugFree( prectlDst );
       return FALSE;
     }
-
-    pptlSrcOrg = (PPOINTL)prectlDst; // Yes, we will use this memory again.
-    prectlScan = prectlDst;
-    for( ulIdx = 0; ulIdx < cRect; ulIdx++, prectlScan++, pptlSrcOrg++ )
+    pbrDst = debugMAlloc( cRect * sizeof(BLTRECT) );
+    if ( pbrDst == NULL )
     {
+      debug( "Not enough memory" );
+      debugFree( pptlSrcOrg );
+      debugFree( prectlDst );
+      return FALSE;
+    }
+
+    prectlScan = prectlDst;
+    for( ulIdx = 0; ulIdx < cRect; ulIdx++, prectlScan++ )
+    {
+      pptlSrcOrg[ulIdx].x = prectlScan->xLeft - pGrop->rectlViewArea.xLeft;
+      pptlSrcOrg[ulIdx].y = bmiSrc.ulHeight -
+                              (prectlScan->yTop - pGrop->rectlViewArea.yBottom);
       pbrDst[ulIdx].ulXOrg = pGrop->rectlWinArea.xLeft + prectlScan->xLeft;
       pbrDst[ulIdx].ulYOrg = pMode->ulHeight - ( pGrop->rectlWinArea.yBottom +
                                                  prectlScan->yTop );
       pbrDst[ulIdx].ulXExt = prectlScan->xRight - prectlScan->xLeft;
       pbrDst[ulIdx].ulYExt = prectlScan->yTop - prectlScan->yBottom;
-
-      pptlSrcOrg->x = prectlScan->xLeft - pGrop->rectlViewArea.xLeft;
-      pptlSrcOrg->y = bmiSrc.ulHeight -
-                             (prectlScan->yTop - pGrop->rectlViewArea.yBottom);
     }
-    pptlSrcOrg = (PPOINTL)prectlDst; // Return to the beginning of the list.
+    debugFree( prectlDst );
   }
 
   rectlScreenUpdate.xLeft = pGrop->rectlWinArea.xLeft + pGrop->rectlViewArea.xLeft;
@@ -844,7 +854,7 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
   }
 
   if ( pptlSrcOrg != &ptlSrcOrg ) // We don't take this memory for fullscreen.
-    debugFree( pptlSrcOrg );      // It was allocated for prectlDst. :)
+    debugFree( pptlSrcOrg );
 
   if ( pbrDst != &brDst ) // We don't take this memory for the fullscreen.
     debugFree( pbrDst );

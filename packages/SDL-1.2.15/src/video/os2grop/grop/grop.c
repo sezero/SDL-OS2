@@ -259,13 +259,17 @@ static BOOL _setMode(PGROPDATA pGrop, ULONG ulModeIdx, BOOL fFullscreen)
     pGrop->ulModeIdx = ulModeIdx;
     pGrop->fFullscreen = TRUE;
   }
-  else if ( pGrop->fFullscreen || ( pGrop->ulModeIdx != ulModeIdx ) )
+  else //if ( pGrop->fFullscreen || ( pGrop->ulModeIdx != ulModeIdx ) )
   {
     // Change window if mode is not same as the current one.
 
     if ( pGrop->fFullscreen )
+    {
+      debug( "Return to the desktop..." );
       _setDesktop( pGrop );
+    }
 
+    debug( "Calc new window size..." );
     rectl.xLeft = 0;
     rectl.yBottom = 0;
     rectl.xRight = pGrop->stUserMode.ulWidth;
@@ -275,9 +279,13 @@ static BOOL _setMode(PGROPDATA pGrop, ULONG ulModeIdx, BOOL fFullscreen)
     lH = rectl.yTop - rectl.yBottom;
 
     if ( !pGrop->fFullscreen && !fFirstTime )
+    {
       // Positioning relative to the current location.
+      debug( "Query current window position..." );
       WinQueryWindowPos( pGrop->hwndFrame, &pGrop->swpOld );
-    // Else - relative to the location before sw. to FS.
+    }
+    else
+      debug( "Window's location will be relative to the location before FS." );
 
     lX = pGrop->swpOld.x + (pGrop->swpOld.cx / 2) - (lW / 2);
     lY = pGrop->swpOld.y + (pGrop->swpOld.cy / 2) - (lH / 2);
@@ -297,16 +305,20 @@ static BOOL _setMode(PGROPDATA pGrop, ULONG ulModeIdx, BOOL fFullscreen)
     pGrop->ulModeIdx = ulModeIdx;
     pGrop->fFullscreen = FALSE;
 
+    debug( "Set window position..." );
     pGrop->fInternalResize = TRUE;
     WinSetWindowPos( pGrop->hwndFrame, HWND_TOP, lX, lY, lW, lH,
        fFirstTime ? SWP_MOVE | SWP_SIZE | SWP_SHOW | SWP_ZORDER | SWP_ACTIVATE
                   : SWP_MOVE | SWP_SIZE | SWP_SHOW );
     pGrop->fInternalResize = FALSE;
 
+    debug( "Call _captureMouse(,%s)...", pGrop->fCapture ? "TRUE" : "FALSE" );
     _captureMouse( pGrop, pGrop->fCapture );
   }
 
+  debug( "Call _calcViewRect(,FALSE)..." );
   _calcViewRect( pGrop, FALSE );
+  debug( "Call pVideoSys->fnUpdate()..." );
   pGrop->pVideoSys->fnUpdate( pGrop->pVSData, pGrop, 0, NULL );
 
   return fSuccess;
@@ -438,6 +450,7 @@ static BOOL _querySetMode(PGROPDATA pGrop, PGROPSETMODE pNewUserMode)
   {
     GROPSETMODE        stSaveUserMode = *pOldUserMode;
 
+    debug( "Call pVideoSys->fnVideoBufAlloc()..." );
     pNewUserMode->pBuffer = pGrop->pVideoSys->fnVideoBufAlloc(
                               pGrop->pVSData,
                               pNewUserMode->ulWidth, pNewUserMode->ulHeight,
@@ -448,6 +461,8 @@ static BOOL _querySetMode(PGROPDATA pGrop, PGROPSETMODE pNewUserMode)
       debug( "Cannot allocate a new video buffer" );
     else
     {
+      debug( "A new video buffer allocated: 0x%P", pNewUserMode->pBuffer );
+
       *pOldUserMode = *pNewUserMode;     // We need this data while _setMode().
 
       // Set new mode.
@@ -462,12 +477,16 @@ static BOOL _querySetMode(PGROPDATA pGrop, PGROPSETMODE pNewUserMode)
         *pOldUserMode = stSaveUserMode;   // Rollback user mode data.
       }
       else if ( stSaveUserMode.pBuffer != NULL )
+      {
+        debug( "Deallocate old buffer: 0x%P", stSaveUserMode.pBuffer );
         // Destroy old buffer.
         pGrop->pVideoSys->fnVideoBufFree( pGrop->pVSData,
                                           stSaveUserMode.pBuffer );
+      }
     }
   }
 
+  debug( "Done, result: 0x%P", pNewUserMode->pBuffer );
   return pNewUserMode->pBuffer != NULL;
 }
 
@@ -508,6 +527,8 @@ static BOOL _queryMouseMove(PGROPDATA pGrop, LONG lX, LONG lY)
 
 static VOID _wmGropQuery(PGROPDATA pGrop, PGROPQUERY pQuery)
 {
+  debug( "pQuery->ulQuery = %u", pQuery->ulQuery );
+
   switch( pQuery->ulQuery )
   {
     case QUERY_SET_MODE:
@@ -562,12 +583,16 @@ static VOID _wmGropQuery(PGROPDATA pGrop, PGROPQUERY pQuery)
       debug( "QUERY_SET_POINTER: %u", pQuery->hptrPointer );
       pGrop->hptrPointer = pQuery->hptrPointer;
       pQuery->fSuccess = WinSetPointer( pGrop->hwndDT, pGrop->hptrPointer );
+      debug( "WinSetPointer(): %s", pQuery->fSuccess ? "TRUE" : "FALSE" );
 
       // Unvisible pointer when mouse captured or fullscreen - relative mouse
       // mode, we shoult move pointer to the center (_captureMouse() do it).
       if ( ( pGrop->hptrPointer == NULLHANDLE ) &&
            ( pGrop->fFullscreen || pGrop->fCapture ) )
+      {
+        debug( "Relative mouse mode, call _captureMouse()" );
         _captureMouse( pGrop, TRUE );
+      }
       break;
 
     case QUERY_SET_CAPTURE:
@@ -622,6 +647,7 @@ static VOID _wmGropQuery(PGROPDATA pGrop, PGROPQUERY pQuery)
       pQuery->fSuccess = FALSE;
   }
 
+  debug( "Done, result: %s", pQuery->fSuccess ? "TRUE" : "FALSE" );
   if ( pQuery->hevReady != NULLHANDLE )
     DosPostEventSem( pQuery->hevReady );
 }
@@ -816,7 +842,7 @@ MRESULT EXPENTRY wndProc(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch( msg )
   {
     case WM_ACTIVATE:
-      _wmActive( pGrop, (BOOL)mp1 );
+        _wmActive( pGrop, (BOOL)mp1 );
       break;
 
     case WM_SETFOCUS:
@@ -847,7 +873,11 @@ MRESULT EXPENTRY wndProc(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
         hps = WinBeginPaint( hwnd, 0, &rctl );
         WinFillRect( hps, &rctl, CLR_BLACK );
         WinEndPaint( hps );
-        pGrop->pVideoSys->fnUpdate( pGrop->pVSData, pGrop, 0, NULL );
+
+        if ( pGrop->fInternalResize )
+          debugCP( "WM_PAINT & fInternalResize" );
+//        else
+          pGrop->pVideoSys->fnUpdate( pGrop->pVSData, pGrop, 0, NULL );
       }
       return (MRESULT)FALSE;
 
@@ -877,7 +907,12 @@ MRESULT EXPENTRY wndProc(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
       if ( pGrop->lSkipMouseMove > 0 )
         pGrop->lSkipMouseMove--;
       else
+      {
+        if ( pGrop->fInternalResize )
+          debugCP( "WM_MOUSEMOVE & fInternalResize" );
+
         _wmMouseMove( pGrop, SHORT1FROMMP(mp1), SHORT2FROMMP(mp1) );
+      }
       return (MRESULT)FALSE;
 
     case WM_BUTTON1DOWN:
@@ -1028,14 +1063,25 @@ void FAR wndThread(void FAR *pData)
         debug( "DosCreateMutexSem() failed" );
       else
       {
-        DosPostEventSem( pGrop->hevReady );      // Ready.
+        ULONG          ulRC;
+
+        ulRC = DosSetPriority( PRTYS_THREAD, PRTYC_TIMECRITICAL, 31, 0 );
+        if ( ulRC != NO_ERROR )
+          debug( "DosSetPriority(), rc = %u", ulRC );
+
+        ulRC = DosPostEventSem( pGrop->hevReady );   // Ready to work.
+        if ( ulRC != NO_ERROR )
+          debug( "DosPostEventSem(), rc = %u", ulRC );
 
         while( TRUE )
         {
           // Work...
           while( WinGetMsg( pGrop->hab, &qmsg, (HWND)NULLHANDLE, 0L, 0L ) )
           {
-            DosRequestMutexSem( pGrop->hmtxData, SEM_INDEFINITE_WAIT );
+            ulRC = DosRequestMutexSem( pGrop->hmtxData, 500 );
+            if ( ulRC != NO_ERROR )
+              debug( "DosRequestMutexSem(), rc = ", ulRC );
+
             WinDispatchMsg( pGrop->hab, &qmsg );
             DosReleaseMutexSem( pGrop->hmtxData );
           }
@@ -1141,7 +1187,7 @@ static BOOL _sendQuery(PGROPDATA pGrop, PGROPQUERY pQuery, BOOL fPrivateEvSem)
   }
   else
   {
-    ulRC = DosWaitEventSem( pQuery->hevReady, 5000 );
+    ulRC = DosWaitEventSem( pQuery->hevReady, 3000 );
     if ( ulRC != NO_ERROR )
     {
       debug( "DosWaitEventSem(), rc = %u.", ulRC );
@@ -1218,6 +1264,8 @@ BOOL gropInit()
 
 VOID gropDone()
 {
+  debug( "Enter" );
+
   if ( lInitTime == 0 )
     return;
 
@@ -1450,7 +1498,7 @@ BOOL gropUpdate(PGROPDATA pGrop, ULONG cRect, PRECTL prectl)
   BOOL       fSuccess;
   ULONG      ulRC;
 
-  ulRC = DosRequestMutexSem( pGrop->hmtxData, SEM_INDEFINITE_WAIT );
+  ulRC = DosRequestMutexSem( pGrop->hmtxData, 1000 );
   if ( ulRC != NO_ERROR )
   {
     debug( "DosRequestMutexSem(), rc = %u", ulRC );
@@ -1521,6 +1569,7 @@ BOOL gropLock(PGROPDATA pGrop)
 {
   ULONG      ulRC;
 
+//  debug( "Enter" );
   ulRC = DosRequestMutexSem( pGrop->hmtxData, SEM_INDEFINITE_WAIT );
   if ( ulRC != NO_ERROR )
   {
@@ -1533,5 +1582,6 @@ BOOL gropLock(PGROPDATA pGrop)
 
 VOID gropUnlock(PGROPDATA pGrop)
 {
+//  debug( "Enter" );
   DosReleaseMutexSem( pGrop->hmtxData );
 }

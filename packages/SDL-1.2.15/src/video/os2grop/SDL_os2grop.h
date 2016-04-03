@@ -45,12 +45,17 @@ struct SDL_PrivateVideoData {
 };
 
 
-//           Mouse pointer structure for SDL.
+//           Mouse pointer structure for OS/2 related code.
 
+#define VBOX_HACK_SUPPORT 1
+// w/o VBOX_HACK_SUPPORT:  We use type cast for (WMcursor *) as HPOINTER.
+//                         Content of structure is not interested for us.
+// with VBOX_HACK_SUPPORT: We use only one field - hptr.
 struct WMcursor
 {
-  HPOINTER		hptr;
-  PCHAR			pcImage;
+  HBITMAP    hbm;
+  HPOINTER   hptr;
+  char       *pchData;
 };
 
 #endif // _SDL_os2grop_h

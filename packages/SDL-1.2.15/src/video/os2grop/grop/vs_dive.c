@@ -203,6 +203,7 @@ static PVOID vsVideoBufAlloc(PVOID pVSData, ULONG ulWidth, ULONG ulHeight,
   ulScanLineSize = ( ulScanLineSize + 3 ) & ~3;	/* 4-byte aligning */
   *pulScanLineSize = ulScanLineSize;
 
+  debug( "Allocate %u bytes...", (ulHeight * ulScanLineSize) + sizeof(ULONG) );
   ulRC = DosAllocMem( &pBuffer, (ulHeight * ulScanLineSize) + sizeof(ULONG),
                       PAG_COMMIT | PAG_EXECUTE | PAG_READ | PAG_WRITE );
   if ( ulRC != NO_ERROR )
@@ -215,6 +216,7 @@ static PVOID vsVideoBufAlloc(PVOID pVSData, ULONG ulWidth, ULONG ulHeight,
   // number. 5'th byte of allocated buffer is a begining of the user buffer.
   pVideoBuffer = &((PULONG)pBuffer)[1];
 
+  debug( "Memory allocated: 0x%P, video buffer: 0x%P", pBuffer, pVideoBuffer );
   ulRC = DiveAllocImageBuffer( pDIVEData->hDive, (PULONG)pBuffer,
                                fccColorEncoding, ulWidth, ulHeight,
                                ulScanLineSize, pVideoBuffer );
@@ -345,11 +347,12 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect, PRECTL prectl)
   PDIVEData  pDIVEData = (PDIVEData)pVSData;
   ULONG      ulRC;
   BOOL       fFullUpdate = cRect == 0;
-  ULONG      ulDiveBufNum = *( ((PULONG)pGrop->stUserMode.pBuffer) - 1 );
+  ULONG      ulDiveBufNum;
   ULONG      ulSrcHeight = pGrop->stUserMode.ulHeight;
 
-  if ( !pDIVEData->fBlitterReady )
+  if ( ( pGrop->stUserMode.pBuffer == NULL ) || ( !pDIVEData->fBlitterReady ) )
     return FALSE;
+  ulDiveBufNum = *( ((PULONG)pGrop->stUserMode.pBuffer) - 1 );
 
   if ( !fFullUpdate )
   {

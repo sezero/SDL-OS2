@@ -84,7 +84,7 @@ static SCAN2SDLKEY     aScan2SDLKey[] = {
 typedef struct _UNICODESHIFTKEY {
   SDLKey     enSDLKey;
   SDLKey     enSDLShiftKey;
-  ULONG ulSDLKey;
+  ULONG      ulSDLKey;
 } UNICODESHIFTKEY;
 
 static SDLKey          aScanSDLKeyMap[0xFF] = { SDLK_UNKNOWN };
@@ -207,8 +207,10 @@ static VOID _memxor(PBYTE pDst, PBYTE pSrc1, PBYTE pSrc2, ULONG ulLen)
 
 static VOID cbMouseMove(PGROPDATA pGrop, BOOL fRelative, LONG lX, LONG lY)
 {
+  debug( "Enter" );
   SDL_PrivateMouseMotion( 0, fRelative, lX,
                           fRelative ? -lY : pGrop->stUserMode.ulHeight - lY );
+  debug( "Leave" );
 }
 
 static VOID cbMouseButton(PGROPDATA pGrop, ULONG ulButton, BOOL fDown)
@@ -216,6 +218,7 @@ static VOID cbMouseButton(PGROPDATA pGrop, ULONG ulButton, BOOL fDown)
   static ULONG         aBtnGROP2SDL[3] = { SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT,
                                            SDL_BUTTON_MIDDLE };
 
+  debug( "Enter" );
   SDL_PrivateMouseButton( fDown ? SDL_PRESSED : SDL_RELEASED,
                           aBtnGROP2SDL[ulButton], 0, 0 );
 }
@@ -228,6 +231,8 @@ static VOID cbKeyboard(PGROPDATA pGrop, ULONG ulScanCode, ULONG ulChar,
   ULONG                ulIdx;
   SDLKey               enSDLKey;
   SDL_keysym           stSDLKeysym;
+
+  debug( "Enter" );
 
   // Check for fastkeys: ALT+HOME to toggle FS mode
   //                     ALT+END to close app
@@ -565,12 +570,15 @@ static SDL_Rect **os2_ListModes(SDL_VideoDevice *pDevice,
   SDL_PrivateVideoData *pPVData = pDevice->hidden;
   PBPPSIZELIST         pBPPSizeList = pPVData->pBPPSizeList;
 
-  debug( "Enter" );
+  debug( "Requested BPP: %u", pSDLPixelFormat->BitsPerPixel );
 
   for( ; pBPPSizeList != NULL; pBPPSizeList = pBPPSizeList->pNext )
   {
     if ( pBPPSizeList->ulBPP == pSDLPixelFormat->BitsPerPixel )
+    {
+      debug( "Success" );
       return &pBPPSizeList->apSDLRect;
+    }
   }
 
   debug( "Unsupported BPP: %u", pSDLPixelFormat->BitsPerPixel );
@@ -660,6 +668,7 @@ static void os2_UpdateRects(SDL_VideoDevice *pDevice, int cRects,
   ULONG                ulHeight = pPVData->pGrop->stUserMode.ulHeight;
   ULONG                ulIdx;
 
+//  debug( "Enter" );
   // Reallocate or get reserved buffer for the list of rectangles.
   if ( pPVData->crectlReserved < cRects )
   {
@@ -691,6 +700,8 @@ static void os2_UpdateRects(SDL_VideoDevice *pDevice, int cRects,
   // Update requested rectangles.
   if ( !gropUpdate( pPVData->pGrop, cRects, prectlList ) )
     debug( "gropUpdate() failed" );
+
+//  debug( "Leave" );
 }
 
 static int os2_ToggleFullScreen(SDL_VideoDevice *pDevice, int iOn)
@@ -713,6 +724,8 @@ static void os2_UpdateMouse(SDL_VideoDevice *pDevice)
   SDL_PrivateVideoData *pPVData = pDevice->hidden;
   ULONG                ulX, ulY;
 
+  debug( "Enter" );
+
   if ( !gropGetMousePos( pPVData->pGrop, &ulX, &ulY ) )
     debug( "gropGetMousePos() failed" );
   else
@@ -730,6 +743,8 @@ static int os2_SetColors(SDL_VideoDevice *pDevice, int iFirst, int iCount,
   PRGB2                pRGB2;
   ULONG                ulIdx;
   BOOL                 fSuccess;
+
+  debug( "Enter" );
 
   if ( pRGB2Colors == NULL )
   {
@@ -805,6 +820,8 @@ static void os2_SetIcon(SDL_VideoDevice *pDevice, SDL_Surface *pSDLSurfaceIcon,
   ULONG                ulX, ulY;
   CHAR                 chMask;
   PULONG               pulDst, pulSrc, pulDstMask;
+
+  debug( "Enter" );
 
   // Remove previous window's icon
   if ( pPVData->hptrWndIcon != NULLHANDLE )
@@ -959,7 +976,7 @@ static WMcursor *os2_CreateWMCursor(SDL_VideoDevice *pDevice,
                                     Uint8 *puiData, Uint8 *puiMask,
                                     int iW, int iH, int iHotX, int iHotY)
 {
-  SDL_PrivateVideoData *pPVData = pDevice->hidden;
+//  SDL_PrivateVideoData *pPVData = pDevice->hidden;
   BITMAPINFOHEADER     bmih = { 0 };
   BITMAPINFO           bmi;
   HPS                  hps;
@@ -988,16 +1005,16 @@ static WMcursor *os2_CreateWMCursor(SDL_VideoDevice *pDevice,
 
   // Make image and mask of cursor at buffer.
 
+  ulMaxXBRnd = ( ulMaxX + 7 ) / 8;
+  ulBRnd = ( iW + 7 ) / 8;
+  ulPad = ulMaxXBRnd - ulBRnd;
+
   pcImage = debugMAlloc( ulMaxXBRnd * ulMaxY * 2 );
   if ( pcImage == NULL )
   {
     debug( "Not enough memory" );
     return NULL;
   }
-
-  ulMaxXBRnd = ( ulMaxX + 7 ) / 8;
-  ulBRnd = ( iW + 7 ) / 8;
-  ulPad = ulMaxXBRnd - ulBRnd;
 
   for( ulIdx = 0; ulIdx < iH; ulIdx++ )
   {
@@ -1021,15 +1038,6 @@ static WMcursor *os2_CreateWMCursor(SDL_VideoDevice *pDevice,
 
   // Create cursor object.
 
-  pResult = debugMAlloc( sizeof(WMcursor) );
-  if ( pResult == NULL )
-  {
-    debug( "Not enough memory" );
-    debugFree( pcImage );
-    return NULL;
-  }
-  pResult->pcImage = pcImage;
-
   bmi.cbFix            = sizeof(BITMAPINFOHEADER);
   bmi.cx               = ulMaxX;
   bmi.cy               = ulMaxY * 2;
@@ -1049,15 +1057,30 @@ static WMcursor *os2_CreateWMCursor(SDL_VideoDevice *pDevice,
   bmih.cBitCount       = 1;
 
   // Create OS/2 pointer.
-  gropLock( pPVData->pGrop );
-  hps = WinGetPS( pPVData->pGrop->hwnd );
+  hps = WinGetPS( HWND_DESKTOP );
   hbm = GpiCreateBitmap( hps, (PBITMAPINFOHEADER2)&bmih, CBM_INIT, pcImage,
                          (PBITMAPINFO2)&bmi );
-  pResult->hptr = WinCreatePointer( HWND_DESKTOP, hbm, TRUE, iHotX,
-                                    ulMaxY - iHotY - 1 );
-  GpiDeleteBitmap( hbm );
+  if ( hbm == NULLHANDLE )
+    pResult = NULL;
+  else
+  {
+    HPOINTER           hPointer =
+                          WinCreatePointer( HWND_DESKTOP, hbm, TRUE, iHotX,
+                                            ulMaxY - iHotY - 1 );
+
+#ifdef VBOX_HACK_SUPPORT
+    pResult = SDL_malloc( sizeof(struct WMcursor) );
+    if ( pResult != NULL )
+      pResult->hptr = hPointer;
+#else
+    pResult = (WMcursor *)hPointer;
+#endif
+
+    GpiDeleteBitmap( hbm );
+  }
   WinReleasePS( hps );
-  gropUnlock( pPVData->pGrop );
+
+  debugFree( pcImage );
 
   debugInc( "WMCursor" );
   debug( "New cursor 0x%P", pResult );
@@ -1067,12 +1090,21 @@ static WMcursor *os2_CreateWMCursor(SDL_VideoDevice *pDevice,
 
 static void os2_FreeWMCursor(SDL_VideoDevice *pDevice, WMcursor *pCursor)
 {
+  debug( "Enter" );
+
+#ifdef VBOX_HACK_SUPPORT
   if ( pCursor == NULL )
     return;
 
   WinDestroyPointer( pCursor->hptr );
-  debugFree( pCursor->pcImage );
-  debugFree( pCursor );
+  SDL_free( pCursor );
+#else
+  if ( (HPOINTER)pCursor == NULLHANDLE )
+    return;
+
+  WinDestroyPointer( (HPOINTER)pCursor );
+#endif
+
   debugDec( "WMCursor" );
 }
 
@@ -1082,12 +1114,18 @@ static int os2_ShowWMCursor(SDL_VideoDevice *pDevice, WMcursor *pCursor)
 
   debug( "Set cursor 0x%P", pCursor );
   if ( !gropSetPointer( pPVData->pGrop,
-                        pCursor == NULL ? NULLHANDLE : pCursor->hptr ) )
+#ifdef VBOX_HACK_SUPPORT
+                        pCursor == NULL ? NULLHANDLE : pCursor->hptr
+#else
+                        (HPOINTER)pCursor
+#endif
+                      ) )
   {
     debug( "gropSetPointer() failed" );
     return 0;
   }
 
+  debug( "Success" );
   return 1;
 }
 
@@ -1109,11 +1147,15 @@ static void os2_PumpEvents(SDL_VideoDevice *pDevice)
   ULONG                ulWinWidth, ulWinHeight;
   ULONG                ulTime;
 
-  gropLock( pPVData->pGrop );    // Block callbacks calls.
-  fWinResized = pPVData->fWinResized;
-  ulWinWidth  = pPVData->ulWinWidth;
-  ulWinHeight = pPVData->ulWinHeight;
-  gropUnlock( pPVData->pGrop );
+  gropLock( pPVData->pGrop );              // Block callbacks calls.
+  fWinResized = pPVData->fWinResized;      // Get size changes flag.
+  if ( fWinResized )
+  {
+    pPVData->fWinResized = FALSE;          // Clear size changes flag.
+    ulWinWidth  = pPVData->ulWinWidth;     // Get new window width.
+    ulWinHeight = pPVData->ulWinHeight;    // Get new window height.
+  }
+  gropUnlock( pPVData->pGrop );            // Allow callbacks calls.
 
   if ( fWinResized )
   {

@@ -26,7 +26,7 @@ rem Specify the path to a directory where this script is located.
 rem for ex.: SET LIBHOME = %HOME%\projects\port\LIBS
 rem -------------------------------------------------------------------------
 
-rem SET LIBHOME=%HOME%\projects\port\SDL
+SET LIBHOME=%HOME%\projects\port\SDL
 
 rem -------------------------------------------------------------------------
 

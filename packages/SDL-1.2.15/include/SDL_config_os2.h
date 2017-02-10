@@ -27,6 +27,7 @@
 
 /* This is a set of defines to configure the SDL features */
 
+#if 0 /* have stdint.h instead */
 typedef signed char         int8_t;
 typedef unsigned char       uint8_t;
 typedef signed short        int16_t;
@@ -37,6 +38,7 @@ typedef unsigned int        size_t;
 typedef unsigned long       uintptr_t;
 typedef signed long long    int64_t;
 typedef unsigned long long  uint64_t;
+#endif
 
 #define SDL_HAS_64BIT_TYPE	1
 
@@ -92,9 +94,11 @@ typedef unsigned long long  uint64_t;
 #define HAVE__UITOA 1
 #define HAVE__ULTOA 1
 #define HAVE_STRTOL 1
+#define HAVE_STRTOUL 1
 #define HAVE__I64TOA 1
 #define HAVE__UI64TOA 1
 #define HAVE_STRTOLL 1
+#define HAVE_STRTOULL 1
 #define HAVE_STRTOD 1
 #define HAVE_ATOI 1
 #define HAVE_ATOF 1
@@ -102,6 +106,7 @@ typedef unsigned long long  uint64_t;
 #define HAVE_STRNCMP 1
 #define HAVE_STRICMP 1
 #define HAVE_STRCASECMP 1
+#define HAVE_STRNCASECMP 1
 #define HAVE_SSCANF 1
 #define HAVE_SNPRINTF 1
 #define HAVE_VSNPRINTF 1

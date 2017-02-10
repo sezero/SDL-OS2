@@ -597,6 +597,11 @@ static SDL_Surface *os2_SetVideoMode(SDL_VideoDevice *pDevice,
 
   debug( "Enter" );
 
+  if (uiFlags & SDL_OPENGL) {
+    SDL_SetError("OS2 driver not configured with OpenGL");
+    return NULL;
+  }
+
   // Adjust the flags to be compatible with our system.
 
   if ( (uiFlags & SDL_FULLSCREEN) != 0 )

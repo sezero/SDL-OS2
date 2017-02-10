@@ -86,7 +86,7 @@ $(DLLFILE): $(LNKFILE) object_dir $(OS2386TK_H) compiling_info $(object_files)
 
 $(LIBFILE): $(DLLFILE)
     @echo * Creating LIB file: $@
-    @wlib -b -n -q $* $(DLLFILE)
+    @wlib -b -n -q -pa -s -t -zld -ii -io $* $(DLLFILE)
 
 
 SDL_RLEaccel.obj : object_dir

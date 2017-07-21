@@ -9,6 +9,8 @@
 #include <os2.h>
 #include "debug.h"
 
+#ifdef DEBUG_FILE /* not used otherwise */
+
 static HMTX		hMtx;
 
 typedef struct _DBGCOUNTER {
@@ -331,3 +333,5 @@ int debug_memused()
 
   return pScan == NULL ? -1 : pScan->iValue;
 }
+
+#endif /*  DEBUG_FILE  */

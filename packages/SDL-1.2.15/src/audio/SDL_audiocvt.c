@@ -1461,7 +1461,7 @@ int SDL_BuildAudioCVT(SDL_AudioCVT *cvt,
 				case 2: rate_cvt = SDL_RateMUL2_c2; break;
 				case 4: rate_cvt = SDL_RateMUL2_c4; break;
 				case 6: rate_cvt = SDL_RateMUL2_c6; break;
-				default: printf( "Invalid src_channels: %d\n", src_channels ); return -1;
+				default: return -1;
 			}
 			len_mult = 2;
 			len_ratio = 2.0;

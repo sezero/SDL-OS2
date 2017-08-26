@@ -24,7 +24,7 @@ COMMENT = $(COMMENT) (debug version)
 
 OBJS = $(SRCS:.c=.obj)
 
-LIBS = os2386.lib mmpm2.lib
+LIBS = os2386.lib pmgre.lib mmpm2.lib
 
 .extensions:
 .extensions: .lib .dll .obj .c

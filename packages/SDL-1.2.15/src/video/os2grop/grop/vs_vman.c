@@ -9,7 +9,6 @@
 #define INCL_GRE_DEVICE
 #define INCL_GRE_DEVMISC
 #include <pmddi.h>
-#include <os2386tk.h>
 #include "gradd.h"
 #include "debug.h"
 #include "grop.h"

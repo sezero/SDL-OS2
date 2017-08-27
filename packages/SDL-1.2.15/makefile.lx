@@ -24,7 +24,6 @@ INCPATH =-Iinclude -Isrc/video/os2grop -Isrc/video/os2grop/grop
 
 # Special flags for building SDL
 CFLAGS=$(CFLAGS_DLL) -otexan -wx -ei
-CFLAGS+= -DLIBPATH=\"$(LIBPATH)\"
 CFLAGS+= -DBUILD_SDL -DUSE_ASM_MIXER_VC
 #  -DCHECK_LEAKS
 CFLAGS+= -DICONV_INBUF_NONCONST
@@ -39,6 +38,8 @@ DESCRIPTION += DEBUG
 !endif
 
 PMGRE_LIB = $(LIBPATH)/pmgre.lib
+PMGRE_DEF = $(LIBPATH)/pmgre.def
+PMGRE_EXP = $(LIBPATH)/pmgre.exp
 
 audioobjs = SDL_audiocvt.obj SDL_mixer.obj SDL_mixer_MMX_VC.obj SDL_wave.obj &
             SDL_diskaudio.obj SDL_audio_os2.obj
@@ -79,7 +80,7 @@ object_files= SDL.obj SDL_error.obj SDL_fatal.obj &
 
 all: $(DLLFILE) $(LIBFILE) .symbolic
 
-$(DLLFILE): $(LNKFILE) $(PMGRE_LIB) compiling_info $(object_files) dll_dir lib_dir
+$(DLLFILE): compiling_info $(object_files) $(LNKFILE) $(PMGRE_LIB) dll_dir lib_dir
 	@echo * Linking: $@
 	@wlink @$(LNKFILE)
 
@@ -98,10 +99,12 @@ lib_dir: .symbolic
 compiling_info : .symbolic
 	@echo * Compiling...
 
-$(PMGRE_LIB): $(LIBPATH)/def2lbc.sed $(LIBPATH)/pmgre.def
-	@echo * Creating pmgre.lib
-	sed -f $(LIBPATH)/def2lbc.sed $(LIBPATH)/pmgre.def > $(LIBPATH)/pmgre.exp
-	wlib -q -b -n -c -pa -s -t -zld -ii -io $(PMGRE_LIB) @$(LIBPATH)/pmgre.exp
+$(PMGRE_LIB): $(PMGRE_EXP)
+	wlib -q -b -n -c -pa -s -t -zld -ii -io $(PMGRE_LIB) @$(PMGRE_EXP)
+
+$(PMGRE_EXP): $(PMGRE_DEF) $(LIBPATH)/def2lbc.sed
+	@echo * Creating PMGRE import library
+	sed -f $(LIBPATH)/def2lbc.sed $(PMGRE_DEF) > $(PMGRE_EXP)
 
 $(LNKFILE):
 	@echo * Creating linker file: $@
@@ -136,9 +139,10 @@ clean: .SYMBOLIC
 	@if exist *.map rm *.map
 	@if exist *.exp rm *.exp
 	@if exist $(LNKFILE) rm $(LNKFILE)
-	@if exist $(LIBPATH)/pmgre.exp rm $(LIBPATH)/pmgre.exp
-	@if exist $(LIBPATH)/pmgre.lib rm $(LIBPATH)/pmgre.lib
+	@if exist $(LIBPATH)/pmgre.exp rm $(PMGRE_EXP)
+	@if exist $(LIBPATH)/pmgre.lib rm $(PMGRE_LIB)
 
 distclean: clean .SYMBOLIC
 	@if exist $(DLLFILE) rm $(DLLFILE)
 	@if exist $(LIBFILE) rm $(LIBFILE)
+

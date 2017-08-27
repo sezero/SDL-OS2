@@ -1,6 +1,6 @@
-TITLENAME=Test programs for the SDL library
+# FOR CROSS-COMPILING UNDER LINUX
 
-!include ..\..\..\packages.mif
+!include ../../../packages.lx
 
 TARGETS = checkkeys.exe graywin.exe loopwave.exe testalpha.exe testbitmap.exe &
           testblitspeed.exe testcdrom.exe testcursor.exe testdyngl.exe &
@@ -13,27 +13,26 @@ TARGETS = checkkeys.exe graywin.exe loopwave.exe testalpha.exe testbitmap.exe &
 
 OBJS = $(TARGETS:.exe=.obj)
 
-BINPATH = $(LIBHOME)\packages\SDL-1.2.15\test
+all: $(TARGETS)
 
-all: $(TARGETS) show_info
-
+BINPATH = .
+INCPATH = -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h -I../include
+CFLAGS_DEF = $(INCPATH) -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier
+CFLAGS_EXE = $(CFLAGS_DEF)
 CFLAGS = $(CFLAGS_EXE) -ei -5s
 
-LIBS = sdl12.lib
+LIBS = SDL12.lib
 
 .obj.exe:
-  @rem echo * Link: $@
-  @wlink SYS os2v2 libpath $(LIBPATH) lib {$(LIBS)} op q file {$<} name $*
+  wlink SYS os2v2 libpath $(LIBPATH) lib {$(LIBS)} op q file {$<} name $*
 
 .c.obj:
-  @rem echo * Compilation: $<
-  @wcc386 $(CFLAGS) $<
-
-show_info: .SYMBOLIC
-  @echo * Tests compiled in $(BINPATH)
+  wcc386 $(CFLAGS) -fo=$^@ $<
 
 clean: .SYMBOLIC
   @echo * Clean tests in $(BINPATH)
-  @for %i in ($(OBJS)) do @if exist %i @del %i
-  @for %i in ($(TARGETS:.exe=.err)) do @if exist %i @del %i
-  @for %i in ($(TARGETS)) do @if exist %i @del %i
+  @if exist *.obj rm *.obj
+  @if exist *.err rm *.err
+
+distclean: clean .SYMBOLIC
+  @if exist *.exe rm *.exe

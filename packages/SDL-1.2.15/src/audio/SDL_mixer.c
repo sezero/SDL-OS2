@@ -92,16 +92,15 @@ static const Uint8 mix8[] =
 
 void SDL_MixAudio (Uint8 *dst, const Uint8 *src, Uint32 len, int volume)
 {
-#ifndef SDL_AUDIO_DRIVER_DARTALT
 	Uint16 format;
-#endif
 
 	if ( volume == 0 ) {
 		return;
 	}
-
 	/* Mix the user-level audio format */
-#ifndef SDL_AUDIO_DRIVER_DARTALT
+#if SDL_AUDIO_DRIVER_DARTALT
+	format = uiAudioFormat;
+#else
 	if ( current_audio ) {
 		if ( current_audio->convert.needed ) {
 			format = current_audio->convert.src_format;
@@ -112,10 +111,9 @@ void SDL_MixAudio (Uint8 *dst, const Uint8 *src, Uint32 len, int volume)
   		/* HACK HACK HACK */
 		format = AUDIO_S16;
 	}
-	switch (format) {
-#else
-	switch (uiAudioFormat) {
 #endif
+	switch (format) {
+
 		case AUDIO_U8: {
 #if defined(__GNUC__) && (defined(__m68k__) && !defined(__mcoldfire__)) && defined(SDL_ASSEMBLY_ROUTINES)
 			SDL_MixAudio_m68k_U8((char*)dst,(char*)src,(unsigned long)len,(long)volume,(char *)mix8);

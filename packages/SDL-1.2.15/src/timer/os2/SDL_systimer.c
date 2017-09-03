@@ -52,45 +52,45 @@ void SDL_StartTicks(void)
 
 DECLSPEC Uint32 SDLCALL SDL_GetTicks(void)
 {
-  long long hires_now;
-//  ULONG ticks = ticks;
+        long long hires_now;
+        /*ULONG ticks = ticks;*/
 
-  DosTmrQueryTime((PQWORD)&hires_now);
+        DosTmrQueryTime((PQWORD)&hires_now);
 #if 1
-/*  hires_now -= hires_start_ticks;
-  hires_now *= 1000;*/
-  return ( hires_now - hires_start_ticks ) * 1000 / hires_ticks_per_second;
+        return ( hires_now - hires_start_ticks ) * 1000 / hires_ticks_per_second;
 #else
-  /* inline asm to avoid runtime inclusion */
-  _asm {
-     push ecx
-     push ebx
-     push edx
-     push eax
-     mov eax, dword ptr hires_now
-     mov edx, dword ptr hires_now+4
-     sub eax, dword ptr hires_start_ticks
-     sbb edx, dword ptr hires_start_ticks+4
-     mov ebx,1000
-     mov ecx,edx
-     mul ebx
-     push eax
-     push edx
-     mov eax,ecx
-     mul ebx
-     pop eax
-     add edx,eax
-     pop eax
-     mov ebx, dword ptr hires_ticks_per_second
-     div ebx
-     mov dword ptr ticks, eax
-     pop edx
-     pop eax
-     pop ebx
-     pop ecx
-  }
+        /* inline asm to avoid runtime inclusion */
+        _asm {
+           push ecx
+           push ebx
 
-  return ticks;
+           push edx
+           push eax
+           mov eax, dword ptr hires_now
+           mov edx, dword ptr hires_now+4
+           sub eax, dword ptr hires_start_ticks
+           sbb edx, dword ptr hires_start_ticks+4
+           mov ebx,1000
+           mov ecx,edx
+           mul ebx
+           push eax
+           push edx
+           mov eax,ecx
+           mul ebx
+           pop eax
+           add edx,eax
+           pop eax
+           mov ebx, dword ptr hires_ticks_per_second
+           div ebx
+           mov dword ptr ticks, eax
+           pop edx
+           pop eax
+
+           pop ebx
+           pop ecx
+        }
+
+        return ticks;
 #endif
 }
 
@@ -138,10 +138,7 @@ DECLSPEC void SDLCALL SDL_Delay(Uint32 ms)
  /* tib->tib_ptib2->tib2_ulpri = 0x0300;*/
  /* We do not want to run at high priority if a signal causes us
     to longjmp() out of this section... */
-
-// Digi
-else
-
+      else /* - Digi */
       if (DosEnterMustComplete(&nesting))
         switch_priority = 0;
       else
@@ -192,44 +189,44 @@ static SDL_Thread *timer = NULL;
 
 static int SDLCALL RunTimer(void *unused)
 {
-  DosSetPriority(PRTYS_THREAD, PRTYC_TIMECRITICAL, 0, 0);
-  while ( timer_alive ) {
-          if ( SDL_timer_running ) {
-                  SDL_ThreadedTimerCheck();
-          }
-          SDL_Delay(10);
-  }
-  return(0);
+        DosSetPriority(PRTYS_THREAD, PRTYC_TIMECRITICAL, 0, 0);
+        while ( timer_alive ) {
+                if ( SDL_timer_running ) {
+                        SDL_ThreadedTimerCheck();
+                }
+                SDL_Delay(10);
+        }
+        return(0);
 }
 
 /* This is only called if the event thread is not running */
 int SDL_SYS_TimerInit(void)
 {
-  timer_alive = 1;
-  timer = SDL_CreateThread(RunTimer, NULL);
-  if ( timer == NULL )
-          return(-1);
-  return(SDL_SetTimerThreaded(1));
+        timer_alive = 1;
+        timer = SDL_CreateThread(RunTimer, NULL);
+        if ( timer == NULL )
+                return(-1);
+        return(SDL_SetTimerThreaded(1));
 }
 
 void SDL_SYS_TimerQuit(void)
 {
-  timer_alive = 0;
-  if ( timer ) {
-          SDL_WaitThread(timer, NULL);
-          timer = NULL;
-  }
+        timer_alive = 0;
+        if ( timer ) {
+                SDL_WaitThread(timer, NULL);
+                timer = NULL;
+        }
 }
 
 int SDL_SYS_StartTimer(void)
 {
-  SDL_SetError("Internal logic error: OS/2 uses threaded timer");
-  return(-1);
+        SDL_SetError("Internal logic error: OS/2 uses threaded timer");
+        return(-1);
 }
 
 void SDL_SYS_StopTimer(void)
 {
-  return;
+        return;
 }
 
 #endif /* SDL_TIMER_OS2 */

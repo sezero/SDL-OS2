@@ -261,8 +261,8 @@ const SDL_version * SDL_Linked_Version(void)
 #define INCL_DOSERRORS
 #define INCL_DOSEXCEPTIONS
 #include <os2.h>
-#include <debug.h>
-#include <os2ini.h>
+#include "debug.h"
+#include "os2ini.h"
 
 /* Exception handler to prevent the Audio thread hanging, making a zombie process! */
 ULONG _System SDL_Main_ExceptionHandler(PEXCEPTIONREPORTRECORD pERepRec,
@@ -307,11 +307,10 @@ unsigned _System LibMain(unsigned hmod, unsigned termination)
 /*    printf("[SDL DLL Unintialization] : Removing exception handler\n"); */
 #endif
     os2iniClose();
-    DosUnsetExceptionHandler( &SDL_Main_xcpthand );
+    DosUnsetExceptionHandler(&SDL_Main_xcpthand);
     debugDone();
     return 1;
-  }
-  else
+  } else
   {
     debugInit();
 #ifdef DEBUG_BUILD

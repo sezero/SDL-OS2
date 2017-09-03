@@ -176,20 +176,15 @@ extern AudioBootStrap MMEAUDIO_bootstrap;
 #if SDL_AUDIO_DRIVER_DART
 extern AudioBootStrap DART_bootstrap;
 #endif
-#if SDL_AUDIO_DRIVER_DARTALT
-// Not used. SDL's native cross-platform code SDL_audio.c replaced with
-// optimised for OS/2 SDL_audio_os2.c
-extern AudioBootStrap DARTALT_bootstrap;
-#endif
 #if SDL_AUDIO_DRIVER_EPOCAUDIO
 extern AudioBootStrap EPOCAudio_bootstrap; 
 #endif
 
-#ifndef SDL_AUDIO_DRIVER_DARTALT
+#if SDL_AUDIO_DRIVER_DARTALT
+extern Uint16 uiAudioFormat;
+#else
 /* This is the current audio device */
 extern SDL_AudioDevice *current_audio;
-#else
-extern Uint16 uiAudioFormat;
 #endif
 
 #endif /* _SDL_sysaudio_h */

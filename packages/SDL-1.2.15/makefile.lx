@@ -24,8 +24,10 @@ INCPATH =-Iinclude -Isrc/video/os2grop -Isrc/video/os2grop/grop
 
 # Special flags for building SDL
 CFLAGS=$(CFLAGS_DLL) -otexan -wx -ei
-CFLAGS+= -DBUILD_SDL -DUSE_ASM_MIXER_VC
-#  -DCHECK_LEAKS
+CFLAGS+= -DBUILD_SDL
+# -DCHECK_LEAKS
+# USE_ASM_MIXER_VC has no effect since SDL-1.2.10.
+# -DUSE_ASM_MIXER_VC
 CFLAGS+= -DICONV_INBUF_NONCONST
 CFLAGS+= -DUSE_DOSSETPRIORITY
 
@@ -42,8 +44,8 @@ PMGRE_DEF = $(LIBPATH)/pmgre.def
 PMGRE_EXP = $(LIBPATH)/pmgre.exp
 
 audioobjs = SDL_audiocvt.obj SDL_mixer.obj SDL_mixer_MMX_VC.obj SDL_wave.obj &
-            SDL_diskaudio.obj SDL_audio_os2.obj
-# SDL_audio.obj SDL_DARTalt.obj
+            SDL_audio_os2.obj
+# SDL_audio.obj SDL_dummyaudio.obj SDL_diskaudio.obj SDL_dart.obj
 
 cdromobjs = SDL_cdrom.obj SDL_syscdrom.obj
 cpuinfoobjs = SDL_cpuinfo.obj
@@ -73,7 +75,8 @@ object_files= SDL.obj SDL_error.obj SDL_fatal.obj &
 .extensions:
 .extensions: .lib .dll .obj .c .asm
 
-.c: src;src/audio;src/audio/DARTalt;src/audio/disk;src/cdrom;src/cdrom/os2;src/cpuinfo;src/events;src/file;src/joystick;src/joystick/os2;src/loadso/os2;src/stdlib;src/thread;src/thread/os2;src/timer;src/timer/os2;src/video;src/video/os2grop;src/video/os2grop/grop
+.c: src;src/audio;src/cdrom;src/cdrom/os2;src/cpuinfo;src/events;src/file;src/joystick;src/joystick/os2;src/loadso/os2;src/stdlib;src/thread;src/thread/os2;src/timer;src/timer/os2;src/video;src/video/os2grop;src/video/os2grop/grop
+#;src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy
 
 .c.obj:
 	wcc386 $(CFLAGS) -fo=$^@ $<

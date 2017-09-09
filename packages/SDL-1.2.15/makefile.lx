@@ -63,6 +63,7 @@ videoobjs = SDL_blit.obj SDL_blit_0.obj SDL_blit_1.obj SDL_blit_A.obj &
             SDL_video.obj SDL_yuv.obj SDL_yuv_mmx.obj SDL_yuv_sw.obj &
             SDL_os2grop.obj os2ini.obj debug.obj grop.obj vs_dive.obj &
             vs_vman.obj
+# SDL_nullevents.obj SDL_nullmouse.obj SDL_nullvideo.obj SDL_os2fslib.obj
 
 stdlibobjs = SDL_string.obj
 # SDL_iconv.obj
@@ -76,7 +77,7 @@ object_files= SDL.obj SDL_error.obj SDL_fatal.obj &
 .extensions: .lib .dll .obj .c .asm
 
 .c: src;src/audio;src/cdrom;src/cdrom/os2;src/cpuinfo;src/events;src/file;src/joystick;src/joystick/os2;src/loadso/os2;src/stdlib;src/thread;src/thread/os2;src/timer;src/timer/os2;src/video;src/video/os2grop;src/video/os2grop/grop
-#;src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy
+#;src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy;src/video/os2fslib
 
 .c.obj:
 	wcc386 $(CFLAGS) -fo=$^@ $<

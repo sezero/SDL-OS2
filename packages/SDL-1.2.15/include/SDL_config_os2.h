@@ -27,19 +27,6 @@
 
 /* This is a set of defines to configure the SDL features */
 
-#if 0 /* have stdint.h instead */
-typedef signed char         int8_t;
-typedef unsigned char       uint8_t;
-typedef signed short        int16_t;
-typedef unsigned short      uint16_t;
-typedef signed int          int32_t;
-typedef unsigned int        uint32_t;
-typedef unsigned int        size_t;
-typedef unsigned long       uintptr_t;
-typedef signed long long    int64_t;
-typedef unsigned long long  uint64_t;
-#endif
-
 #define SDL_HAS_64BIT_TYPE	1
 
 /* Use Watcom's LIBC */
@@ -69,7 +56,6 @@ typedef unsigned long long  uint64_t;
 #define HAVE_ALLOCA 1
 #define HAVE_GETENV 1
 #define HAVE_PUTENV 1
-/* #undef HAVE_UNSETENV */
 #define HAVE_QSORT 1
 #define HAVE_ABS 1
 #define HAVE_BCOPY 1
@@ -91,7 +77,6 @@ typedef unsigned long long  uint64_t;
 #define HAVE_STRSTR 1
 #define HAVE_ITOA 1
 #define HAVE__LTOA 1
-#define HAVE__UITOA 1
 #define HAVE__ULTOA 1
 #define HAVE_STRTOL 1
 #define HAVE_STRTOUL 1
@@ -111,8 +96,6 @@ typedef unsigned long long  uint64_t;
 #define HAVE_SNPRINTF 1
 #define HAVE_VSNPRINTF 1
 #define HAVE_SETJMP 1
-/* #undef HAVE_ICONV */
-/* #undef HAVE_ICONV_H */
 
 /* Enable various audio drivers */
 /*
@@ -145,7 +128,7 @@ typedef unsigned long long  uint64_t;
 #define SDL_VIDEO_DRIVER_OS2GROP	1
 
 /* Enable OpenGL support */
-/* Nothing here yet for OS/2... :( */
+/* Nothing yet for OS/2. */
 
 /* Enable assembly routines where available */
 #define SDL_ASSEMBLY_ROUTINES	1

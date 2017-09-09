@@ -413,8 +413,7 @@ if (SYS_JoyData[index].id == 0)
 	else pos[2]=0;
 	if (SYS_JoyData[index].axes >= 4)	pos[3] = stGameStatus.curdata.B.y;
 	else pos[3]=0;
-	pos[4]=0;	/* OS/2 basic drivers do not support more than 4 axes joysticks */
-	pos[5]=0;
+	/* OS/2 basic drivers do not support more than 4 axes joysticks */
 	}
 else if (SYS_JoyData[index].id == 1)
 	{
@@ -422,8 +421,6 @@ else if (SYS_JoyData[index].id == 1)
 	pos[1] = stGameStatus.curdata.B.y;
 	pos[2]=0;
 	pos[3]=0;
-	pos[4]=0;
-	pos[5]=0;
 	}
 
 /* Corrects the movements using the callibration */

@@ -15,24 +15,20 @@ INCPATH = .\include;.\src;.\src\audio;.\src\audio\DARTalt;.\src\audio\disk;.\src
 !include ..\..\packages.mif
 
 # Create debug build or not?
-#DEBUG_BUILD = defined
-
-#
-#==============================================================================
-#
+#DEBUG_BUILD=1
 
 # Special flags for building SDL
 CFLAGS = $(CFLAGS_DLL) -otexan -wx -ei -fo=.\obj\
-CFLAGS += -dLIBPATH="$(LIBPATH)"
-CFLAGS += -dBUILD_SDL -dUSE_ASM_MIXER_VC
-#  -dCHECK_LEAKS
-CFLAGS += -dICONV_INBUF_NONCONST
-CFLAGS += -dUSE_DOSSETPRIORITY
+CFLAGS += -DBUILD_SDL
+# -DCHECK_LEAKS
+# USE_ASM_MIXER_VC has no effect since SDL-1.2.10.
+# -DUSE_ASM_MIXER_VC
+CFLAGS += -DUSE_DOSSETPRIORITY
 
 DESCRIPTION = Simple DirectMedia Layer (alternative port)
 
 !ifdef DEBUG_BUILD
-CFLAGS += -d2 -dDEBUG_BUILD
+CFLAGS += -d2 -DDEBUG_BUILD
 CFLAGS += -DDEBUG_FILE="SDL.dbg"
 DESCRIPTION += DEBUG
 !endif

@@ -18,17 +18,12 @@ INCPATH =-Iinclude -Isrc/video/os2grop -Isrc/video/os2grop/grop
 # Create debug build or not?
 #DEBUG_BUILD=1
 
-#
-#==============================================================================
-#
-
 # Special flags for building SDL
 CFLAGS=$(CFLAGS_DLL) -otexan -wx -ei
 CFLAGS+= -DBUILD_SDL
 # -DCHECK_LEAKS
 # USE_ASM_MIXER_VC has no effect since SDL-1.2.10.
 # -DUSE_ASM_MIXER_VC
-CFLAGS+= -DICONV_INBUF_NONCONST
 CFLAGS+= -DUSE_DOSSETPRIORITY
 
 DESCRIPTION = Simple DirectMedia Layer (alternative port)

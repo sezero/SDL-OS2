@@ -3,13 +3,12 @@
 #define INCL_DOSMODULEMGR
 #define INCL_WIN
 #define INCL_GPI
-#define INCL_GPIBITMAPS         // GPI bit map functions
-#define INCL_DOSEXCEPTIONS      // DosEnterMustComplete()/DosExitMustComplete()
+#define INCL_GPIBITMAPS /* GPI bit map functions */
 #include <os2.h>
+#include "gradd.h"
 #define INCL_GRE_DEVICE
 #define INCL_GRE_DEVMISC
 #include <pmddi.h>
-#include "gradd.h"
 #include "debug.h"
 #include "grop.h"
 

@@ -11,10 +11,10 @@
 
 #include "SDL_os2alt.h"
 
+#include "gradd.h"
 #define INCL_GRE_DEVICE
 #define INCL_GRE_DEVMISC
 #include <pmddi.h>
-#include "gradd.h"
 #include "os2ini.h"
 
 #define WIN_CLIENT_CLASS	"OS2SDL"

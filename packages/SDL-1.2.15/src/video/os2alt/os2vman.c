@@ -9,10 +9,10 @@
 #endif
 
 #include "SDL_os2alt.h"
+#include "gradd.h"
 #define INCL_GRE_DEVICE
 #define INCL_GRE_DEVMISC
 #include <pmddi.h>
-#include "gradd.h"
 
 static HMODULE			hmodVMan = NULLHANDLE;
 static FNVMIENTRY		*pfnVMIEntry;

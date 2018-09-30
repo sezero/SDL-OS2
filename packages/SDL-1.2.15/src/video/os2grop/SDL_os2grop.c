@@ -1,12 +1,12 @@
 #include <SDL_config.h>
 #include <SDL_video.h>
 #include <SDL_mouse.h>
-#define INCL_WIN                 // Type RGB2.
-#define INCL_GPI                 // Types for gradd.h.
-#define INCL_DOSMISC             // DosQuerySysInfo().
-#define INCL_GPIBITMAPS          // GPI bit map functions to make pointer.
+#define INCL_WIN        /* Type RGB2. */
+#define INCL_GPI        /* Types for gradd.h. */
+#define INCL_DOSMISC    /* DosQuerySysInfo(). */
+#define INCL_GPIBITMAPS /* GPI bit map functions to make pointer. */
 #include <os2.h>
-#include <gradd.h>               // Defines FOURCC_xxxx
+#include <gradd.h>      /* Defines FOURCC_xxxx */
 
 #include "os2ini.h"
 #include "SDL_os2grop.h"

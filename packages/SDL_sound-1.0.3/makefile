@@ -1,7 +1,7 @@
-DLLNAME = sdlsound
+DLLNAME = SDLsound
 VERSION = 1.0.3
 
-INCPATH = .\decoders\timidity;..\libmikmod-3.3.6\include
+INCPATH = .\decoders\timidity;..\libmikmod-3.1.21.1\include
 
 !include ..\..\packages.mif
 
@@ -19,7 +19,6 @@ SRCS = aiff.c au.c flac.c midi.c mikmod.c modplug.c mpglib.c ogg.c quicktime.c &
 OBJS = $(SRCS:.c=.obj)
 
 CFLAGS  = $(CFLAGS_DLL) -ei -DBUILD_SDL -DSDL_SOUND_DLL_EXPORTS &
-          -DSOUND_SUPPORTS_SMPEG &
           -DSOUND_SUPPORTS_MPGLIB &
           -DSOUND_SUPPORTS_MIKMOD &
           -DSOUND_SUPPORTS_WAV &
@@ -32,8 +31,7 @@ CFLAGS  = $(CFLAGS_DLL) -ei -DBUILD_SDL -DSDL_SOUND_DLL_EXPORTS &
           -DSOUND_SUPPORTS_MIDI
 # SOUND_SUPPORTS_MODPLUG
 
-LIBS = sdl12.lib flac_static.lib vorbis_static.lib ogg_static.lib &
-       smpeg_static.lib mikmod.lib
+LIBS = SDL12.lib FLAC.lib vorbisfile.lib vorbis.lib ogg.lib mikmod.lib
 
 .extensions:
 .extensions: .lib .dll .obj .c

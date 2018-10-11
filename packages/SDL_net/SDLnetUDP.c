@@ -24,7 +24,7 @@
 #include "SDLnetsys.h"
 #include "SDL_net.h"
 
-#if defined(__WIN32__) | defined(__WATCOMC__)
+#if defined(__WIN32__) || defined(__OS2__)
 #define srandom	srand
 #define random	rand
 #endif
@@ -246,7 +246,8 @@ static int ValidChannel(int channel)
 }
 
 /* Bind the address 'address' to the requested channel on the UDP socket.
-   If the channel is -1, then the first unbound channel will be bound with
+   If the channel is -1, then the first unbound channel that has not yet
+   been bound to the maximum number of addresses will be bound with
    the given address as it's primary address.
    If the channel is already bound, this new address will be added to the
    list of valid source addresses for packets arriving on the channel.

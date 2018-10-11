@@ -49,12 +49,20 @@ static int SDLNet_started = 0;
 
 int SDLNet_GetLastError(void)
 {
+	#if defined(__OS2__) && !defined(__EMX__)
+	return sock_errno();
+	#else
 	return errno;
+	#endif
 }
 
 void SDLNet_SetLastError(int err)
 {
+	#if defined(__OS2__) && !defined(__EMX__)
+	/* FIXME: OS2 doesn't have a function to reset socket errno */
+	#else
 	errno = err;
+	#endif
 }
 
 #endif
@@ -63,15 +71,18 @@ void SDLNet_SetLastError(int err)
 int  SDLNet_Init(void)
 {
 	if ( !SDLNet_started ) {
-#ifdef __OS2__
-		sock_init();
-#elif defined(__USE_W32_SOCKETS)
+#ifdef __USE_W32_SOCKETS
 		/* Start up the windows networking */
 		WORD version_wanted = MAKEWORD(1,1);
 		WSADATA wsaData;
 
 		if ( WSAStartup(version_wanted, &wsaData) != 0 ) {
 			SDLNet_SetError("Couldn't initialize Winsock 1.1\n");
+			return(-1);
+		}
+#elif defined(__OS2__) && !defined(__EMX__)
+		if (sock_init() < 0) {
+			SDLNet_SetError("Couldn't initialize IBM OS/2 sockets");
 			return(-1);
 		}
 #else
@@ -102,7 +113,9 @@ void SDLNet_Quit(void)
 				WSACleanup();
 			}
 		}
-#elif !defined(__OS2__)
+#elif defined(__OS2__) && !defined(__EMX__)
+		/* -- nothing */
+#else
 		/* Restore the SIGPIPE handler */
 		void (*handler)(int);
 		handler = signal(SIGPIPE, SIG_DFL);
@@ -203,36 +216,36 @@ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
 	}
 	closesocket(sock);
 #elif defined(__WIN32__)
-    PIP_ADAPTER_INFO pAdapterInfo;
-    PIP_ADAPTER_INFO pAdapter;
+	PIP_ADAPTER_INFO pAdapterInfo;
+	PIP_ADAPTER_INFO pAdapter;
 	PIP_ADDR_STRING pAddress;
-    DWORD dwRetVal = 0;
-    ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
+	DWORD dwRetVal = 0;
+	ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
 
-    pAdapterInfo = (IP_ADAPTER_INFO *) SDL_malloc(sizeof (IP_ADAPTER_INFO));
-    if (pAdapterInfo == NULL) {
+	pAdapterInfo = (IP_ADAPTER_INFO *) SDL_malloc(sizeof (IP_ADAPTER_INFO));
+	if (pAdapterInfo == NULL) {
 		return 0;
-    }
+	}
 
-    if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == ERROR_BUFFER_OVERFLOW) {
-        pAdapterInfo = (IP_ADAPTER_INFO *) SDL_realloc(pAdapterInfo, ulOutBufLen);
-        if (pAdapterInfo == NULL) {
+	if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == ERROR_BUFFER_OVERFLOW) {
+		pAdapterInfo = (IP_ADAPTER_INFO *) SDL_realloc(pAdapterInfo, ulOutBufLen);
+		if (pAdapterInfo == NULL) {
 			return 0;
-        }
+		}
 		dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
-    }
+	}
 
-    if (dwRetVal == NO_ERROR) {
-        for (pAdapter = pAdapterInfo; pAdapter; pAdapter = pAdapter->Next) {
-			for (pAddress = &pAdapterInfo->IpAddressList; pAddress; pAddress = pAddress->Next) {
+	if (dwRetVal == NO_ERROR) {
+		for (pAdapter = pAdapterInfo; pAdapter; pAdapter = pAdapter->Next) {
+			for (pAddress = &pAdapter->IpAddressList; pAddress; pAddress = pAddress->Next) {
 				if (count < maxcount) {
 					addresses[count].host = inet_addr(pAddress->IpAddress.String);
 					addresses[count].port = 0;
 				}
 				++count;
 			}
-        }
-    }
+		}
+	}
 	SDL_free(pAdapterInfo);
 #endif
 	return count;

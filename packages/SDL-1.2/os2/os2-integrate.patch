@@ -1,0 +1,167 @@
+diff -urp SDL-1.2.15/include/SDL_config_os2.h SDL-1.2.15-os2/include/SDL_config_os2.h
+--- SDL-1.2.15/include/SDL_config_os2.h
++++ SDL-1.2.15-os2/include/SDL_config_os2.h
+@@ -98,9 +98,12 @@
+ #define HAVE_SETJMP 1
+ 
+ /* Enable various audio drivers */
++/*
+ #define SDL_AUDIO_DRIVER_DART	1
+ #define SDL_AUDIO_DRIVER_DISK	1
+ #define SDL_AUDIO_DRIVER_DUMMY	1
++*/
++#define SDL_AUDIO_DRIVER_DARTALT	1
+ 
+ /* Enable various cdrom drivers */
+ #define SDL_CDROM_OS2	1
+@@ -118,8 +121,11 @@
+ #define SDL_TIMER_OS2	1
+ 
+ /* Enable various video drivers */
++/*
+ #define SDL_VIDEO_DRIVER_DUMMY	1
+ #define SDL_VIDEO_DRIVER_OS2FS	1
++*/
++#define SDL_VIDEO_DRIVER_OS2GROP	1
+ 
+ /* Enable OpenGL support */
+ /* Nothing yet for OS/2. */
+diff -urp SDL-1.2.15/src/audio/SDL_mixer.c SDL-1.2.15-os2/src/audio/SDL_mixer.c
+--- SDL-1.2.15/src/audio/SDL_mixer.c
++++ SDL-1.2.15-os2/src/audio/SDL_mixer.c
+@@ -98,6 +98,9 @@ void SDL_MixAudio (Uint8 *dst, const Uin
+ 		return;
+ 	}
+ 	/* Mix the user-level audio format */
++#if SDL_AUDIO_DRIVER_DARTALT
++	format = uiAudioFormat;
++#else
+ 	if ( current_audio ) {
+ 		if ( current_audio->convert.needed ) {
+ 			format = current_audio->convert.src_format;
+@@ -108,6 +111,7 @@ void SDL_MixAudio (Uint8 *dst, const Uin
+   		/* HACK HACK HACK */
+ 		format = AUDIO_S16;
+ 	}
++#endif
+ 	switch (format) {
+ 
+ 		case AUDIO_U8: {
+diff -urp SDL-1.2.15/src/audio/SDL_sysaudio.h SDL-1.2.15-os2/src/audio/SDL_sysaudio.h
+--- SDL-1.2.15/src/audio/SDL_sysaudio.h
++++ SDL-1.2.15-os2/src/audio/SDL_sysaudio.h
+@@ -183,7 +183,11 @@
+ extern AudioBootStrap EPOCAudio_bootstrap; 
+ #endif
+ 
++#if SDL_AUDIO_DRIVER_DARTALT
++extern Uint16 uiAudioFormat;
++#else
+ /* This is the current audio device */
+ extern SDL_AudioDevice *current_audio;
++#endif
+ 
+ #endif /* _SDL_sysaudio_h */
+diff -urp SDL-1.2.15/src/SDL.c SDL-1.2.15-os2/src/SDL.c
+--- SDL-1.2.15/src/SDL.c
++++ SDL-1.2.15-os2/src/SDL.c
+@@ -261,6 +261,8 @@ const SDL_version * SDL_Linked_Version(v
+ #define INCL_DOSERRORS
+ #define INCL_DOSEXCEPTIONS
+ #include <os2.h>
++#include "debug.h"
++#include "os2ini.h"
+ 
+ /* Exception handler to prevent the Audio thread hanging, making a zombie process! */
+ ULONG _System SDL_Main_ExceptionHandler(PEXCEPTIONREPORTRECORD pERepRec,
+@@ -304,10 +306,13 @@ unsigned _System LibMain(unsigned hmod, 
+ #ifdef DEBUG_BUILD
+ /*    printf("[SDL DLL Unintialization] : Removing exception handler\n"); */
+ #endif
++    os2iniClose();
+     DosUnsetExceptionHandler(&SDL_Main_xcpthand);
++    debugDone();
+     return 1;
+   } else
+   {
++    debugInit();
+ #ifdef DEBUG_BUILD
+     /* Make stdout and stderr unbuffered! */
+     setbuf(stdout, NULL);
+@@ -319,7 +324,7 @@ unsigned _System LibMain(unsigned hmod, 
+ #endif
+     /* Set exception handler */
+     DosSetExceptionHandler(&SDL_Main_xcpthand);
+-
++    os2iniOpen();
+     return 1;
+   }
+ }
+diff -urp SDL-1.2.15/src/timer/os2/SDL_systimer.c SDL-1.2.15-os2/src/timer/os2/SDL_systimer.c
+--- SDL-1.2.15/src/timer/os2/SDL_systimer.c
++++ SDL-1.2.15-os2/src/timer/os2/SDL_systimer.c
+@@ -53,16 +53,17 @@
+ DECLSPEC Uint32 SDLCALL SDL_GetTicks(void)
+ {
+         long long hires_now;
+-        ULONG ticks = ticks;
++        /*ULONG ticks = ticks;*/
+ 
+         DosTmrQueryTime((PQWORD)&hires_now);
+-/*
+-        hires_now -= hires_start_ticks;
+-        hires_now *= 1000;
+-        hires_now /= hires_ticks_per_second;
+-*/
++#if 1
++        return ( hires_now - hires_start_ticks ) * 1000 / hires_ticks_per_second;
++#else
+         /* inline asm to avoid runtime inclusion */
+         _asm {
++           push ecx
++           push ebx
++
+            push edx
+            push eax
+            mov eax, dword ptr hires_now
+@@ -84,10 +85,13 @@
+            mov dword ptr ticks, eax
+            pop edx
+            pop eax
++
++           pop ebx
++           pop ecx
+         }
+ 
+         return ticks;
+-
++#endif
+ }
+ 
+ /* High resolution sleep, originally made by Ilya Zakharevich */
+diff -urp SDL-1.2.15/src/video/SDL_sysvideo.h SDL-1.2.15-os2/src/video/SDL_sysvideo.h
+--- SDL-1.2.15/src/video/SDL_sysvideo.h
++++ SDL-1.2.15-os2/src/video/SDL_sysvideo.h
+@@ -401,6 +401,9 @@ extern VideoBootStrap NDS_bootstrap;
+ #if SDL_VIDEO_DRIVER_RISCOS
+ extern VideoBootStrap RISCOS_bootstrap;
+ #endif
++#if SDL_VIDEO_DRIVER_OS2GROP
++extern VideoBootStrap OS2GROP_bootstrap;
++#endif
+ #if SDL_VIDEO_DRIVER_OS2FS
+ extern VideoBootStrap OS2FSLib_bootstrap;
+ #endif
+diff -urp SDL-1.2.15/src/video/SDL_video.c SDL-1.2.15-os2/src/video/SDL_video.c
+--- SDL-1.2.15/src/video/SDL_video.c
++++ SDL-1.2.15-os2/src/video/SDL_video.c
+@@ -120,6 +120,9 @@ static VideoBootStrap *bootstrap[] = {
+ #if SDL_VIDEO_DRIVER_OS2FS
+ 	&OS2FSLib_bootstrap,
+ #endif
++#if SDL_VIDEO_DRIVER_OS2GROP
++	&OS2GROP_bootstrap,
++#endif
+ #if SDL_VIDEO_DRIVER_AALIB
+ 	&AALIB_bootstrap,
+ #endif

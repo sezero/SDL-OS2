@@ -31,7 +31,8 @@ SRCS = dynamic_flac.c dynamic_fluidsynth.c dynamic_mod.c &
        dynamic_mp3.c dynamic_ogg.c effects_internal.c effect_position.c &
        effect_stereoreverse.c fluidsynth.c load_aiff.c load_flac.c &
        load_ogg.c load_voc.c mixer.c music.c music_cmd.c music_flac.c &
-       music_mad.c music_mod.c music_modplug.c music_ogg.c wavestream.c
+       music_mad.c music_mpg.c music_mod.c music_modplug.c music_ogg.c &
+       wavestream.c
 
 OBJS = $(SRCS:.c=.obj)
 
@@ -75,7 +76,7 @@ CFLAGS+= -DMP3_MAD_MUSIC
 LIBS+= mad.lib
 !endif
 !ifeq USE_MPG123 yes
-CFLAGS+= -DMP3_MPG_MUSIC
+CFLAGS+= -DMP3_MUSIC
 LIBS+= mpg123.lib
 !endif
 !ifeq USE_MOD yes
@@ -139,4 +140,3 @@ clean: .SYMBOLIC
   @if exist $(LNKFILE) rm $(LNKFILE)
   @if exist $(DLLFILE) rm $(DLLFILE)
   @if exist $(LIBFILE) rm $(LIBFILE)
-

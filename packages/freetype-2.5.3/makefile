@@ -13,7 +13,7 @@ SRCS = autofit.c ftapi.c ftbase.c ftbbox.c ftbdf.c ftdebug.c &
 
 OBJS = $(SRCS:.c=.obj)
 
-CFLAGS = $(CFLAGS_STATIC) -wcd=124 -DFT2_BUILD_LIBRARY
+CFLAGS = $(CFLAGS_STATIC) -ei -wcd=124 -DFT2_BUILD_LIBRARY
 
 $(LIBFILE_STATIC): $(OBJS)
   @echo * Create library: $@...

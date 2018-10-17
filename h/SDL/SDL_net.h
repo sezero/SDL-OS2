@@ -21,8 +21,8 @@
 
 /* $Id$ */
 
-#ifndef _SDL_NET_H
-#define _SDL_NET_H
+#ifndef SDL_NET_H_
+#define SDL_NET_H_
 
 #include "SDL.h"
 #include "SDL_endian.h"
@@ -40,7 +40,7 @@ extern "C" {
 */
 #define SDL_NET_MAJOR_VERSION	1
 #define SDL_NET_MINOR_VERSION	2
-#define SDL_NET_PATCHLEVEL	8
+#define SDL_NET_PATCHLEVEL	9
 
 /* This macro can be used to fill a version structure with the compile-time
  * version of the SDL_net library.
@@ -200,7 +200,8 @@ extern DECLSPEC UDPsocket SDLCALL SDLNet_UDP_Open(Uint16 port);
 extern DECLSPEC void SDLCALL SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent);
 
 /* Bind the address 'address' to the requested channel on the UDP socket.
-   If the channel is -1, then the first unbound channel will be bound with
+   If the channel is -1, then the first unbound channel that has not yet
+   been bound to the maximum number of addresses will be bound with
    the given address as it's primary address.
    If the channel is already bound, this new address will be added to the
    list of valid source addresses for packets arriving on the channel.
@@ -354,7 +355,7 @@ extern no_parse_DECLSPEC char * SDLCALL SDLNet_GetError(void);
 /* Inline macro functions to read/write network data */
 
 /* Warning, some systems have data access alignment restrictions */
-#if defined(sparc) || defined(mips)
+#if defined(sparc) || defined(mips) || defined(__arm__)
 #define SDL_DATA_ALIGNED	1
 #endif
 #ifndef SDL_DATA_ALIGNED
@@ -366,7 +367,6 @@ extern no_parse_DECLSPEC char * SDLCALL SDLNet_GetError(void);
 #define SDLNet_Write16(value, areap)	\
 	(*SDL_reinterpret_cast(Uint16 *, areap) = SDL_SwapBE16(value))
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Write16(value, areap)	\
 do 					\
 {					\
@@ -374,15 +374,6 @@ do 					\
 	area[0] = (value >>  8) & 0xFF;	\
 	area[1] =  value        & 0xFF;	\
 } while ( 0 )
-#else
-#define SDLNet_Write16(value, areap)	\
-do 					\
-{					\
-	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
-	area[1] = (value >>  8) & 0xFF;	\
-	area[0] =  value        & 0xFF;	\
-} while ( 0 )
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Write a 32 bit value to network packet buffer */
@@ -390,7 +381,6 @@ do 					\
 #define SDLNet_Write32(value, areap) 	\
 	*SDL_reinterpret_cast(Uint32 *, areap) = SDL_SwapBE32(value);
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Write32(value, areap) 	\
 do					\
 {					\
@@ -400,17 +390,6 @@ do					\
 	area[2] = (value >>  8) & 0xFF;	\
 	area[3] =  value       & 0xFF;	\
 } while ( 0 )
-#else
-#define SDLNet_Write32(value, areap) 	\
-do					\
-{					\
-	Uint8 *area = SDL_reinterpret_cast(Uint8 *, areap);	\
-	area[3] = (value >> 24) & 0xFF;	\
-	area[2] = (value >> 16) & 0xFF;	\
-	area[1] = (value >>  8) & 0xFF;	\
-	area[0] =  value       & 0xFF;	\
-} while ( 0 )
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Read a 16 bit value from network packet buffer */
@@ -418,13 +397,8 @@ do					\
 #define SDLNet_Read16(areap) 		\
 	(SDL_SwapBE16(*SDL_reinterpret_cast(Uint16 *, areap)))
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read16(areap) 		\
 	(((SDL_reinterpret_cast(Uint8 *, areap))[0] <<  8) | (SDL_reinterpret_cast(Uint8 *, areap))[1] <<  0)
-#else
-#define SDLNet_Read16(areap) 		\
-	(((SDL_reinterpret_cast(Uint8 *, areap))[1] <<  8) | (SDL_reinterpret_cast(Uint8 *, areap))[0] <<  0)
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Read a 32 bit value from network packet buffer */
@@ -432,15 +406,9 @@ do					\
 #define SDLNet_Read32(areap) 		\
 	(SDL_SwapBE32(*SDL_reinterpret_cast(Uint32 *, areap)))
 #else
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define SDLNet_Read32(areap) 		\
 	(((SDL_reinterpret_cast(Uint8 *, areap))[0] << 24) | ((SDL_reinterpret_cast(Uint8 *, areap))[1] << 16) | \
 	 ((SDL_reinterpret_cast(Uint8 *, areap))[2] <<  8) |  (SDL_reinterpret_cast(Uint8 *, areap))[3] <<  0)
-#else
-#define SDLNet_Read32(areap) 		\
-	(((SDL_reinterpret_cast(Uint8 *, areap))[3] << 24) | ((SDL_reinterpret_cast(Uint8 *, areap))[2] << 16) | \
-	 ((SDL_reinterpret_cast(Uint8 *, areap))[1] <<  8) |  (SDL_reinterpret_cast(Uint8 *, areap))[0] <<  0)
-#endif
 #endif /* !SDL_DATA_ALIGNED */
 
 /* Ends C function definitions when using C++ */
@@ -449,4 +417,4 @@ do					\
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_NET_H */
+#endif /* SDL_NET_H_ */

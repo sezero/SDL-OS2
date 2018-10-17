@@ -9,22 +9,19 @@ LIBFILE = $(LIBNAME).lib
 DLLFILE = $(LIBNAME).dll
 LNKFILE = $(LIBNAME).lnk
 
-SRCS = SDLnet.c SDLnetselect.c SDLnetTCP.c SDLnetUDP.c
+SRCS = SDLnetTCP.c SDLnetUDP.c SDLnetselect.c SDLnet.c
 
 OBJS = $(SRCS:.c=.obj)
 
 LIBS = SDL12.lib
 
-CFLAGS_BASE = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier -ei -j
-# include paths:
-CFLAGS_BASE+= -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h -I. -I$(INCPATH) -I$(INCPATH)/SDL
-CFLAGS = $(CFLAGS_BASE)
+CFLAGS = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier -ei -j
 # to build a dll:
 CFLAGS+= -bd
 # for DECLSPEC:
 CFLAGS+= -DBUILD_SDL
-
-all: $(DLLFILE)
+# include paths:
+CFLAGS+= -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h -I$(INCPATH)/SDL
 
 $(LIBFILE): $(DLLFILE)
   @echo * Create library: $@...
@@ -41,9 +38,9 @@ $(LNKFILE):
   @for %i in ($(OBJS)) do @%append $@ FILE %i
   @%append $@ OPTION QUIET
 !ifdef %osdir
-  @$(%osdir)\KLIBC\BIN\date +"OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$#$#1$#$# %F               $(%HOSTNAME)::::::@@Simple DirectMedia Layer Network Library'" >>$^@
+  @$(%osdir)\KLIBC\BIN\date +"OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$#$#1$#$# %F               $(%HOSTNAME)::::::@@Simple DirectMedia Layer network library'" >>$^@
 !else
-  @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer Network Library'
+  @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer network library'
 !endif
   @%append $@ LIBPATH $(LIBPATH)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
@@ -61,8 +58,6 @@ clean: .SYMBOLIC
   @if exist *.obj rm *.obj
   @if exist *.err rm *.err
   @if exist *.map rm *.map
-  @if exist *.exe rm *.exe
   @if exist $(LNKFILE) rm $(LNKFILE)
   @if exist $(DLLFILE) rm $(DLLFILE)
   @if exist $(LIBFILE) rm $(LIBFILE)
-

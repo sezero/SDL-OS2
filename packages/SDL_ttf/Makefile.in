@@ -39,6 +39,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@USE_VERSION_RC_FALSE@libSDL_ttf_la_DEPENDENCIES =
 noinst_PROGRAMS = showfont$(EXEEXT) glfont$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) \
@@ -85,7 +86,6 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" \
 	"$(DESTDIR)$(libSDL_ttfincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libSDL_ttf_la_LIBADD =
 am_libSDL_ttf_la_OBJECTS = SDL_ttf.lo
 libSDL_ttf_la_OBJECTS = $(am_libSDL_ttf_la_OBJECTS)
 libSDL_ttf_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -194,6 +194,7 @@ PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
+PATCH_VERSION = @PATCH_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
@@ -273,10 +274,12 @@ libSDL_ttf_la_SOURCES = \
 	SDL_ttf.c
 
 EXTRA_DIST = \
+	Android.mk		\
 	CHANGES			\
 	version.rc		\
-	VisualC.zip		\
-	Xcode.tar.gz		\
+	VisualC			\
+	Xcode			\
+	Xcode-iOS		\
 	MPWmake.sea.bin		\
 	Watcom-Win32.zip	\
 	SDL_ttf.spec		\
@@ -295,6 +298,7 @@ EXTRA_DIST = \
 @USE_VERSION_RC_TRUE@	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) -Wl,version.o
 
 @USE_VERSION_RC_TRUE@libSDL_ttf_la_DEPENDENCIES = version.o
+libSDL_ttf_la_LIBADD = @MATHLIB@
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = SDL_ttf.pc
 showfont_LDADD = libSDL_ttf.la

@@ -67,7 +67,7 @@ RTF_Context *RTF_CreateContext(RTF_FontEngine *fontEngine)
         return(NULL);
     }
     memcpy(ctx->fontEngine, fontEngine, sizeof(*fontEngine));
-        return(ctx);
+    return(ctx);
 }
 
 /* Set the text of an RTF context.

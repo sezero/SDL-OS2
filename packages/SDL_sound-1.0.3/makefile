@@ -29,6 +29,7 @@ CFLAGS  = $(CFLAGS_DLL) -ei -DBUILD_SDL -DSDL_SOUND_DLL_EXPORTS &
           -DSOUND_SUPPORTS_RAW &
           -DSOUND_SUPPORTS_FLAC &
           -DSOUND_SUPPORTS_MIDI
+# SOUND_SUPPORTS_SMPEG
 # SOUND_SUPPORTS_MODPLUG
 
 LIBS = SDL12.lib FLAC.lib vorbisfile.lib vorbis.lib ogg.lib mikmod.lib
@@ -67,7 +68,7 @@ $(LNKFILE):
 !else
   @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer abstract soundfile decoder'
 !endif
-  @%append $@ LIBPATH $(LIBPATH);..\libmikmod-3.3.6\os2
+  @%append $@ LIBPATH $(LIBPATH)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
   @%append $@ OPTION MAP=$*
   @%append $@ OPTION ELIMINATE

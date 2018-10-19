@@ -139,11 +139,7 @@ static int _mm_RWopsReader_get(MREADER *reader)
 } /* _mm_RWopsReader_get */
 
 
-#if defined(__WATCOMC__) && defined(__OS2__)
 static int _mm_RWopsReader_seek(MREADER *reader, long offset, int whence)
-#else
-static BOOL _mm_RWopsReader_seek(MREADER *reader, long offset, int whence)
-#endif
 {
     MRWOPSREADER *rwops_reader = (MRWOPSREADER *) reader;
     Sound_Sample *sample = rwops_reader->sample;

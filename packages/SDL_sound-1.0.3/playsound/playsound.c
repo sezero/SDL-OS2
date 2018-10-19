@@ -84,12 +84,18 @@ static void output_versions(const char *argv0)
     Sound_Version compiled;
     Sound_Version linked;
     SDL_version sdl_compiled;
-    const SDL_version *sdl_linked;
+    SDL_version sdl_linked_ver;
+    const SDL_version *sdl_linked = &sdl_linked_ver;
 
     SOUND_VERSION(&compiled);
     Sound_GetLinkedVersion(&linked);
     SDL_VERSION(&sdl_compiled);
+
+    #if SDL_MAJOR_VERSION >= 2
+    SDL_GetVersion(&sdl_linked_ver);
+    #else
     sdl_linked = SDL_Linked_Version();
+    #endif
 
     fprintf(stdout,
            "%s version %d.%d.%d\n"
@@ -539,11 +545,7 @@ static void memcpy_with_volume(Sound_Sample *sample,
 } /* memcpy_with_volume */
 
 
-#ifdef __WATCOMC__
 static void SDLCALL audio_callback(void *userdata, Uint8 *stream, int len)
-#else
-static void audio_callback(void *userdata, Uint8 *stream, int len)
-#endif
 {
     Sound_Sample *sample = (Sound_Sample *) userdata;
     int bw = 0; /* bytes written to stream this time through the callback */

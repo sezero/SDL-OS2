@@ -10,6 +10,8 @@ CFLAGS+= -DBUILD_SDL
 # include paths:
 CFLAGS+= -I"$(%WATCOM)/h/os2" -I"$(%WATCOM)/h" -I.
 CFLAGS+= -I"../../../../h/SDL" -I"../.."
+# features support:
+CFLAGS+= -DLAYER1 -DLAYER2 -DLAYER3
 
 all: mpglib.lib
 

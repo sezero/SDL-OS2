@@ -9,7 +9,7 @@ SRCS_mpglib = dct64_i386.c decode_i386.c interface.c layer1.c layer2.c &
               layer3.c mpglib_common.c tabinit.c
 
 SRCS_timidity = common.c instrum.c mix.c output.c playmidi.c &
-                readmidi.c resample.c tables.c timidity.c instrum_dls.c
+                readmidi.c resample.c tables.c timidity.c
 
 SRCS = aiff.c au.c flac.c midi.c mikmod.c modplug.c mpglib.c ogg.c quicktime.c &
        raw.c shn.c smpeg.c speex.c voc.c wav.c &

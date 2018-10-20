@@ -13,8 +13,8 @@ LIBMPG  = decoders/mpglib/mpglib.lib
 
 TITLENAME = $(LIBNAME) $(VERSION)
 
-SRCS = aiff.c au.c flac.c midi.c mikmod.c modplug.c mpglib.c ogg.c quicktime.c &
-       raw.c shn.c smpeg.c speex.c voc.c wav.c &
+SRCS = aiff.c au.c flac.c midi.c mikmod.c modplug.c mpglib.c ogg.c &
+       raw.c shn.c speex.c voc.c wav.c &
        alt_audio_convert.c audio_convert.c extra_rwops.c SDL_sound.c
 
 OBJS = $(SRCS:.c=.obj)
@@ -29,6 +29,8 @@ CFLAGS+= -bd
 # for DECLSPEC:
 CFLAGS+= -DBUILD_SDL -DSDL_SOUND_DLL_EXPORTS
 
+#this is noted as experimental:
+#CFLAGS+= -DSOUND_USE_ALTCVT=1
 CFLAGS+= -DSOUND_SUPPORTS_MPGLIB &
           -DSOUND_SUPPORTS_MIKMOD &
           -DSOUND_SUPPORTS_WAV &
@@ -39,7 +41,7 @@ CFLAGS+= -DSOUND_SUPPORTS_MPGLIB &
           -DSOUND_SUPPORTS_RAW &
           -DSOUND_SUPPORTS_FLAC &
           -DSOUND_SUPPORTS_MIDI
-# SOUND_SUPPORTS_SMPEG
+# SOUND_SUPPORTS_SPEEX
 # SOUND_SUPPORTS_MODPLUG
 
 LIBS = SDL12.lib FLAC.lib vorbisfile.lib vorbis.lib ogg.lib mikmod.lib $(LIBTIMI) $(LIBMPG)
@@ -73,7 +75,7 @@ $(LNKFILE):
 !endif
   @%append $@ LIBPATH $(LIBPATH)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
-  @%append $@ OPTION MAP=$*
+  @%append $@ OPTION MAP=$^&.map
   @%append $@ OPTION ELIMINATE
   @%append $@ OPTION MANYAUTODATA
   @%append $@ OPTION OSNAME='OS/2 and eComStation'

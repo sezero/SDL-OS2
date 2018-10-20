@@ -292,7 +292,7 @@ static void metadata_callback(
         f->sample->actual.rate = metadata->data.stream_info.sample_rate;
 
         if (metadata->data.stream_info.bits_per_sample > 8)
-            f->sample->actual.format = AUDIO_S16SYS;
+            f->sample->actual.format = AUDIO_S16LSB;
         else
             f->sample->actual.format = AUDIO_S8;
     } /* if */

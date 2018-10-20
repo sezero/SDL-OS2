@@ -1,0 +1,28 @@
+OBJS = dct64_i386.obj decode_i386.obj interface.obj layer1.obj layer2.obj &
+       layer3.obj mpglib_common.obj tabinit.obj
+
+CFLAGS = -zq -bt=os2 -bm -fp5 -fpi87 -mf -oeatxh -w4 -ei -j -zp8
+# -5s  :  Pentium stack calling conventions.
+# -5r  :  Pentium register calling conventions.
+CFLAGS+= -5s
+# for SDL DECLSPEC:
+CFLAGS+= -DBUILD_SDL
+# include paths:
+CFLAGS+= -I"$(%WATCOM)/h/os2" -I"$(%WATCOM)/h" -I.
+CFLAGS+= -I"../../../../h/SDL" -I"../.."
+
+all: mpglib.lib
+
+.SUFFIXES:
+.SUFFIXES: .obj .c .asm .nasm
+
+mpglib.lib: $(OBJS)
+  wlib -b -n -q -c -pa -s -t -zld -ii -io $@ $(OBJS)
+
+.c.obj:
+  wcc386 $(CFLAGS) -fo=$^@ $<
+
+clean: .SYMBOLIC
+  @if exist *.obj rm *.obj
+  @if exist *.err rm *.err
+  @if exist mpglib.lib rm mpglib.lib

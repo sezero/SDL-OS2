@@ -14,7 +14,7 @@ TITLENAME = $(LIBNAME) $(VERSION)
 
 SRCS = aiff.c au.c flac.c midi.c mikmod.c modplug.c mpg123.c ogg.c &
        raw.c shn.c speex.c voc.c wav.c &
-       alt_audio_convert.c audio_convert.c extra_rwops.c SDL_sound.c
+       alt_audio_convert.c audio_convert.c SDL_sound.c
 
 OBJS = $(SRCS:.c=.obj)
 

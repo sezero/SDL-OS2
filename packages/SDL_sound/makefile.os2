@@ -97,11 +97,11 @@ playsound_simple.obj: playsound/playsound_simple.c
 
 playsound.exe: $(LIBFILE) playsound.obj
   @echo * Link: $@
-  wlink SYS os2v2 LIBPATH $(LIBPATH) LIBR {SDLsound.lib SDL12.lib} op q op el F {playsound.obj}  N playsound.exe
+  wlink SYS os2v2 LIBPATH $(LIBPATH) LIBR {$(LIBFILE) SDL12.lib} op q op el F {playsound.obj}  N playsound.exe
 
 playsound_simple.exe: $(LIBFILE) playsound_simple.obj
   @echo * Link: $@
-  wlink SYS os2v2 LIBPATH $(LIBPATH) LIBR {SDLsound.lib SDL12.lib} op q op el F {playsound_simple.obj}  N playsound_simple.exe
+  wlink SYS os2v2 LIBPATH $(LIBPATH) LIBR {$(LIBFILE) SDL12.lib} op q op el F {playsound_simple.obj}  N playsound_simple.exe
 
 clean: .SYMBOLIC
   @echo * Clean: $(TITLENAME)

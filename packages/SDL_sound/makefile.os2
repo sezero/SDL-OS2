@@ -68,11 +68,7 @@ $(LNKFILE):
   @%append $@ NAME $(LIBNAME)
   @for %i in ($(OBJS)) do @%append $@ FILE %i
   @%append $@ OPTION QUIET
-!ifdef %osdir
-  @$(%osdir)\KLIBC\BIN\date +"OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$#$#1$#$# %F               $(%HOSTNAME)::::::@@Simple DirectMedia Layer, abstract soundfile decoder'" >>$^@
-!else
-  @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer, abstract soundfile decoder'
-!endif
+  @%append $@ OPTION DESCRIPTION '@$#icculus org:$(VERSION)$#@Simple DirectMedia Layer, abstract soundfile decoder'
   @%append $@ LIBPATH $(LIBPATH)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
   @%append $@ OPTION MAP=$^&.map
@@ -91,7 +87,7 @@ wav.obj: decoders/wav.c
   wcc386 $(CFLAGS) -wcd=1181 -fo=$^@ decoders/wav.c
 
 playsound.obj: playsound/playsound.c
-  wcc386 $(CFLAGS_BASE) -wcd=136 -DHAVE_SIGNAL_H -DHAVE_SETBUF -DHAVE_ASSERT_H -fo=$^@ $<
+  wcc386 $(CFLAGS_BASE) -wcd=136 -DHAVE_SIGNAL_H=1 -DHAVE_SETBUF=1 -DHAVE_ASSERT_H=1 -fo=$^@ $<
 playsound_simple.obj: playsound/playsound_simple.c
   wcc386 $(CFLAGS_BASE) -fo=$^@ $<
 

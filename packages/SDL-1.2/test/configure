@@ -3003,6 +3003,11 @@ fi
             SYS_GL_LIBS="-lOSMesa"
         fi
 		;;
+    *-*-riscos*)
+	EXE=",e1f"
+	MATHLIB=""
+	SYS_GL_LIBS=""
+	;;
     *)
         EXE=""
         MATHLIB="-lm"

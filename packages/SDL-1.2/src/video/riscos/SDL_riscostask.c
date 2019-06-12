@@ -37,6 +37,8 @@
 
 #include "SDL_stdinc.h"
 #include "SDL_riscostask.h"
+#include "SDL_riscosvideo.h"
+#include "SDL_riscosmouse_c.h"
 
 #if !SDL_THREADS_DISABLED
 #include <pthread.h>
@@ -54,8 +56,6 @@ int riscos_closeaction = 1; /* Close icon action */
 
 static int stored_mode = -1; /* -1 when in desktop, mode number or pointer when full screen */
 
-extern int mouseInWindow; /* Mouse is in WIMP window */
-
 /* Local function */
 
 static int RISCOS_GetTaskName(char *task_name, size_t maxlen);
@@ -72,9 +72,13 @@ static void dump_mode()
         int blockSize = 0;
 		int *storeBlock = (int *)stored_mode;
 
-        while(blockSize < 5 || storeBlock[blockSize] != -1)
+        while(blockSize < 5)
         {
            fprintf(stderr, "   %d\n", storeBlock[blockSize++]);
+        }
+        while(storeBlock[blockSize] != -1)
+        {
+           fprintf(stderr, "   %d   %d\n", storeBlock[blockSize++], storeBlock[blockSize++]);
         }
     }
 }
@@ -97,8 +101,8 @@ int RISCOS_InitTask()
    messages[0] = 9;       /* Palette changed */
    messages[1] = 0x400c1; /* Mode changed */
    messages[2] = 8;       /* Pre quit */
-   messages[2] = 0;
-   
+   messages[3] = 0;
+
 	regs.r[0] = (unsigned int)360; /* Minimum version 3.6 */
 	regs.r[1] = (unsigned int)0x4b534154;
 	regs.r[2] = (unsigned int)task_name;
@@ -132,7 +136,7 @@ void RISCOS_ExitTask()
     {
        /* Ensure cursor is put back to standard pointer shape if
           we have been running in a window */
-       _kernel_osbyte(106,1,0);
+       WIMP_RestoreWimpCursor();
     }
 
 	/* Ensure we end up back in the wimp */
@@ -285,7 +289,8 @@ void RISCOS_StoreWimpMode()
 		int *storeBlock;
         int j;
 
-        while(blockSize < 5 || retBlock[blockSize] != -1) blockSize++;
+        while(blockSize < 5) blockSize++;
+        while(retBlock[blockSize] != -1) blockSize+=2;
         blockSize++;
         storeBlock = (int *)SDL_malloc(blockSize * sizeof(int));
         retBlock = (int *)regs.r[1];
@@ -294,7 +299,7 @@ void RISCOS_StoreWimpMode()
 
 		stored_mode = (int)storeBlock;
      }
-#if DUMP_MODE
+#ifdef DUMP_MODE
     fprintf(stderr, "Stored "); dump_mode();
 #endif
 }
@@ -312,7 +317,7 @@ void RISCOS_RestoreWimpMode()
 	/* Only need to restore if we are in full screen mode */
 	if (stored_mode == -1) return;
 
-#if DUMP_MODE
+#ifdef DUMP_MODE
    fprintf(stderr, "Restored"); dump_mode();
 #endif
 
@@ -325,9 +330,7 @@ void RISCOS_RestoreWimpMode()
     stored_mode = -1;
 
     /* Flush keyboard buffer to dump the keystrokes we've already polled */
-    regs.r[0] = 21;
-    regs.r[1] = 0; /* Keyboard buffer number */
-    _kernel_swi(OS_Byte, &regs, &regs);
+    _kernel_osbyte(21, 0, 0);
 
     mouseInWindow = 0;
 

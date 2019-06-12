@@ -39,8 +39,6 @@
 static WMcursor *current_cursor = NULL;
 static WMcursor *defined_cursor = NULL;
 
-extern int mouseInWindow;
-
 /* Area to save cursor palette colours changed by SDL.
    Actual values will be read before we change to the SDL cursor */
 static Uint8 wimp_cursor_palette[2][5] = {
@@ -50,9 +48,8 @@ static Uint8 wimp_cursor_palette[2][5] = {
 
 static int cursor_palette_saved = 0;
 
-void WIMP_SaveCursorPalette();
-void WIMP_RestoreWimpCursor();
-void WIMP_SetSDLCursorPalette();
+static void WIMP_SaveCursorPalette();
+static void WIMP_SetSDLCursorPalette();
 
 
 void RISCOS_FreeWMCursor(_THIS, WMcursor *cursor)
@@ -188,20 +185,13 @@ int RISCOS_ShowWMCursor(_THIS, WMcursor *cursor)
 void FULLSCREEN_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
 {
 	Uint8 move_block[5];
-	int eig_block[3];
-	_kernel_swi_regs regs;
 	int os_x, os_y;
+	int topLeftY;
 
-	eig_block[0] = 4;  /* X eig factor */
-	eig_block[1] = 5;  /* Y eig factor */
-	eig_block[2] = -1;  /* End of list of variables to request */
+	topLeftY = (this->hidden->height << this->hidden->yeig) - 1; /* As per RISCOS_PollMouseHelper */
 
-    regs.r[0] = (int)eig_block;
-    regs.r[1] = (int)eig_block;
-    _kernel_swi(OS_ReadVduVariables, &regs, &regs);
-
-	os_x = x << eig_block[0];
-	os_y = y << eig_block[1];
+	os_x = x << this->hidden->xeig;
+	os_y = topLeftY - (y << this->hidden->yeig);
 
 	move_block[0] = 3; /* Move cursor */
 	move_block[1] = os_x & 0xFF;
@@ -233,8 +223,9 @@ void WIMP_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
 	regs.r[1] = (unsigned int)window_state;
 	_kernel_swi(Wimp_GetWindowState, &regs, &regs);
 
-	 osX = (x << this->hidden->xeig) + window_state[1];
-	 osY = window_state[4] - (y << this->hidden->yeig);
+	/* 90 DPI mapping from SDL pixels to OS units */
+	 osX = (x << 1) + window_state[1];
+	 osY = window_state[4] - (y << 1);
 
 	block[0] = 3;
 	block[1] = osX & 0xFF;
@@ -242,9 +233,7 @@ void WIMP_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
 	block[3] = osY & 0xFF;
 	block[4] = (osY >> 8) & 0xFF;
 
-	regs.r[0] = 21;
-	regs.r[1] = (int)block;
-	_kernel_swi(OS_Word, &regs, &regs);
+	_kernel_osword(21, (int *)block);
 	SDL_PrivateMouseMotion(0, 0, x, y);
 }
 
@@ -296,9 +285,7 @@ SDL_GrabMode RISCOS_GrabInput(_THIS, SDL_GrabMode mode)
 
       }
 
-      regs.r[0] = 21; /* OS word code */
-      regs.r[1] = (int)block;
-      _kernel_swi(OS_Word, &regs, &regs);
+      _kernel_osword(21, (int *)block);
    }
 
    return mode;
@@ -317,7 +304,7 @@ void WIMP_SaveCursorPalette()
       regs.r[0] = (int)wimp_cursor_palette[colour][0];
       regs.r[1] = 25;
       /* Read settings with OS_ReadPalette */
-      if (_kernel_swi(0x2f, &regs, &regs) == NULL)
+      if (_kernel_swi(OS_ReadPalette, &regs, &regs) == NULL)
       {
         wimp_cursor_palette[colour][2] = (unsigned char)((regs.r[2] >> 8) & 0xFF);
         wimp_cursor_palette[colour][3] = (unsigned char)((regs.r[2] >> 16) & 0xFF);

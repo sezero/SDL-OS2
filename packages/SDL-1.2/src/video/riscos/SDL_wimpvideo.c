@@ -30,6 +30,7 @@
 
 #include "SDL_video.h"
 #include "SDL_mouse.h"
+#include "SDL_timer.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -42,88 +43,51 @@
 #include "kernel.h"
 #include "swis.h"
 
-/* Initialization/Query functions */
-SDL_Rect **WIMP_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags);
-SDL_Surface *WIMP_SetVideoMode(_THIS, SDL_Surface *current, int width, int height, int bpp, Uint32 flags);
-int WIMP_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors);
-void WIMP_SetWMCaption(_THIS, const char *title, const char *icon);
-
-
-extern unsigned char *WIMP_CreateBuffer(int width, int height, int bpp);
-extern void WIMP_PumpEvents(_THIS);
-extern void WIMP_PlotSprite(_THIS, int x, int y);
-extern void WIMP_SetupPlotInfo(_THIS);
-extern void WIMP_SetFocus(int win);
-
-/* etc. */
+static int WIMP_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors);
+static void WIMP_SetWMCaption(_THIS, const char *title, const char *icon);
 static void WIMP_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 /* RISC OS Wimp handling helpers */
-void WIMP_ReadModeInfo(_THIS);
-unsigned int WIMP_SetupWindow(_THIS, SDL_Surface *surface);
-void WIMP_SetDeviceMode(_THIS);
-void WIMP_DeleteWindow(_THIS);
+static unsigned int WIMP_SetupWindow(_THIS, SDL_Surface *surface);
+static void WIMP_SetDeviceMode(_THIS);
 
-/* FULLSCREEN function required for wimp/fullscreen toggling */
-extern int FULLSCREEN_SetMode(int width, int height, int bpp);
-
-/* Currently need to set this up here as it only works if you
-   start up in a Wimp mode */
-extern int RISCOS_ToggleFullScreen(_THIS, int fullscreen);
-
-extern int riscos_backbuffer;
-extern int mouseInWindow;
-extern int riscos_closeaction;
-
-/* Following needed to ensure window is shown immediately */
-extern int hasFocus;
-extern void WIMP_Poll(_THIS, int waitTime);
 
 SDL_Surface *WIMP_SetVideoMode(_THIS, SDL_Surface *current,
 				int width, int height, int bpp, Uint32 flags)
 {
-   Uint32 Rmask = 0;
-   Uint32 Gmask = 0;
-   Uint32 Bmask = 0;
-   char *buffer = NULL;
-   int bytesPerPixel = 1;
+	unsigned char *buffer = NULL;
+	int bytesPerPixel;
+	const RISCOS_SDL_PixelFormat *fmt;
 
-   /* Don't support double buffering in Wimp mode */
-   flags &= ~SDL_DOUBLEBUF;
-   flags &= ~SDL_HWSURFACE;
+	/* Don't support double buffering in Wimp mode */
+	flags &= ~SDL_DOUBLEBUF;
+	flags &= ~SDL_HWSURFACE;
 
-   switch(bpp)
-   {
-	case 8:
+	/* Identify the current pixel format */
+	fmt = RISCOS_CurrentPixelFormat();
+	/* If it's the same (approximate) BPP as the desired BPP, use it directly (less overhead in sprite rendering) */
+	if ((fmt == NULL) || (fmt->sdl_bpp != ((bpp+1)&~1)))
+	{
+		/* Not a good match - look for a supported format which is correct */
+		fmt = WIMP_FindSupportedSpriteFormat(bpp);
+		if (fmt == NULL)
+		{
+			SDL_SetError("Pixel depth not supported");
+			return NULL;
+		}
+	}
+
+	if (fmt->sdl_bpp == 8)
+	{
 		/* Emulated palette using ColourTrans */
 		flags |= SDL_HWPALETTE;
-		break;
-
-	case 15:
-	case 16:
-		Bmask = 0x00007c00;
-		Gmask = 0x000003e0;
-		Rmask = 0x0000001f;
-		bytesPerPixel = 2;
-		break;
-
-	case 32:
-		Bmask = 0x00ff0000;
-		Gmask = 0x0000ff00;
-		Rmask = 0x000000ff;
-		bytesPerPixel = 4;
-		break;
-
-	default:
-		SDL_SetError("Pixel depth not supported");
-		return NULL;
-		break;
-   }
+	}
+	bytesPerPixel = 1 << (fmt->ro.log2bpp - 3);
 
 /* 	printf("Setting mode %dx%d\n", width, height);*/
 
 	/* Allocate the new pixel format for the screen */
-	if ( ! SDL_ReallocFormat(current, bpp, Rmask, Gmask, Bmask, 0) ) {
+	if ( ! SDL_ReallocFormat(current, fmt->sdl_bpp, fmt->rmask, fmt->gmask, fmt->bmask, 0) ) {
 		SDL_SetError("Couldn't allocate new pixel format for requested mode");
 		return(NULL);
 	}
@@ -133,7 +97,7 @@ SDL_Surface *WIMP_SetVideoMode(_THIS, SDL_Surface *current,
 	this->hidden->height = current->h = height;
 
 	if (bpp == 15) bpp = 16;
-	buffer = WIMP_CreateBuffer(width, height, bpp);
+	buffer = WIMP_CreateBuffer(width, height, &fmt->ro);
 	if (buffer == NULL)
 	{
 		SDL_SetError("Couldn't create sprite for video memory");
@@ -155,6 +119,7 @@ SDL_Surface *WIMP_SetVideoMode(_THIS, SDL_Surface *current,
 		/* Sprites are 32bit word aligned */
 		current->pitch += (4 - (current->pitch & 3));
 	}
+	this->hidden->format = fmt;
 
   	current->flags = flags | SDL_PREALLOC;
 
@@ -214,7 +179,6 @@ void WIMP_ReadModeInfo(_THIS)
 	_kernel_swi(OS_ReadVduVariables, &regs, &regs);
 	this->hidden->xeig = vals[0];
 	this->hidden->yeig = vals[1];
-	this->hidden->screen_bpp = 1 << vals[2];
 	this->hidden->screen_width = vals[3] + 1;
 	this->hidden->screen_height = vals[4] + 1;
 }
@@ -238,6 +202,8 @@ void WIMP_SetDeviceMode(_THIS)
 	this->ShowWMCursor = WIMP_ShowWMCursor;
 	this->WarpWMCursor = WIMP_WarpWMCursor;
 
+/* Currently need to set this up here as it only works if you
+   start up in a Wimp mode */
         this->ToggleFullScreen = RISCOS_ToggleFullScreen;
 
 	this->PumpEvents = WIMP_PumpEvents;	
@@ -249,21 +215,17 @@ unsigned int WIMP_SetupWindow(_THIS, SDL_Surface *surface)
 	_kernel_swi_regs regs;
 	int window_data[23];
     int	*window_block = window_data+1;
-	int x = (this->hidden->screen_width - surface->w) / 2;
-	int y = (this->hidden->screen_height - surface->h) / 2;
-	int xeig = this->hidden->xeig;
-	int yeig = this->hidden->yeig;
+	int x = ((this->hidden->screen_width << this->hidden->xeig) - (surface->w << 1)) / 2;
+	int y = ((this->hidden->screen_height << this->hidden->yeig) - (surface->h << 1)) / 2;    
 
-    mouseInWindow = 0;
-    
 	/* Always delete the window and recreate on a change */
 	if (this->hidden->window_handle) WIMP_DeleteWindow(this);
 
 	/* Setup window co-ordinates */
-   window_block[0] = x << xeig;
-   window_block[1] = y << yeig;
-   window_block[2] = window_block[0] + (surface->w << xeig);
-   window_block[3] = window_block[1] + (surface->h << yeig);
+   window_block[0] = x;
+   window_block[1] = y;
+   window_block[2] = window_block[0] + (surface->w << 1);
+   window_block[3] = window_block[1] + (surface->h << 1);
 
    
    window_block[4] = 0;				  /* Scroll offsets */
@@ -278,8 +240,8 @@ unsigned int WIMP_SetupWindow(_THIS, SDL_Surface *surface)
    window_block[8] = 0xff070207;      /* Window colours */
    window_block[9] = 0x000c0103;
    window_block[10] = 0;                    /* Work area minimum */
-   window_block[11] = -surface->h << yeig;
-   window_block[12] = surface->w << xeig;   /* Work area maximum */
+   window_block[11] = -surface->h << 1;
+   window_block[12] = surface->w << 1;   /* Work area maximum */
    window_block[13] = 0;
    window_block[14] = 0x2700013d;    /* Title icon flags */
    window_block[15] = 0x00003000;	 /* Work area flags - Mouse click down reported */
@@ -326,17 +288,15 @@ void WIMP_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
 	_kernel_swi_regs regs;
 	int update_block[12];
-	int xeig = this->hidden->xeig;
-	int yeig = this->hidden->yeig;
 	int j;
 	update_block[0] = this->hidden->window_handle;
 
 	for (j = 0; j < numrects; j++)
 	{
-		update_block[1] = rects[j].x << xeig; /* Min X */
-		update_block[4] = -(rects[j].y << yeig);
-		update_block[3] = update_block[1] + (rects[j].w << xeig);
-		update_block[2] = update_block[4] - (rects[j].h << yeig);
+		update_block[1] = rects[j].x << 1; /* Min X */
+		update_block[4] = -(rects[j].y << 1);
+		update_block[3] = update_block[1] + (rects[j].w << 1);
+		update_block[2] = update_block[4] - (rects[j].h << 1);
 
 		regs.r[1] = (int)update_block;
 		/* Update window can fail if called before first poll */
@@ -421,28 +381,15 @@ void WIMP_SetWMCaption(_THIS, const char *title, const char *icon)
 	}
 }
 
-void WIMP_RefreshDesktop(_THIS)
-{
-   int width = this->hidden->screen_width << this->hidden->xeig;
-   int height = this->hidden->screen_height << this->hidden->yeig;
-   _kernel_swi_regs regs;
-   regs.r[0] = -1; /* Whole screen */
-   regs.r[1] = 0;
-   regs.r[2] = 0;
-   regs.r[3] = width;
-   regs.r[4] = height;
-   _kernel_swi(Wimp_ForceRedraw, &regs, &regs);
-}
-
 /* Toggle to window from full screen */
 int WIMP_ToggleFromFullScreen(_THIS)
 {     
    int width = this->screen->w;
    int height = this->screen->h;
    int bpp = this->screen->format->BitsPerPixel;
-   char *buffer = NULL;
-   char *old_bank[2];
-   char *old_alloc_bank;
+   unsigned char *buffer = NULL;
+   unsigned char *old_bank[2];
+   unsigned char *old_alloc_bank;
 
    /* Ensure flags are OK */
    this->screen->flags &= ~(SDL_DOUBLEBUF|SDL_HWSURFACE);
@@ -450,8 +397,8 @@ int WIMP_ToggleFromFullScreen(_THIS)
    if (this->hidden->bank[0] == this->hidden->alloc_bank || riscos_backbuffer == 0)
    {
       /* Need to create a sprite for the screen and copy the data to it */
-      char *data;
-      buffer = WIMP_CreateBuffer(width, height, bpp);
+      unsigned char *data;
+      buffer = WIMP_CreateBuffer(width, height, &this->hidden->format->ro);
       data = buffer + 60;         /* Start of sprite data */
       if (bpp == 8) data += 2048;  /* 8bpp sprite have palette first */
 

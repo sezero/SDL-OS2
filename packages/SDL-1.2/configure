@@ -31280,8 +31280,6 @@ _ACEOF
             SOURCES="$SOURCES $srcdir/src/timer/riscos/*.c"
             have_timers=yes
         fi
-        # The RISC OS platform requires special setup.
-        EXTRA_LDFLAGS="$EXTRA_LDFLAGS -ljpeg -ltiff -lpng -lz"
         ;;
     *)
         { { $as_echo "$as_me:$LINENO: error:

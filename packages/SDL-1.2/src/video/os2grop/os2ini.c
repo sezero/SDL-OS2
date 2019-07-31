@@ -300,7 +300,7 @@ void os2iniOpen()
   }
   else
     cbPath = 0;
-  SDL_strlcpy( &acIniFName[cbPath], "sdl.ini", sizeof( &acIniFName ) - cbPath );
+  SDL_strlcpy( &acIniFName[cbPath], "sdl.ini", sizeof( acIniFName ) - cbPath );
 
   _readIni( acIniFName, acProgFName );
   fOpened = TRUE;

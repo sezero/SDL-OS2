@@ -279,7 +279,6 @@ static VOID cbKeyboard(PGROPDATA pGrop, ULONG ulScanCode, ULONG ulChar,
   }
 
   // Send key event to SDL.
-
   enSDLKey = aScanSDLKeyMap[ulScanCode];
   stSDLKeysym.unicode = 0;
 
@@ -288,19 +287,18 @@ static VOID cbKeyboard(PGROPDATA pGrop, ULONG ulScanCode, ULONG ulChar,
     if ( ( ulChar != 0 ) && ( pPVData->ucoUnicode != NULL ) )
     {
       // Detect unicode value for key
-
       CHAR	achInput[2];
-      PCHAR	pchInput = &achInput;
+      PCHAR	pchInput = achInput;
       size_t	cInput = sizeof(achInput);
       UniChar	auchOutput[4];
-      UniChar	*puchOutput = &auchOutput;
+      UniChar	*puchOutput = auchOutput;
       size_t	cOutput = sizeof(auchOutput);
       size_t	cSubst;
       ULONG     ulRC;
 
       achInput[0] = ulChar;
       achInput[1] = 0;
-      ulRC = UniUconvToUcs( pPVData->ucoUnicode, (PVOID)&pchInput,
+      ulRC = UniUconvToUcs( pPVData->ucoUnicode, (void**)&pchInput,
                             &cInput, &puchOutput, &cOutput, &cSubst );
 
       if ( ulRC != ULS_SUCCESS )
@@ -577,7 +575,7 @@ static SDL_Rect **os2_ListModes(SDL_VideoDevice *pDevice,
     if ( pBPPSizeList->ulBPP == pSDLPixelFormat->BitsPerPixel )
     {
       debug( "Success" );
-      return &pBPPSizeList->apSDLRect;
+      return pBPPSizeList->apSDLRect;
     }
   }
 

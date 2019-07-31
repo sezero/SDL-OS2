@@ -68,8 +68,8 @@ static VOID _MCIError(PSZ pszFunc, ULONG ulResult)
 {
   CHAR			acBuf[128];
 
-  mciGetErrorString( ulResult, (PCHAR)&acBuf, sizeof(acBuf) );
-  SDL_SetError( "[%s] %s", pszFunc, &acBuf );
+  mciGetErrorString( ulResult, acBuf, sizeof(acBuf) );
+  SDL_SetError( "[%s] %s", pszFunc, acBuf );
 }
 
 static ULONG _mixSetup(ULONG ulBPS, ULONG ulFreq, ULONG ulChannels)
@@ -149,7 +149,6 @@ LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG ulFlags)
 
   return 0;
 }
-
 
 int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 {
@@ -336,7 +335,7 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
         sMCIBuffer.ulBufferSize = sOnFlyCVT.len * sOnFlyCVT.len_mult;
 
         sOnFlyCVT.len = desired->size;
-        sOnFlyCVT.buf = SDL_malloc( sMCIBuffer.ulBufferSize );
+        sOnFlyCVT.buf = (Uint8 *) SDL_malloc( sMCIBuffer.ulBufferSize );
         if ( sOnFlyCVT.buf == NULL )
         {
           SDL_SetError( "Not enough memory" );
@@ -446,7 +445,6 @@ void SDLCALL SDL_AudioQuit(void)
   fPause = FALSE;
   hmtxLock = NULLHANDLE;
 }
-
 
 int SDLCALL SDL_AudioInit(const char *driver_name)
 {

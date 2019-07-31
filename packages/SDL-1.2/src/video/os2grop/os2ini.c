@@ -120,9 +120,9 @@ static VOID _readIni(PSZ pszIniFName, PSZ pszProgFName)
   }
   debug( "Read ini-file: %s", pszIniFName );
 
-  while( fgets( &acBuf, sizeof(acBuf), fdIni ) != NULL )
+  while( fgets( acBuf, sizeof(acBuf), fdIni ) != NULL )
   {
-    pcSwBegin = &acBuf;
+    pcSwBegin = acBuf;
     _STR_LTrim( pcSwBegin );
 
     // Skip comments and empty lines
@@ -279,30 +279,30 @@ void os2iniOpen()
     return;
 
   DosGetInfoBlocks( &tib, &pib );
-  _fullpath( &acProgFName, pib->pib_pchcmd, sizeof(acProgFName) );
+  _fullpath( acProgFName, pib->pib_pchcmd, sizeof(acProgFName) );
   debug( "Program: %s", &acProgFName );
 
   // Read global ini-file
 
   if ( pszHome != NULL )
   {
-    SDL_snprintf( &acIniFName, sizeof(acIniFName), "%s\\sdl.ini", pszHome );
-    _readIni( &acIniFName, &acProgFName );
+    SDL_snprintf( acIniFName, sizeof(acIniFName), "%s\\sdl.ini", pszHome );
+    _readIni( acIniFName, acProgFName );
   }
 
   // Read local ini-file
 
-  pcSlash = SDL_strrchr( &acProgFName, '\\' );
+  pcSlash = SDL_strrchr( acProgFName, '\\' );
   if ( pcSlash != NULL )
   {
-    cbPath = pcSlash - &acProgFName + 1;
-    SDL_memcpy( &acIniFName, &acProgFName, cbPath );
+    cbPath = pcSlash - acProgFName + 1;
+    SDL_memcpy( acIniFName, acProgFName, cbPath );
   }
   else
     cbPath = 0;
   SDL_strlcpy( &acIniFName[cbPath], "sdl.ini", sizeof( &acIniFName ) - cbPath );
 
-  _readIni( &acIniFName, &acProgFName );
+  _readIni( acIniFName, acProgFName );
   fOpened = TRUE;
 }
 

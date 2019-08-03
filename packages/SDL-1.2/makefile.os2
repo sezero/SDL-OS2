@@ -13,7 +13,7 @@
 !endif
 
 DLLNAME = SDL12
-VERSION = 1.2.15.1
+VERSION = 1.2.16
 INCPATH =-Iinclude -Isrc/video/os2grop -Isrc/video/os2grop/grop
 LIBHOME = os2
 

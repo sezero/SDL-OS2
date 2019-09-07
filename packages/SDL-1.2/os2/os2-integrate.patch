@@ -1,6 +1,6 @@
-diff -urp SDL-1.2.15/include/SDL_config_os2.h SDL-1.2.15-os2/include/SDL_config_os2.h
---- SDL-1.2.15/include/SDL_config_os2.h
-+++ SDL-1.2.15-os2/include/SDL_config_os2.h
+diff -u a/include/SDL_config_os2.h b/include/SDL_config_os2.h
+--- a/include/SDL_config_os2.h
++++ b/include/SDL_config_os2.h
 @@ -98,9 +98,12 @@
  #define HAVE_SETJMP 1
  
@@ -26,9 +26,9 @@ diff -urp SDL-1.2.15/include/SDL_config_os2.h SDL-1.2.15-os2/include/SDL_config_
  
  /* Enable OpenGL support */
  /* Nothing yet for OS/2. */
-diff -urp SDL-1.2.15/src/audio/SDL_mixer.c SDL-1.2.15-os2/src/audio/SDL_mixer.c
---- SDL-1.2.15/src/audio/SDL_mixer.c
-+++ SDL-1.2.15-os2/src/audio/SDL_mixer.c
+diff -up a/src/audio/SDL_mixer.c b/src/audio/SDL_mixer.c
+--- a/src/audio/SDL_mixer.c
++++ b/src/audio/SDL_mixer.c
 @@ -98,6 +98,9 @@ void SDL_MixAudio (Uint8 *dst, const Uin
  		return;
  	}
@@ -47,9 +47,9 @@ diff -urp SDL-1.2.15/src/audio/SDL_mixer.c SDL-1.2.15-os2/src/audio/SDL_mixer.c
  	switch (format) {
  
  		case AUDIO_U8: {
-diff -urp SDL-1.2.15/src/audio/SDL_sysaudio.h SDL-1.2.15-os2/src/audio/SDL_sysaudio.h
---- SDL-1.2.15/src/audio/SDL_sysaudio.h
-+++ SDL-1.2.15-os2/src/audio/SDL_sysaudio.h
+diff -u a/src/audio/SDL_sysaudio.h b/src/audio/SDL_sysaudio.h
+--- a/src/audio/SDL_sysaudio.h
++++ b/src/audio/SDL_sysaudio.h
 @@ -183,7 +183,11 @@
  extern AudioBootStrap EPOCAudio_bootstrap; 
  #endif
@@ -62,9 +62,9 @@ diff -urp SDL-1.2.15/src/audio/SDL_sysaudio.h SDL-1.2.15-os2/src/audio/SDL_sysau
 +#endif
  
  #endif /* _SDL_sysaudio_h */
-diff -urp SDL-1.2.15/src/SDL.c SDL-1.2.15-os2/src/SDL.c
---- SDL-1.2.15/src/SDL.c
-+++ SDL-1.2.15-os2/src/SDL.c
+diff -up a/src/SDL.c b/src/SDL.c
+--- a/src/SDL.c
++++ b/src/SDL.c
 @@ -261,6 +261,8 @@ const SDL_version * SDL_Linked_Version(v
  #define INCL_DOSERRORS
  #define INCL_DOSEXCEPTIONS
@@ -97,9 +97,9 @@ diff -urp SDL-1.2.15/src/SDL.c SDL-1.2.15-os2/src/SDL.c
      return 1;
    }
  }
-diff -urp SDL-1.2.15/src/timer/os2/SDL_systimer.c SDL-1.2.15-os2/src/timer/os2/SDL_systimer.c
---- SDL-1.2.15/src/timer/os2/SDL_systimer.c
-+++ SDL-1.2.15-os2/src/timer/os2/SDL_systimer.c
+diff -u a/src/timer/os2/SDL_systimer.c b/src/timer/os2/SDL_systimer.c
+--- a/src/timer/os2/SDL_systimer.c
++++ b/src/timer/os2/SDL_systimer.c
 @@ -53,16 +53,17 @@
  DECLSPEC Uint32 SDLCALL SDL_GetTicks(void)
  {
@@ -139,10 +139,10 @@ diff -urp SDL-1.2.15/src/timer/os2/SDL_systimer.c SDL-1.2.15-os2/src/timer/os2/S
  }
  
  /* High resolution sleep, originally made by Ilya Zakharevich */
-diff -urp SDL-1.2.15/src/video/SDL_sysvideo.h SDL-1.2.15-os2/src/video/SDL_sysvideo.h
---- SDL-1.2.15/src/video/SDL_sysvideo.h
-+++ SDL-1.2.15-os2/src/video/SDL_sysvideo.h
-@@ -401,6 +401,9 @@ extern VideoBootStrap NDS_bootstrap;
+diff -u a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
+--- a/src/video/SDL_sysvideo.h
++++ b/src/video/SDL_sysvideo.h
+@@ -401,6 +401,9 @@
  #if SDL_VIDEO_DRIVER_RISCOS
  extern VideoBootStrap RISCOS_bootstrap;
  #endif
@@ -152,9 +152,9 @@ diff -urp SDL-1.2.15/src/video/SDL_sysvideo.h SDL-1.2.15-os2/src/video/SDL_sysvi
  #if SDL_VIDEO_DRIVER_OS2FS
  extern VideoBootStrap OS2FSLib_bootstrap;
  #endif
-diff -urp SDL-1.2.15/src/video/SDL_video.c SDL-1.2.15-os2/src/video/SDL_video.c
---- SDL-1.2.15/src/video/SDL_video.c
-+++ SDL-1.2.15-os2/src/video/SDL_video.c
+diff -up a/src/video/SDL_video.c b/src/video/SDL_video.c
+--- a/src/video/SDL_video.c
++++ b/src/video/SDL_video.c
 @@ -120,6 +120,9 @@ static VideoBootStrap *bootstrap[] = {
  #if SDL_VIDEO_DRIVER_OS2FS
  	&OS2FSLib_bootstrap,

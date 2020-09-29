@@ -29,5 +29,6 @@ LINKS
   - https://github.com/sezero/SDL-OS2.git
 
 * Original sites:
+  - http://os2.snc.ru/product-SDL.html
   - ftp://digi.os2.snc.ru/pub/SDL/
   - https://github.com/OS2World/LIB-SDL-2014.git

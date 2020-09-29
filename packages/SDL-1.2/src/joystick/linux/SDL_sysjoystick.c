@@ -389,7 +389,8 @@ static int EV_IsJoystick(int fd)
 		return(0);
 	}
 	if (!(test_bit(EV_KEY, evbit) && test_bit(EV_ABS, evbit) &&
-	      test_bit(ABS_X, absbit) && test_bit(ABS_Y, absbit) &&
+	     ((test_bit(ABS_X, absbit) && test_bit(ABS_Y, absbit)) ||
+		  (test_bit(ABS_HAT0X, absbit) && test_bit(ABS_HAT0Y, absbit))) &&
 	     (test_bit(BTN_TRIGGER, keybit) || test_bit(BTN_A, keybit) || test_bit(BTN_1, keybit)))) return 0;
 	return(1);
 }
@@ -582,7 +583,7 @@ static SDL_bool JS_ConfigJoystick(SDL_Joystick *joystick, int fd)
 	SDL_bool handled;
 	unsigned char n;
 	int tmp_naxes, tmp_nhats, tmp_nballs;
-	const char *name;
+	const char *name, *ptr;
 	char *env, env_name[128];
 	int i;
 
@@ -603,8 +604,9 @@ static SDL_bool JS_ConfigJoystick(SDL_Joystick *joystick, int fd)
 	name = SDL_SYS_JoystickName(joystick->index);
 
 	/* Generic analog joystick support */
-	if ( SDL_strstr(name, "Analog") == name && SDL_strstr(name, "-hat") ) {
-		if ( SDL_sscanf(name,"Analog %d-axis %*d-button %d-hat",
+	ptr = SDL_strstr(name, "Analog");
+	if ( ptr != NULL && SDL_strstr(ptr, "-hat") ) {
+		if ( SDL_sscanf(ptr,"Analog %d-axis %*d-button %d-hat",
 			&tmp_naxes, &tmp_nhats) == 2 ) {
 
 			joystick->naxes = tmp_naxes;
@@ -728,7 +730,10 @@ static SDL_bool EV_ConfigJoystick(SDL_Joystick *joystick, int fd)
 					(absinfo.maximum + absinfo.minimum) / 2 - absinfo.flat;
 				    joystick->hwdata->abs_correct[i].coef[1] =
 					(absinfo.maximum + absinfo.minimum) / 2 + absinfo.flat;
-				    t = ((absinfo.maximum - absinfo.minimum) / 2 - 2 * absinfo.flat);
+				    if (absinfo.maximum > absinfo.minimum)
+				        t = ((absinfo.maximum - absinfo.minimum) / 2 - 2 * absinfo.flat);
+				    else
+				        t = ((absinfo.maximum - absinfo.minimum) / 2 + 2 * absinfo.flat);
 				    if ( t != 0 ) {
 					joystick->hwdata->abs_correct[i].coef[2] = (1 << 29) / t;
 				    } else {

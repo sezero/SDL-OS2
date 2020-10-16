@@ -83,7 +83,7 @@ static BOOL _isMatch(PCHAR pcStr, ULONG cbStr, PCHAR pcPtrn, ULONG cbPtrn)
                 /* skip all continuous '*' */
                 do {
                     cbPtrn--;
-                    if (cbPtrn == 0 ) /* if end with '*', its match. */
+                    if (cbPtrn == 0) /* if end with '*', its match. */
                         return TRUE;
                         pcPtrn++;
                 }
@@ -214,7 +214,7 @@ static VOID _readIni(PSZ pszIniFName, PSZ pszProgFName)
                 pcNext = NULL;
             }
 
-            _STR_RTrim( pcValBegin, pcValEnd );
+            _STR_RTrim(pcValBegin, pcValEnd);
 
             /* Switch and value were read.
              * pcSwBegin - switch name,  pcValBegin - value */
@@ -272,7 +272,7 @@ void os2iniOpen(void)
 {
     PTIB  tib;
     PPIB  pib;
-    PSZ   pszHome = SDL_getenv( "HOME" );
+    PSZ   pszHome = SDL_getenv("HOME");
     PCHAR pcSlash;
     ULONG cbPath;
     CHAR  acProgFName[CCHMAXPATH + 1];
@@ -283,7 +283,7 @@ void os2iniOpen(void)
 
     DosGetInfoBlocks(&tib, &pib);
     _fullpath(acProgFName, pib->pib_pchcmd, sizeof(acProgFName));
-    debug("Program: %s", &acProgFName);
+    debug("Program: %s", acProgFName);
 
     /* Read global ini-file */
     if (pszHome != NULL) {

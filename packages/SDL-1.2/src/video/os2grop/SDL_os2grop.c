@@ -2,11 +2,17 @@
 #include <SDL_video.h>
 #include <SDL_mouse.h>
 #define INCL_WIN        /* Type RGB2. */
-#define INCL_GPI        /* Types for gradd.h. */
 #define INCL_DOSMISC    /* DosQuerySysInfo(). */
 #define INCL_GPIBITMAPS /* GPI bit map functions to make pointer. */
 #include <os2.h>
-#include <gradd.h>      /* Defines FOURCC_xxxx */
+
+#define __MEERROR_H__
+#define  _MEERROR_H_
+#include <mmioos2.h>
+#include <fourcc.h>
+#ifndef FOURCC_R666
+#define FOURCC_R666 mmioFOURCC('R','6','6','6')
+#endif
 
 #include "os2ini.h"
 #include "SDL_os2grop.h"
@@ -199,7 +205,6 @@ static VOID _memxor(PBYTE pDst, PBYTE pSrc1, PBYTE pSrc2, ULONG ulLen)
   while( ulLen-- > 0 )
     *pDst++ = (*pSrc1++)^(*pSrc2++);
 }
-
 
 
 //           GROP callback routines.

@@ -1,15 +1,20 @@
 #include <malloc.h>
 #include <string.h>
+
 #define INCL_OS2MM
 #define INCL_GPI
+#define INCL_DOSERRORS
 #define INCL_DOSMEMMGR
+#define INCL_DOSSEMAPHORES
 #include <os2.h>
+#define __MEERROR_H__
 #define  _MEERROR_H_
 #include <mmioos2.h>
 #include <os2me.h>
 #define INCL_MM_OS2
 #include <dive.h>
 #include <fourcc.h>
+
 #include "debug.h"
 #include "grop.h"
 
@@ -39,7 +44,6 @@ VIDEOSYS stVideoSysDIVE =
   vsUpdate,
   vsSetPalette
 };
-
 
 typedef struct _DIVEData {
   HDIVE      hDive;

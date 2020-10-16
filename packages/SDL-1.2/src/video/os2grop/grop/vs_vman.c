@@ -9,6 +9,7 @@
 #define INCL_GRE_DEVICE
 #define INCL_GRE_DEVMISC
 #include <pmddi.h>
+
 #include "debug.h"
 #include "grop.h"
 
@@ -155,7 +156,7 @@ static VOID _clearScreen(PVIDEOMODE pMode)
 //
 // One-time VMAN module initialization.
 
-static BOOL _vmanInit()
+static BOOL _vmanInit(void)
 {
   ULONG                ulRC;
   CHAR                 acBuf[256];
@@ -217,7 +218,7 @@ static BOOL _vmanInit()
 //
 // One-time VMAN module finalization.
 
-static VOID _vmanDone()
+static VOID _vmanDone(void)
 {
   lVManInit--;
   if ( lVManInit > 0 )

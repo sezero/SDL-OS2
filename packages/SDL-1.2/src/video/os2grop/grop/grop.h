@@ -160,12 +160,12 @@ typedef struct _GROPDATA {
 
 // BOOL gropInit();
 // GrOp module initialization. Returns FALSE if an error occurred. 
-BOOL gropInit();
+BOOL gropInit(void);
 
 // VOID gropDone();
 // Shuts down GrOp module and frees the resources allocated to it. This should
 // always be called before exit.
-VOID gropDone();
+VOID gropDone(void);
 
 // Macro is used to obtain user-defined pointer of GrOp object. 
 #define gropGetUserPtr(grop) ((grop)->pUser)

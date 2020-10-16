@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <process.h>
-#include "debug.h"
 #define INCL_DOS
 #define INCL_DOSERRORS
 #define INCL_DOSPROCESS
@@ -10,6 +9,8 @@
 #define INCL_GPIBITMAPS         /* GPI bit map functions         */
 #define INCL_DOSRESOURCES       /* Dos Resource functions        */
 #include <os2.h>
+
+#include "debug.h"
 #include "grop.h"
 #include "linkseq.h"
 
@@ -32,7 +33,7 @@ static PVIDEOSYS       aVideoSys[] =
   &stVideoSysVMAN,
 };
 
-#define VIDEOSYSNUM    ( sizeof(aVideoSys) / sizeof(PVIDEOSYS) )
+#define VIDEOSYSNUM         (sizeof(aVideoSys) / sizeof(PVIDEOSYS))
 
 // Query to GROP window data structure pointed by mp1 paramether of
 // window message WM_GROP_QUERY.
@@ -566,7 +567,7 @@ static VOID _wmGropQuery(PGROPDATA pGrop, PGROPQUERY pQuery)
         // Switching from fullscreen to window is always available for:
         // DIVE - can blit buffer with any BPP,
         // VMANComptible - manages just one mode.
-  
+
         if ( !fFullscreen &&
              ( pQuery->ulSetFullscreen != _GROP_SET_FS_PANIC_OFF ) &&
              ( !pGrop->pVideoSys->fBPPConvSup ) &&
@@ -1212,7 +1213,7 @@ static HMTX            hmtxGropList = NULLHANDLE;
 static LINKSEQ         lsGropList;
 static LONG            lInitTime = 0;
 
-static VOID _gropAllToDesktop()
+static VOID _gropAllToDesktop(void)
 {
   PGROPDATA  pGrop;
 
@@ -1238,7 +1239,7 @@ static VOID _gropAllToDesktop()
 //
 // Module initialization. Returns TRUE on success.
 
-BOOL gropInit()
+BOOL gropInit(void)
 {
   ULONG      ulRC;
 
@@ -1262,7 +1263,7 @@ BOOL gropInit()
   return TRUE;
 }
 
-VOID gropDone()
+VOID gropDone(void)
 {
   debug( "Enter" );
 
@@ -1514,7 +1515,7 @@ BOOL gropUpdate(PGROPDATA pGrop, ULONG cRect, PRECTL prectl)
   DosReleaseMutexSem( pGrop->hmtxData );
 
   return fSuccess;
-#elif
+#else
   // Update query.
 
   GROPQUERY  stQuery;

@@ -25,13 +25,69 @@
 
 /* OS/2 Joystick driver, contributed by Daniel Caetano */
 
-#include <mem.h>
-
 #define INCL_DOSDEVICES
 #define INCL_DOSDEVIOCTL
 #define INCL_DOSMEMMGR
 #include <os2.h>
-#include "joyos2.h"
+
+/*****************************************************************
+ * OS/2 Joystick driver defs. Based on docs at edm2.com and in old
+ * drivers available at hobbes.nmsu.edu and www.os2site.com
+ *****************************************************************/
+
+#define GAME_GET_VERSION 0x01
+#define GAME_GET_PARMS   0x02
+#define GAME_GET_CALIB   0x04
+#define GAME_GET_STATUS  0x10
+
+#define IOCTL_CAT_USER   0x80
+#define GAME_PORT_GET    0x20
+#define GAME_PORT_RESET  0x60
+
+#pragma pack(push,1)
+typedef struct {
+  USHORT  uJs_AxCnt, uJs_AyCnt; /* A joystick X/Y pos */
+  USHORT  uJs_BxCnt, uJs_ByCnt; /* B joystick X/Y pos */
+  USHORT  usJs_ButtonA1Cnt, usJs_ButtonA2Cnt;/* A1/A2 press cnts */
+  USHORT  usJs_ButtonB1Cnt, usJs_ButtonB2Cnt;/* B1/B2 press cnts */
+  UCHAR   ucJs_JoyStickMask;  /* mask of connected joystick pots */
+  UCHAR   ucJs_ButtonStatus;  /* bits of switches down */
+  ULONG   ulJs_Ticks;         /* total clock ticks (60 Hz) */
+} GAME_PORT_STRUCT;
+#pragma pack(pop)
+
+typedef struct {
+  USHORT  useA, useB;
+  USHORT  mode;
+  USHORT  format;
+  USHORT  sampDiv;
+  USHORT  scale;
+  USHORT  res1, res2;
+} GAME_PARM_STRUCT;
+
+typedef struct {
+  SHORT   x, y;
+} GAME_2DPOS_STRUCT;
+
+typedef struct {
+  SHORT  lower, centre, upper;
+} GAME_3POS_STRUCT;
+
+typedef struct {
+  GAME_3POS_STRUCT  Ax, Ay, Bx, By;
+} GAME_CALIB_STRUCT;
+
+typedef struct {
+  GAME_2DPOS_STRUCT A, B;
+  USHORT  butMask;
+} GAME_DATA_STRUCT;
+
+typedef struct {
+  GAME_DATA_STRUCT  curdata;
+  USHORT  b1cnt, b2cnt, b3cnt, b4cnt;
+} GAME_STATUS_STRUCT;
+
+/*****************************************************************/
 
 #include "SDL_joystick.h"
 #include "SDL_events.h"
@@ -556,7 +612,7 @@ static APIRET joyPortOpen(HFILE * hGame)
 	if (*hGame != NULLHANDLE) return 0;
 
 	/* Open GAME$ for read */
-	rc = DosOpen((PSZ)GAMEPDDNAME, hGame, &ulAction, 0, FILE_READONLY,
+	rc = DosOpen("GAME$   ", hGame, &ulAction, 0, FILE_READONLY,
 		     FILE_OPEN, OPEN_ACCESS_READONLY | OPEN_SHARE_DENYNONE, NULL);
 	if (rc != 0)
 	{
@@ -575,7 +631,7 @@ static APIRET joyPortOpen(HFILE * hGame)
 		SDL_SetError("Could not get Joystick Driver version.");
 		return -1;
 	}
-	if (ulVersion < GAME_VERSION)
+	if (ulVersion < 0x20)
 	{
 		joyPortClose(hGame);
 		SDL_SetError("Driver too old. At least IBM driver version 2.0 required.");

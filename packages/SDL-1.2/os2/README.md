@@ -12,12 +12,11 @@ COMPILE TOOLS
     may or may not be a fault of this port.
 
 * Open Watcom snapshot builds from the official perforce repository:
-  - https://efbe.musca.uberspace.de/
+  - https://efbe.musca.uberspace.de/ (dead link)
 
 * Open Watcom V2 fork by Jiří Malák:
-  - http://open-watcom.github.io/open-watcom/
+  - https://open-watcom.github.io/
   - https://github.com/open-watcom/
-  - https://github.com/open-watcom/travis-ci-ow-builds
 
 AUTHORS
 ===============
@@ -29,5 +28,6 @@ LINKS
   - https://github.com/sezero/SDL-OS2.git
 
 * Original sites:
-  - ftp://digi.os2.snc.ru/pub/SDL/
-  - https://github.com/OS2World/LIB-SDL-2014.git
+  - http://os2.snc.ru/product-SDL.html
+  - ftp://ftp.os2.snc.ru/pub/SDL/
+  - http://ftp.os2.snc.ru/pub/SDL/

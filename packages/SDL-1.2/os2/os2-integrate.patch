@@ -25,7 +25,7 @@ diff -u a/include/SDL_config_os2.h b/include/SDL_config_os2.h
 +#define SDL_VIDEO_DRIVER_OS2GROP	1
  
  /* Enable OpenGL support */
- /* Nothing yet for OS/2. */
+ /* #undef SDL_VIDEO_OPENGL */				/* Nothing yet */
 diff -up a/src/audio/SDL_mixer.c b/src/audio/SDL_mixer.c
 --- a/src/audio/SDL_mixer.c
 +++ b/src/audio/SDL_mixer.c

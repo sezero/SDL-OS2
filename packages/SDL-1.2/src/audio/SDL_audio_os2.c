@@ -306,7 +306,7 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
                 sOnFlyCVT.len = desired->size;
                 sOnFlyCVT.buf = (Uint8 *) SDL_malloc(sMCIBuffer.ulBufferSize);
                 if (sOnFlyCVT.buf == NULL) {
-                    SDL_SetError("Not enough memory");
+                    SDL_OutOfMemory();
                     SDL_AudioQuit();
                     return -1;
                 }
@@ -324,7 +324,7 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     sMCIBuffer.pBufList = (PMCI_MIX_BUFFER) SDL_malloc(
                            AUDIO_NUM_SOUND_BUFFERS * sizeof(MCI_MIX_BUFFER));
     if (sMCIBuffer.pBufList == NULL) {
-        SDL_SetError("Not enough memory for DART buffers list");
+        SDL_OutOfMemory();
         SDL_AudioQuit();
         return -1 ;
     }

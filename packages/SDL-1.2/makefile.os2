@@ -1,5 +1,4 @@
 #=============================================================================
-#
 #  This is an OpenWatcom makefile to build alternative version SDL for OS/2
 #
 #  * A new VMAN and DIVE support
@@ -45,7 +44,7 @@ CFLAGS+= -DSDL_HERMES_BLITTERS=1
 # USE_ASM_MIXER_VC has no effect since SDL-1.2.10.
 #CFLAGS+= -DUSE_ASM_MIXER_VC
 
-DESCRIPTION = Simple DirectMedia Layer (alternative port)
+DESCRIPTION = Simple DirectMedia Layer 1.2 (alternative os/2 port)
 
 !ifeq DEBUG 1
 CFLAGS += -d2 -DDEBUG_BUILD
@@ -94,9 +93,9 @@ object_files= SDL.obj SDL_error.obj SDL_fatal.obj &
 .extensions:
 .extensions: .lib .dll .obj .c .asm
 
+.asm: src/hermes
 .c: src;src/audio;src/cdrom;src/cdrom/os2;src/cpuinfo;src/events;src/file;src/joystick;src/joystick/os2;src/loadso/os2;src/stdlib;src/thread;src/thread/os2;src/timer;src/timer/os2;src/video;src/video/os2grop;src/video/os2grop/grop
 #;src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy;src/video/os2fslib
-.asm: src/hermes
 
 .c.obj:
 	wcc386 $(CFLAGS) -fo=$^@ $<
@@ -138,16 +137,10 @@ $(LNKFILE):
 	@%append $@ LIB mmpm2.lib
 	@%append $@ LIB libuls.lib
 	@%append $@ LIB libconv.lib
-#	@%append $@ LIB os2iconv_static.lib
 	@%append $@ OPTION QUIET
 	@%append $@ OPTION IMPF=$^&.exp
 	@%append $@ OPTION MAP=$^&.map
-!ifdef %osdir
-	@$(%osdir)\KLIBC\BIN\date +"OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$#$#1$#$# %F               $(%HOSTNAME)::::::@@Simple DirectMedia Layer (alternative port)'" >>$^@
-!else
 	@%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$(DESCRIPTION)'
-!endif
-	@%append $@ OPTION QUIET
 	@%append $@ OPTION ELIMINATE
 	@%append $@ OPTION MANYAUTODATA
 	@%append $@ OPTION OSNAME='OS/2 and eComStation'
@@ -165,4 +158,3 @@ clean: .SYMBOLIC
 distclean: clean .SYMBOLIC
 	@if exist $(DLLFILE) rm $(DLLFILE)
 	@if exist $(LIBFILE) rm $(LIBFILE)
-

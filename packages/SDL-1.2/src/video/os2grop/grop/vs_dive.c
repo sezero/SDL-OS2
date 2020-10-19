@@ -84,7 +84,7 @@ static BOOL vsInit(PVIDEOMODESLIST pModes, PVOID *ppVSData)
   pDIVEData = debugMAlloc( sizeof(DIVEData) );
   if ( pDIVEData == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     return FALSE;
   }
 
@@ -104,7 +104,7 @@ static BOOL vsInit(PVIDEOMODESLIST pModes, PVOID *ppVSData)
   pMode = debugMAlloc( sizeof(VIDEOMODE) * cModes );
   if ( pMode == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     DiveClose( pDIVEData->hDive );
     debugFree( pDIVEData );
     return FALSE;
@@ -300,8 +300,9 @@ static VOID vsSetVisibleRegion(PVOID pVSData, HWND hwnd, PGROPSETMODE pUserMode,
       rgnCtl.ulDirection  = 1;
       GpiQueryRegionRects( hps, hrgn, NULL, &rgnCtl, prectl );
     }
-    else
-      debug( "Not enough memory" );
+    else {
+      debugNoMem();
+    }
   }
   GpiDestroyRegion( hps, hrgn );
   WinReleasePS( hps );

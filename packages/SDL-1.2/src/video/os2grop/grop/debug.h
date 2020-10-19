@@ -65,6 +65,14 @@
 
 #endif /* DEBUG_FILE */
 
+#ifdef BUILD_SDL
+#include <SDL_error.h>
+#define debugNoMem() SDL_OutOfMemory (); \
+                     debug("Not enough memory")
+#else
+#define debugNoMem() debug("Not enough memory")
+#endif
+
 #ifdef __OS2__
 #define DBGLIBENTRY _System
 #else

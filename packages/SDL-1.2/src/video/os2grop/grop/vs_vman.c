@@ -263,7 +263,7 @@ static BOOL vsInitCompatible(PVIDEOMODESLIST pModes, PVOID *ppVSData)
   pVMANData = debugCAlloc( 1, sizeof(VMANDATA) );
   if ( pVMANData == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     return FALSE;
   }
   *ppVSData = pVMANData;
@@ -288,7 +288,7 @@ static BOOL vsInitCompatible(PVIDEOMODESLIST pModes, PVOID *ppVSData)
     pModes->pList = debugMAlloc( sizeof(VIDEOMODE) );
     if ( pModes->pList == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       break;
     }
 
@@ -334,7 +334,7 @@ static BOOL vsInit(PVIDEOMODESLIST pModes, PVOID *ppVSData)
   pVMANData = debugCAlloc( 1, sizeof(VMANDATA) );
   if ( pVMANData == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     return FALSE;
   }
   *ppVSData = pVMANData;
@@ -368,7 +368,7 @@ static BOOL vsInit(PVIDEOMODESLIST pModes, PVOID *ppVSData)
     pGDDModeInfList = debugMAlloc( sizeof(GDDMODEINFO) * pModes->ulCount );
     if ( pGDDModeInfList == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       break;
     }
 
@@ -385,7 +385,7 @@ static BOOL vsInit(PVIDEOMODESLIST pModes, PVOID *ppVSData)
     pModes->pList = debugMAlloc( sizeof(VIDEOMODE) * pModes->ulCount );
     if ( pModes->pList == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       break;
     }
 
@@ -712,7 +712,7 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
     prectlDst = debugMAlloc( cRect * sizeof(RECTL) );
     if ( prectlDst == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       return FALSE;
     }
     prectlScan = prectlDst;
@@ -748,7 +748,7 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
     prectl = debugReAlloc( prectlDst, rgnCtl.crcReturned * sizeof(RECTL) );
     if ( prectl == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       GpiDestroyRegion( hps, hrgnUpdate );
       debugFree( prectlDst );
       WinReleasePS( hps );
@@ -769,7 +769,7 @@ static BOOL vsUpdate(PVOID pVSData, PGROPDATA pGrop, ULONG cRect,
     pbrDst = debugMAlloc( cRect * sizeof(BLTRECT) );
     if ( pbrDst == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       debugFree( prectlDst );
       return FALSE;
     }

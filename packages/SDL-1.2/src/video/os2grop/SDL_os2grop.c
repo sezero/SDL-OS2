@@ -435,7 +435,7 @@ static int os2_VideoInit(SDL_VideoDevice *pDevice,
   pPVData->paBPPSize = debugMAlloc( sizeof(BPPSIZE) * pGrop->stModes.ulCount );
   if ( pPVData->paBPPSize == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     gropFree( pGrop );
     pPVData->pGrop = NULL;
     return -1;
@@ -484,7 +484,7 @@ static int os2_VideoInit(SDL_VideoDevice *pDevice,
     pBPPSizeList = debugMAlloc( sizeof(BPPSIZELIST) * cModes );
     if ( pBPPSizeList == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       break;
     }
     pBPPSizeList->ulBPP = ulBPP;
@@ -684,7 +684,7 @@ static void os2_UpdateRects(SDL_VideoDevice *pDevice, int cRects,
                                sizeof(RECTL) * cRects );
     if ( prectlList == NULL )
     {
-      debug( "Not enough memory" );
+      debugNoMem();
       return;
     }
     pPVData->crectlReserved = cRects;
@@ -756,7 +756,7 @@ static int os2_SetColors(SDL_VideoDevice *pDevice, int iFirst, int iCount,
 
   if ( pRGB2Colors == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     return 0;
   }
 
@@ -871,7 +871,7 @@ static void os2_SetIcon(SDL_VideoDevice *pDevice, SDL_Surface *pSDLSurfaceIcon,
   pulBitmap = debugMAlloc( 2 * ( sSDLRect.h * sSDLRect.w * 4 ) );
   if ( pulBitmap == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     SDL_FreeSurface( SDLSurfIcon );
     return;
   }
@@ -1020,7 +1020,7 @@ static WMcursor *os2_CreateWMCursor(SDL_VideoDevice *pDevice,
   pcImage = debugMAlloc( ulMaxXBRnd * ulMaxY * 2 );
   if ( pcImage == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     return NULL;
   }
 
@@ -1201,7 +1201,7 @@ static SDL_VideoDevice *os2_CreateDevice(int devindex)
   pDevice = SDL_calloc( 1, sizeof(SDL_VideoDevice) );
   if ( pDevice == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     return NULL;
   }
 
@@ -1237,7 +1237,7 @@ static SDL_VideoDevice *os2_CreateDevice(int devindex)
   pPVData = SDL_calloc( 1, sizeof(struct SDL_PrivateVideoData) );
   if ( pPVData == NULL )
   {
-    debug( "Not enough memory" );
+    debugNoMem();
     SDL_free( pDevice );
     return NULL;
   }

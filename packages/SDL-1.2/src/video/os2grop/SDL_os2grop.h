@@ -4,9 +4,11 @@
 #include <SDL_config.h>
 #include <SDL_video.h>
 #include <grop.h>
+
+#define _ULS_CALLCONV_
 #define CALLCONV _System
-#include <unidef.h>             /* Unicode API */
-#include <uconv.h>              /* Unicode API (codepage conversion) */
+#include <unidef.h> /* Unicode API */
+#include <uconv.h>  /* Unicode API (codepage conversion) */
 
 /* Private display data */
 typedef struct SDL_PrivateVideoData SDL_PrivateVideoData;

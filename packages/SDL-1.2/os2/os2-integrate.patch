@@ -97,48 +97,6 @@ diff -up a/src/SDL.c b/src/SDL.c
      return 1;
    }
  }
-diff -u a/src/timer/os2/SDL_systimer.c b/src/timer/os2/SDL_systimer.c
---- a/src/timer/os2/SDL_systimer.c
-+++ b/src/timer/os2/SDL_systimer.c
-@@ -53,16 +53,17 @@
- DECLSPEC Uint32 SDLCALL SDL_GetTicks(void)
- {
-         long long hires_now;
--        ULONG ticks = ticks;
-+        /*ULONG ticks = ticks;*/
- 
-         DosTmrQueryTime((PQWORD)&hires_now);
--/*
--        hires_now -= hires_start_ticks;
--        hires_now *= 1000;
--        hires_now /= hires_ticks_per_second;
--*/
-+#if 1
-+        return ( hires_now - hires_start_ticks ) * 1000 / hires_ticks_per_second;
-+#else
-         /* inline asm to avoid runtime inclusion */
-         _asm {
-+           push ecx
-+           push ebx
-+
-            push edx
-            push eax
-            mov eax, dword ptr hires_now
-@@ -84,10 +85,13 @@
-            mov dword ptr ticks, eax
-            pop edx
-            pop eax
-+
-+           pop ebx
-+           pop ecx
-         }
- 
-         return ticks;
--
-+#endif
- }
- 
- /* High resolution sleep, originally made by Ilya Zakharevich */
 diff -u a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
 --- a/src/video/SDL_sysvideo.h
 +++ b/src/video/SDL_sysvideo.h

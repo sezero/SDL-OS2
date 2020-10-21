@@ -16,7 +16,7 @@ VERSION = 1.2.16
 INCPATH =-Iinclude -Isrc/video/os2grop -Isrc/video/os2grop/grop
 LIBHOME = os2
 
-INCPATH=-I$(%WATCOM)/h/os2 -I$(%WATCOM)/h $(INCPATH) -Ios2/h
+INCPATH=-I$(%WATCOM)/h/os2 -I$(%WATCOM)/h $(INCPATH)
 LIBPATH=$(LIBHOME)/lib
 DLLPATH=$(LIBHOME)/dll
 LIBNAME=$(DLLNAME)
@@ -53,7 +53,6 @@ DESCRIPTION += DEBUG
 !endif
 
 PMGRE_LIB = $(LIBPATH)/pmgre.lib
-PMGRE_DEF = $(LIBPATH)/pmgre.def
 PMGRE_EXP = $(LIBPATH)/pmgre.exp
 
 audioobjs = SDL_audiocvt.obj SDL_mixer.obj SDL_mixer_MMX_VC.obj SDL_wave.obj &
@@ -95,7 +94,7 @@ object_files= SDL.obj SDL_error.obj SDL_fatal.obj &
 
 .asm: src/hermes
 .c: src;src/audio;src/cdrom;src/cdrom/os2;src/cpuinfo;src/events;src/file;src/joystick;src/joystick/os2;src/loadso/os2;src/stdlib;src/thread;src/thread/os2;src/timer;src/timer/os2;src/video;src/video/os2grop;src/video/os2grop/grop
-#;src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy;src/video/os2fslib
+#.c: src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy;src/video/os2fslib
 
 .c.obj:
 	wcc386 $(CFLAGS) -fo=$^@ $<
@@ -119,11 +118,8 @@ compiling_info : .symbolic
 	@echo * Compiling...
 
 $(PMGRE_LIB): $(PMGRE_EXP)
-	wlib -q -b -n -c -pa -s -t -zld -ii -io $(PMGRE_LIB) @$(PMGRE_EXP)
-
-$(PMGRE_EXP): $(PMGRE_DEF) $(LIBPATH)/def2lbc.sed
 	@echo * Creating PMGRE import library
-	sed -f $(LIBPATH)/def2lbc.sed $(PMGRE_DEF) > $(PMGRE_EXP)
+	wlib -q -b -n -c -pa -s -t -zld -ii -io $(PMGRE_LIB) @$(PMGRE_EXP)
 
 $(LNKFILE):
 	@echo * Creating linker file: $@
@@ -147,13 +143,11 @@ $(LNKFILE):
 	@%append $@ OPTION SHOWDEAD
 
 clean: .SYMBOLIC
-	@ echo * Clean: $(LIBNAME) $(VERSION)
+	@echo * Clean: $(LIBNAME) $(VERSION)
 	@if exist *.obj rm *.obj
 	@if exist *.map rm *.map
 	@if exist *.exp rm *.exp
 	@if exist $(LNKFILE) rm $(LNKFILE)
-	@if exist $(LIBPATH)/pmgre.exp rm $(PMGRE_EXP)
-	@if exist $(LIBPATH)/pmgre.lib rm $(PMGRE_LIB)
 
 distclean: clean .SYMBOLIC
 	@if exist $(DLLFILE) rm $(DLLFILE)

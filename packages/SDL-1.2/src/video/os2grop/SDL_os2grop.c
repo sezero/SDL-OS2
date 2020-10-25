@@ -988,8 +988,8 @@ static WMcursor *os2_CreateWMCursor(SDL_VideoDevice *pDevice,
   BITMAPINFOHEADER     bmih = { 0 };
   BITMAPINFO           bmi;
   HPS                  hps;
-  PCHAR                pcImage;
-  PCHAR                pcPixels;
+  PBYTE                pcImage;
+  PBYTE                pcPixels;
   ULONG                ulMaxX = WinQuerySysValue( HWND_DESKTOP, SV_CXPOINTER );
   ULONG                ulMaxY = WinQuerySysValue( HWND_DESKTOP, SV_CYPOINTER );
   ULONG                ulMaxXBRnd, ulBRnd, ulPad;

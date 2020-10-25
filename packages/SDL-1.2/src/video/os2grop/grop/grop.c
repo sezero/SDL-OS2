@@ -51,6 +51,18 @@ static PVIDEOSYS       aVideoSys[] =
 
 #define _GROP_SET_FS_PANIC_OFF   100
 
+struct _GQUPDATE {
+  ULONG            cRect;
+  PRECTL           prectl;
+  ULONG           _pad;
+};
+
+struct _GQSETPAL {
+  ULONG            ulFirst;
+  ULONG            ulNumber;
+  PRGB2            pColors;
+};
+
 typedef struct _GROPQUERY {
   ULONG      ulQuery;                      // QUERY_SET_xxxxx
   HEV        hevReady;
@@ -63,15 +75,8 @@ typedef struct _GROPQUERY {
     HPOINTER           hptrPointer;        // QUERY_SET_POINTER, QUERY_SET_ICON
     BOOL               fCapture;           // QUERY_SET_CAPTURE
     POINTL             pointlPos;          // QUERY_MOUSEMOVE
-    struct _GQUPDATE {                     // QUERY_UPDATE
-      ULONG            cRect;
-      PRECTL           prectl;
-    } GQUPDATE;
-    struct _GQSETPAL {                     // QUERY_SET_PALETTER
-      ULONG            ulFirst;
-      ULONG            ulNumber;
-      PRGB2            pColors;
-    } GQSETPAL;
+    struct _GQUPDATE   GQUPDATE;           // QUERY_UPDATE
+    struct _GQSETPAL   GQSETPAL;           // QUERY_SET_PALETTER
     PSZ                pszText;            // WM_GROP_SET_TITLE
   };
 } GROPQUERY, *PGROPQUERY;

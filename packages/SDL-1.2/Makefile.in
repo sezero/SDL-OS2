@@ -41,7 +41,8 @@ SDLMAIN_SOURCES = @SDLMAIN_SOURCES@
 SDLMAIN_OBJECTS = @SDLMAIN_OBJECTS@
 SDLMAIN_LDFLAGS = @SDLMAIN_LDFLAGS@
 
-DIST = acinclude autogen.sh Borland.html Borland.zip BUGS build-scripts configure configure.in COPYING CREDITS CWprojects.sea.bin docs docs.html include INSTALL Makefile.dc Makefile.minimal Makefile.in MPWmake.sea.bin README* sdl-config.in sdl.m4 sdl.pc.in SDL.qpg.in SDL.spec SDL.spec.in src test TODO VisualCE VisualC.html VisualC Watcom-OS2.zip Watcom-Win32.zip symbian.zip WhatsNew Xcode
+SRC_DIST = acinclude autogen.sh BUGS build-scripts configure configure.ac COPYING CREDITS CWprojects.sea.bin docs docs.html include INSTALL Makefile.dc Makefile.minimal Makefile.in MPWmake.sea.bin README* sdl-config.in sdl.m4 sdl.pc.in SDL.qpg.in SDL.spec.in src test TODO VisualCE VisualC.html VisualC os2 Makefile.os2 Watcom-Win32.zip symbian.zip WhatsNew Xcode
+GEN_DIST = SDL.spec
 
 HDRS = SDL.h SDL_active.h SDL_audio.h SDL_byteorder.h SDL_cdrom.h SDL_cpuinfo.h SDL_endian.h SDL_error.h SDL_events.h SDL_getenv.h SDL_joystick.h SDL_keyboard.h SDL_keysym.h SDL_loadso.h SDL_main.h SDL_mouse.h SDL_mutex.h SDL_name.h SDL_opengl.h SDL_platform.h SDL_quit.h SDL_rwops.h SDL_stdinc.h SDL_syswm.h SDL_thread.h SDL_timer.h SDL_types.h SDL_version.h SDL_video.h begin_code.h close_code.h
 
@@ -53,7 +54,7 @@ LT_LDFLAGS  = -no-undefined -rpath $(libdir) -release $(LT_RELEASE) -version-inf
 
 all: $(srcdir)/configure Makefile $(objects) $(objects)/$(TARGET) $(objects)/$(SDLMAIN_TARGET)
 
-$(srcdir)/configure: $(srcdir)/configure.in
+$(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "Warning, configure is out of date, please re-run autogen.sh"
 
 Makefile: $(srcdir)/Makefile.in
@@ -146,9 +147,9 @@ distclean: clean
 
 dist $(distfile):
 	$(SHELL) $(auxdir)/mkinstalldirs $(distdir)
-	tar cf - $(DIST) | (cd $(distdir); tar xf -)
+	(cd $(srcdir); tar cf - $(SRC_DIST)) | (cd $(distdir); tar xf -)
+	tar cf - $(GEN_DIST) | (cd $(distdir); tar xf -)
 	cp $(distdir)/include/SDL_config.h.default $(distdir)/include/SDL_config.h
-	rm -rf `find $(distdir) -name .svn`
 	rm -rf $(distdir)/test/autom4te*
 	find $(distdir) \( \
 	    -name '*~' -o \
@@ -165,9 +166,9 @@ dist $(distfile):
 rpm: $(distfile)
 	rpmbuild -ta $?
 
-# Create a SVN snapshot that people can run update on
+# Create a Git snapshot that people can run update on
 snapshot:
-	svn co http://svn.libsdl.org/branches/SDL-1.2
+	git clone https://github.com/libsdl-org/SDL-1.2.git
 	(cd SDL-1.2 && ./autogen.sh && rm -rf autom4te.cache)
 	cp SDL-1.2/include/SDL_config.h.default SDL-1.2/include/SDL_config.h
 	tar zcf $(HOME)/SDL-1.2.tar.gz SDL-1.2

@@ -1,11 +1,4 @@
-#=============================================================================
-#  This is an OpenWatcom makefile to build alternative version SDL for OS/2
-#
-#  * A new VMAN and DIVE support
-#  * A new DART support
-#
-# Digi 2014.
-#=============================================================================
+#  OpenWatcom makefile to build SDL for OS/2
 
 !ifndef %WATCOM
 !error Environment variable WATCOM is not specified!
@@ -13,16 +6,15 @@
 
 DLLNAME = SDL12
 VERSION = 1.2.16
-INCPATH =-Iinclude -Isrc/video/os2grop -Isrc/video/os2grop/grop
 LIBHOME = os2
 
-INCPATH=-I$(%WATCOM)/h/os2 -I$(%WATCOM)/h $(INCPATH)
+INCPATH = -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h
+INCPATH+= -Iinclude -I"os2/h"
 LIBPATH=$(LIBHOME)/lib
-DLLPATH=$(LIBHOME)/dll
 LIBNAME=$(DLLNAME)
 
-LIBFILE=$(LIBPATH)/$(LIBNAME).lib
-DLLFILE=$(DLLPATH)/$(LIBNAME).dll
+DLLFILE = $(LIBHOME)/$(LIBNAME).dll
+LIBFILE = $(LIBHOME)/$(LIBNAME).lib
 LNKFILE=$(LIBNAME).lnk
 
 CFLAGS_DEF=-bt=os2 -d0 -zq -bm -5s -fp5 -fpi87 -sg -oteanbmier $(INCPATH)
@@ -44,16 +36,15 @@ CFLAGS+= -DSDL_HERMES_BLITTERS=1
 # USE_ASM_MIXER_VC has no effect since SDL-1.2.10.
 #CFLAGS+= -DUSE_ASM_MIXER_VC
 
-DESCRIPTION = Simple DirectMedia Layer 1.2 (alternative os/2 port)
+DESCRIPTION = Simple DirectMedia Layer 1.2
 
 !ifeq DEBUG 1
 CFLAGS += -d2 -DDEBUG_BUILD
-CFLAGS += -DDEBUG_FILE=\"SDL.dbg\"
 DESCRIPTION += DEBUG
 !endif
 
 PMGRE_LIB = $(LIBPATH)/pmgre.lib
-PMGRE_EXP = $(LIBPATH)/pmgre.exp
+PMGRE_EXP = os2/pmgre/pmgre.exp
 
 audioobjs = SDL_audiocvt.obj SDL_mixer.obj SDL_mixer_MMX_VC.obj SDL_wave.obj &
             SDL_audio_os2.obj
@@ -73,9 +64,9 @@ videoobjs = SDL_blit.obj SDL_blit_0.obj SDL_blit_1.obj SDL_blit_A.obj &
             SDL_blit_N.obj SDL_bmp.obj SDL_cursor.obj SDL_gamma.obj &
             SDL_pixels.obj SDL_RLEaccel.obj SDL_stretch.obj SDL_surface.obj &
             SDL_video.obj SDL_yuv.obj SDL_yuv_mmx.obj SDL_yuv_sw.obj &
-            SDL_os2grop.obj os2ini.obj debug.obj grop.obj vs_dive.obj &
-            vs_vman.obj
-# SDL_nullevents.obj SDL_nullmouse.obj SDL_nullvideo.obj SDL_os2fslib.obj
+            SDL_os2grop.obj SDL_os2dive.obj SDL_os2vman.obj SDL_grop.obj &
+            SDL_os2fslib.obj &
+            SDL_nullevents.obj SDL_nullmouse.obj SDL_nullvideo.obj
 
 stdlibobjs = SDL_malloc.obj SDL_qsort.obj SDL_string.obj
 # SDL_iconv.obj
@@ -93,8 +84,8 @@ object_files= SDL.obj SDL_error.obj SDL_fatal.obj &
 .extensions: .lib .dll .obj .c .asm
 
 .asm: src/hermes
-.c: src;src/audio;src/cdrom;src/cdrom/os2;src/cpuinfo;src/events;src/file;src/joystick;src/joystick/os2;src/loadso/os2;src/stdlib;src/thread;src/thread/os2;src/timer;src/timer/os2;src/video;src/video/os2grop;src/video/os2grop/grop
-#.c: src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy;src/video/os2fslib
+.c: src;src/audio;src/cdrom;src/cdrom/os2;src/cpuinfo;src/events;src/file;src/joystick;src/joystick/os2;src/loadso/os2;src/stdlib;src/thread;src/thread/os2;src/timer;src/timer/os2;src/video
+.c: src/audio/dummy;src/audio/disk;src/audio/dart;src/video/dummy;src/video/os2fslib;src/video/os2grop
 
 .c.obj:
 	wcc386 $(CFLAGS) -fo=$^@ $<
@@ -125,10 +116,10 @@ $(LNKFILE):
 	@echo * Creating linker file: $@
 	@%create $@
 	@%append $@ SYSTEM os2v2_dll INITINSTANCE TERMINSTANCE
-	@%append $@ NAME $(DLLPATH)/$(LIBNAME)
+	@%append $@ NAME $(DLLFILE)
 	@for %i in ($(object_files)) do @%append $@ FILE %i
 	@%append $@ LIBPATH $(LIBPATH)
-	@%append $@ LIB os2386.lib
+	@%append $@ LIB FSLib.lib
 	@%append $@ LIB pmgre.lib
 	@%append $@ LIB mmpm2.lib
 	@%append $@ LIB libuls.lib

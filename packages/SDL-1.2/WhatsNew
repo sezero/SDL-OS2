@@ -52,6 +52,7 @@ Changes include:
 - X11video: fix SDL_VIDEORESIZE events not received when resizing
   window from the corner (inverted logic in X11 ConfigureNotify, i.e.
   resize handling - bug 1430.)
+- X11video: properly handle input focus events (bug 5426.)
 - X11video: unblock SDL_WM_GrabInput() GrabNotViewable case (bug 1155.)
 - Mac OS X: fix macOS 10.14 (Mojave) opengl issues (bug 4788.)
 - Mac OS X: fix crash on any input in Quartz code (bug 2560.)
@@ -69,9 +70,12 @@ Changes include:
 - Windows: Visual Studio project file updates.
 - OS/2: fixes and Watcom makefile updates.
 - Linux, joystick: fix invalid coef when axis min > axis max.
+- Linux, joystick: remove deadzone and output axis values in correct
+  range (bug 5241.)
 - Linux, joystick: enhance detection of gamepads.
 - Linux, joystick: allow for custom joystick names.
 - FreeBSD, joystick: compile fixes.
+- BSD, joystick: fix USB joystick input for FreeBSD 9.0+ (bug 1552)
 - BSD, joystick: increase the number of uhid devices to scan (bug 1561)
 - Linux, ALSA: fix excessive I/O causing high CPU usage (bug 4941.)
 - Linux, evdev: ignore joystick axis events if they aren't in a sane

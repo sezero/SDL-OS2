@@ -1,4 +1,19 @@
-diff -u a/include/SDL_config_os2.h b/include/SDL_config_os2.h
+diff --git a/Makefile.os2 b/Makefile.os2
+index 59e4502..eddef31 100644
+--- a/Makefile.os2
++++ b/Makefile.os2
+@@ -47,7 +47,8 @@ PMGRE_LIB = $(LIBPATH)/pmgre.lib
+ PMGRE_EXP = os2/pmgre/pmgre.exp
+ 
+ audioobjs = SDL_audiocvt.obj SDL_mixer.obj SDL_mixer_MMX_VC.obj SDL_wave.obj &
+-            SDL_audio.obj SDL_dummyaudio.obj SDL_diskaudio.obj SDL_dart.obj
++            SDL_audio_os2.obj
++# SDL_audio.obj SDL_dummyaudio.obj SDL_diskaudio.obj SDL_dart.obj
+ 
+ cdromobjs = SDL_cdrom.obj SDL_syscdrom.obj
+ cpuinfoobjs = SDL_cpuinfo.obj
+diff --git a/include/SDL_config_os2.h b/include/SDL_config_os2.h
+index 56eb787..47b250c 100644
 --- a/include/SDL_config_os2.h
 +++ b/include/SDL_config_os2.h
 @@ -98,9 +98,12 @@
@@ -14,32 +29,21 @@ diff -u a/include/SDL_config_os2.h b/include/SDL_config_os2.h
  
  /* Enable various cdrom drivers */
  #define SDL_CDROM_OS2	1
-@@ -118,8 +121,11 @@
- #define SDL_TIMER_OS2	1
- 
- /* Enable various video drivers */
-+/*
- #define SDL_VIDEO_DRIVER_DUMMY	1
- #define SDL_VIDEO_DRIVER_OS2FS	1
-+*/
-+#define SDL_VIDEO_DRIVER_OS2GROP	1
- 
- /* Enable OpenGL support */
- /* #undef SDL_VIDEO_OPENGL */				/* Nothing yet */
-diff -up a/src/audio/SDL_mixer.c b/src/audio/SDL_mixer.c
+diff --git a/src/audio/SDL_mixer.c b/src/audio/SDL_mixer.c
+index b5d4d8b..3e3cd83 100644
 --- a/src/audio/SDL_mixer.c
 +++ b/src/audio/SDL_mixer.c
-@@ -98,6 +98,9 @@ void SDL_MixAudio (Uint8 *dst, const Uin
+@@ -98,6 +98,9 @@ void SDL_MixAudio (Uint8 *dst, const Uint8 *src, Uint32 len, int volume)
  		return;
  	}
  	/* Mix the user-level audio format */
 +#if SDL_AUDIO_DRIVER_DARTALT
-+	format = uiAudioFormat;
++	format = SDL_AudioFmt;
 +#else
  	if ( current_audio ) {
  		if ( current_audio->convert.needed ) {
  			format = current_audio->convert.src_format;
-@@ -108,6 +111,7 @@ void SDL_MixAudio (Uint8 *dst, const Uin
+@@ -108,6 +111,7 @@ void SDL_MixAudio (Uint8 *dst, const Uint8 *src, Uint32 len, int volume)
    		/* HACK HACK HACK */
  		format = AUDIO_S16;
  	}
@@ -47,79 +51,19 @@ diff -up a/src/audio/SDL_mixer.c b/src/audio/SDL_mixer.c
  	switch (format) {
  
  		case AUDIO_U8: {
-diff -u a/src/audio/SDL_sysaudio.h b/src/audio/SDL_sysaudio.h
+diff --git a/src/audio/SDL_sysaudio.h b/src/audio/SDL_sysaudio.h
+index fa29a2b..6d9b9ea 100644
 --- a/src/audio/SDL_sysaudio.h
 +++ b/src/audio/SDL_sysaudio.h
-@@ -183,7 +183,11 @@
+@@ -183,7 +183,11 @@ extern AudioBootStrap DART_bootstrap;
  extern AudioBootStrap EPOCAudio_bootstrap; 
  #endif
  
 +#if SDL_AUDIO_DRIVER_DARTALT
-+extern Uint16 uiAudioFormat;
++extern Uint16 SDL_AudioFmt;
 +#else
  /* This is the current audio device */
  extern SDL_AudioDevice *current_audio;
 +#endif
  
  #endif /* _SDL_sysaudio_h */
-diff -up a/src/SDL.c b/src/SDL.c
---- a/src/SDL.c
-+++ b/src/SDL.c
-@@ -261,6 +261,8 @@ const SDL_version * SDL_Linked_Version(v
- #define INCL_DOSERRORS
- #define INCL_DOSEXCEPTIONS
- #include <os2.h>
-+#include "debug.h"
-+#include "os2ini.h"
- 
- /* Exception handler to prevent the Audio thread hanging, making a zombie process! */
- ULONG _System SDL_Main_ExceptionHandler(PEXCEPTIONREPORTRECORD pERepRec,
-@@ -304,10 +306,13 @@ unsigned _System LibMain(unsigned hmod, 
- #ifdef DEBUG_BUILD
- /*    printf("[SDL DLL Unintialization] : Removing exception handler\n"); */
- #endif
-+    os2iniClose();
-     DosUnsetExceptionHandler(&SDL_Main_xcpthand);
-+    debugDone();
-     return 1;
-   } else
-   {
-+    debugInit();
- #ifdef DEBUG_BUILD
-     /* Make stdout and stderr unbuffered! */
-     setbuf(stdout, NULL);
-@@ -319,7 +324,7 @@ unsigned _System LibMain(unsigned hmod, 
- #endif
-     /* Set exception handler */
-     DosSetExceptionHandler(&SDL_Main_xcpthand);
--
-+    os2iniOpen();
-     return 1;
-   }
- }
-diff -u a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
---- a/src/video/SDL_sysvideo.h
-+++ b/src/video/SDL_sysvideo.h
-@@ -401,6 +401,9 @@
- #if SDL_VIDEO_DRIVER_RISCOS
- extern VideoBootStrap RISCOS_bootstrap;
- #endif
-+#if SDL_VIDEO_DRIVER_OS2GROP
-+extern VideoBootStrap OS2GROP_bootstrap;
-+#endif
- #if SDL_VIDEO_DRIVER_OS2FS
- extern VideoBootStrap OS2FSLib_bootstrap;
- #endif
-diff -up a/src/video/SDL_video.c b/src/video/SDL_video.c
---- a/src/video/SDL_video.c
-+++ b/src/video/SDL_video.c
-@@ -120,6 +120,9 @@ static VideoBootStrap *bootstrap[] = {
- #if SDL_VIDEO_DRIVER_OS2FS
- 	&OS2FSLib_bootstrap,
- #endif
-+#if SDL_VIDEO_DRIVER_OS2GROP
-+	&OS2GROP_bootstrap,
-+#endif
- #if SDL_VIDEO_DRIVER_AALIB
- 	&AALIB_bootstrap,
- #endif

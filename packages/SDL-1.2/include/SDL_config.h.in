@@ -76,6 +76,7 @@
 #undef HAVE_ICONV_H
 #undef HAVE_SIGNAL_H
 #undef HAVE_ALTIVEC_H
+#undef HAVE_SYS_IO_H
 
 /* C library functions */
 #undef HAVE_MALLOC
@@ -140,6 +141,8 @@
 #undef HAVE_GETPAGESIZE
 #undef HAVE_MPROTECT
 #undef HAVE_SEM_TIMEDWAIT
+#undef HAVE_GETAUXVAL
+#undef HAVE_ELF_AUX_INFO
 
 #else
 /* We may need some replacement for stdarg.h here */
@@ -220,7 +223,7 @@
 #undef SDL_JOYSTICK_RISCOS
 #undef SDL_JOYSTICK_WINMM
 #undef SDL_JOYSTICK_USBHID
-#undef SDL_JOYSTICK_USBHID_MACHINE_JOYSTICK_H
+#undef SDL_HAVE_MACHINE_JOYSTICK_H
 
 /* Enable various shared object loading systems */
 #undef SDL_LOADSO_BEOS
@@ -271,6 +274,7 @@
 #undef SDL_VIDEO_DRIVER_GGI
 #undef SDL_VIDEO_DRIVER_IPOD
 #undef SDL_VIDEO_DRIVER_NANOX
+#undef SDL_VIDEO_DRIVER_OS2GROP
 #undef SDL_VIDEO_DRIVER_OS2FS
 #undef SDL_VIDEO_DRIVER_PHOTON
 #undef SDL_VIDEO_DRIVER_PICOGUI

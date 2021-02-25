@@ -117,11 +117,11 @@ static VideoBootStrap *bootstrap[] = {
 #if SDL_VIDEO_DRIVER_RISCOS
 	&RISCOS_bootstrap,
 #endif
-#if SDL_VIDEO_DRIVER_OS2FS
-	&OS2FSLib_bootstrap,
-#endif
 #if SDL_VIDEO_DRIVER_OS2GROP
 	&OS2GROP_bootstrap,
+#endif
+#if SDL_VIDEO_DRIVER_OS2FS
+	&OS2FSLib_bootstrap,
 #endif
 #if SDL_VIDEO_DRIVER_AALIB
 	&AALIB_bootstrap,
@@ -181,6 +181,18 @@ int SDL_VideoInit (const char *driver_name, Uint32 flags)
 #if 0	/* This will be replaced with a better driver selection API */
 		if ( SDL_strrchr(driver_name, ':') != NULL ) {
 			index = atoi(SDL_strrchr(driver_name, ':')+1);
+		}
+#endif
+#if SDL_VIDEO_DRIVER_OS2GROP
+		if ( SDL_strcasecmp(driver_name,"DIVE") == 0 ||
+		     SDL_strcasecmp(driver_name,"VMAN") == 0 ||
+		     SDL_strcasecmp(driver_name,"VMANFS") == 0 ) {
+		    driver_name = "OS2";
+		}
+#endif
+#if SDL_VIDEO_DRIVER_OS2FS
+		if ( SDL_strcasecmp(driver_name,"FSLIB") == 0 ) {
+		    driver_name = "os2fslib";
 		}
 #endif
 		for ( i=0; bootstrap[i]; ++i ) {
@@ -576,7 +588,7 @@ static void SDL_CreateShadowSurface(int depth)
     #include <sys/neutrino.h>
 #endif /* __QNXNTO__ */
 
-#ifdef WIN32
+#ifdef _WIN32
 	extern int sysevents_mouse_pressed;
 #endif
 
@@ -593,7 +605,7 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 	int is_opengl;
 	SDL_GrabMode saved_grab;
 
-	#ifdef WIN32
+	#if defined(_WIN32) && !defined(SDL_VIDEO_DISABLED)
 		sysevents_mouse_pressed = 0;
 	#endif
 
@@ -820,9 +832,9 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 		   ) {
 			video->is_32bit = 0;
 			SDL_VideoSurface = SDL_CreateRGBSurface(
-				flags, 
-				width, 
-				height,  
+				flags,
+				width,
+				height,
 				16,
 				31 << 11,
 				63 << 5,
@@ -835,10 +847,10 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 		{
 			video->is_32bit = 1;
 			SDL_VideoSurface = SDL_CreateRGBSurface(
-				flags, 
-				width, 
-				height, 
-				32, 
+				flags,
+				width,
+				height,
+				32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 				0x000000FF,
 				0x0000FF00,
@@ -1644,7 +1656,7 @@ void SDL_GL_Lock()
 		this->glDisable(GL_FOG);
 		this->glDisable(GL_ALPHA_TEST);
 		this->glDisable(GL_DEPTH_TEST);
-		this->glDisable(GL_SCISSOR_TEST);	
+		this->glDisable(GL_SCISSOR_TEST);
 		this->glDisable(GL_STENCIL_TEST);
 		this->glDisable(GL_CULL_FACE);
 

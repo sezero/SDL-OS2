@@ -99,7 +99,7 @@ void SDL_MixAudio (Uint8 *dst, const Uint8 *src, Uint32 len, int volume)
 	}
 	/* Mix the user-level audio format */
 #if SDL_AUDIO_DRIVER_DARTALT
-	format = uiAudioFormat;
+	format = SDL_AudioFmt;
 #else
 	if ( current_audio ) {
 		if ( current_audio->convert.needed ) {

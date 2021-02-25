@@ -17,7 +17,7 @@ CFLAGS_DEF = $(INCPATH) -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier
 CFLAGS_EXE = $(CFLAGS_DEF)
 CFLAGS = $(CFLAGS_EXE) -ei -5s
 
-LIBPATH = ../os2/lib
+LIBPATH = ../os2
 LIBS = SDL12.lib
 
 .obj.exe:

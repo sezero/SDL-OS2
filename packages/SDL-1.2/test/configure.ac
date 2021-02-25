@@ -1,21 +1,20 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(README)
+AC_INIT
+AC_CONFIG_SRCDIR([loopwave.c])
 
 dnl Detect the canonical build and host environments
 AC_CONFIG_AUX_DIRS($srcdir/../build-scripts)
 AC_CANONICAL_HOST
 
 dnl Check for tools
-
 AC_PROG_CC
 
 dnl Check for compiler environment
-
 AC_C_CONST
 
 dnl Figure out which math library to use
 case "$host" in
-    *-*-cygwin* | *-*-mingw32*)
+    *-*-cygwin* | *-*-mingw*)
         EXE=".exe"
         MATHLIB=""
         SYS_GL_LIBS="-lopengl32"
@@ -32,7 +31,7 @@ case "$host" in
         ;;
     *-*-aix*)
         EXE=""
-        if test x$ac_cv_prog_gcc = xyes; then
+        if test x$ac_cv_c_compiler_gnu = xyes; then
             CFLAGS="-mthreads"
         fi
         SYS_GL_LIBS=""
@@ -49,12 +48,12 @@ case "$host" in
         else
             SYS_GL_LIBS="-lOSMesa"
         fi
-		;;
-    *-*-riscos*)
-	EXE=",e1f"
-	MATHLIB=""
-	SYS_GL_LIBS=""
-	;;
+        ;;
+    *-*-riscos* )
+        EXE=",e1f"
+        MATHLIB=""
+        SYS_GL_LIBS=""
+        ;;
     *)
         EXE=""
         MATHLIB="-lm"
@@ -107,4 +106,5 @@ fi
 AC_SUBST(GLLIB)
 
 dnl Finally create all the generated files
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

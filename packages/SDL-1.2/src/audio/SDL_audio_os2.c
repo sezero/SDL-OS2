@@ -19,8 +19,7 @@
 
 #define AUDIO_NUM_SOUND_BUFFERS	4
 
-/* uiAudioFormat - input audio format (for application) */
-Uint16				uiAudioFormat = AUDIO_S16;
+Uint16 SDL_AudioFmt = AUDIO_S16; /* global for SDL_mixer.c. */
 
 static HMTX			hmtxLock = NULLHANDLE;
 static BOOL			fPause = FALSE;
@@ -60,10 +59,21 @@ static BYTE			bSilence = 0; /* silence value for real HW mode */
 
 #endif /* DEBUG_BUILD */
 
-int os2iniGetBool(char *pszSwitch, int iDefault);
-void os2iniOpen(void);
 static LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG ulFlags);
 
+
+static ULONG _getEnvULong(const char *name, ULONG ulMax, ULONG ulDefault)
+{
+    ULONG   ulValue;
+    char*   end;
+    char*   envval = SDL_getenv(name);
+
+    if (envval == NULL)
+        return ulDefault;
+
+    ulValue = SDL_strtoul(envval, &end, 10);
+    return (end == envval) || (ulValue > ulMax)? ulDefault : ulMax;
+}
 
 static VOID _MCIError(PCSZ pszFunc, ULONG ulResult)
 {
@@ -151,7 +161,7 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     ULONG ulBPS;
     ULONG ulIdx;
     MCI_AMP_OPEN_PARMS sMCIAmpOpen = { 0 };
-    BOOL  fSharedDevice = os2iniGetBool("AudioShared", FALSE);
+    BOOL  fSharedDevice = _getEnvULong("SDL_AUDIO_SHARE", 1, 0);
 
     debug("Requested: Freq.: %u, Channels: %u, format: 0x%X", desired->freq,
           desired->channels, desired->format);
@@ -266,10 +276,10 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     }
 
     if (sMCIMixSetup.ulBitsPerSample == 8) {
-        uiAudioFormat = AUDIO_U8;
+        SDL_AudioFmt = AUDIO_U8;
         bSilence = 0x80;
     } else {
-        uiAudioFormat = AUDIO_S16;
+        SDL_AudioFmt = AUDIO_S16;
         bSilence = 0x0;
     }
 
@@ -280,7 +290,7 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 
     if (obtained != NULL) {
         obtained->freq = sMCIMixSetup.ulSamplesPerSec;
-        obtained->format = uiAudioFormat;
+        obtained->format = SDL_AudioFmt;
         obtained->channels = sMCIMixSetup.ulChannels;
         obtained->silence = bSilence;
         obtained->samples = desired->samples;
@@ -288,11 +298,11 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
         obtained->size = desired->size;
     } else {
         if (desired->freq != sMCIMixSetup.ulSamplesPerSec ||
-            desired->format != uiAudioFormat ||
+            desired->format != SDL_AudioFmt ||
             desired->channels != sMCIMixSetup.ulChannels) {
             if (SDL_BuildAudioCVT(&sOnFlyCVT,
                                   desired->format, desired->channels,
-                                  desired->freq, uiAudioFormat,
+                                  desired->freq, SDL_AudioFmt,
                                   sMCIMixSetup.ulChannels,
                                   sMCIMixSetup.ulSamplesPerSec) < 0) {
                 debug("SDL_BuildAudioCVT() fail");
@@ -310,11 +320,11 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
                     SDL_AudioQuit();
                     return -1;
                 }
-                uiAudioFormat = sOnFlyCVT.src_format;
+                SDL_AudioFmt = sOnFlyCVT.src_format;
                 debug("On-fly audio converting prepared: "
                       "Freq.: %u, Channels: %u, format: 0x%X",
                       sMCIMixSetup.ulSamplesPerSec, sMCIMixSetup.ulChannels,
-                      uiAudioFormat);
+                      SDL_AudioFmt);
             }
         }
     }
@@ -410,8 +420,6 @@ int SDLCALL SDL_AudioInit(const char *driver_name)
 {
     /* Not used. All initialisation/finalisation work at
      * SDL_OpenAudio() / SDL_AudioQuit() */
-    debug("Enter");
-    os2iniOpen();
     return 0; /* 0 - success, -1 - fail */
 }
 

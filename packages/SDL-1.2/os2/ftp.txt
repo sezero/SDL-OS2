@@ -1,7 +1,0 @@
-http://os2.snc.ru/product-SDL.html
-ftp://ftp.os2.snc.ru/pub/SDL/
-https://www.os2site.com/sw/dev/sdl/
-ftp://ftp.netlabs.org/pub/sdl/
-http://bauxite.sakura.ne.jp/software/os2/
-https://hobbes.nmsu.edu/?search=SDL-
-https://hobbes.nmsu.edu/?search=SDL2

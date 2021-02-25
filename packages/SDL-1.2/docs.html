@@ -121,6 +121,9 @@ Changes include:
   resize handling - bug <a href="https://bugzilla.libsdl.org/show_bug.cgi?id=1430">1430</a>.)
 </P>
 <P>
+  X11video: properly handle input focus events (bug <a href="https://bugzilla.libsdl.org/show_bug.cgi?id=5426">5426</a>.)
+</P>
+<P>
   X11video: unblock SDL_WM_GrabInput() GrabNotViewable case (bug <a href="https://bugzilla.libsdl.org/show_bug.cgi?id=1155">1155</a>.)
 </P>
 <P>
@@ -166,6 +169,10 @@ Changes include:
   Linux, joystick: fix invalid coef when axis&nbsp;min &gt; axis&nbsp;max.
 </P>
 <P>
+  Linux, joystick: remove deadzone and output axis values in correct
+  range (bug <a href="https://bugzilla.libsdl.org/show_bug.cgi?id=5241">5241</a>.)
+</P>
+<P>
   Linux, joystick: enhance detection of gamepads.
 </P>
 <P>
@@ -173,6 +180,9 @@ Changes include:
 </P>
 <P>
   FreeBSD, joystick: compile fixes.
+</P>
+<P>
+  BSD, joystick: fix USB joystick input for FreeBSD 9.0+ (bug <a href="https://bugzilla.libsdl.org/show_bug.cgi?id=1552">1552</a>)
 </P>
 <P>
   BSD, joystick: increase the number of uhid devices to scan (bug <a href="https://bugzilla.libsdl.org/show_bug.cgi?id=1561">1561</a>)

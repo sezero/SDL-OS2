@@ -19,7 +19,7 @@
 
 #define AUDIO_NUM_SOUND_BUFFERS	4
 
-Uint16 SDL_AudioFmt = AUDIO_S16; /* global for SDL_mixer.c. */
+Uint16 OS2DART_AudioFmt = AUDIO_S16; /* global for SDL_mixer.c. */
 
 static HMTX			hmtxLock = NULLHANDLE;
 static BOOL			fPause = FALSE;
@@ -59,65 +59,67 @@ static BYTE			bSilence = 0; /* silence value for real HW mode */
 
 #endif /* DEBUG_BUILD */
 
-static LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG ulFlags);
+static LONG APIENTRY AudioEvent(ULONG status, PMCI_MIX_BUFFER pBuffer, ULONG flags);
 
 
-static ULONG _getEnvULong(const char *name, ULONG ulMax, ULONG ulDefault)
+static ULONG _getEnvULong(const char *name, ULONG maxvalue, ULONG defvalue)
 {
-    ULONG   ulValue;
+    ULONG   value;
     char*   end;
     char*   envval = SDL_getenv(name);
 
     if (envval == NULL)
-        return ulDefault;
+        return defvalue;
 
-    ulValue = SDL_strtoul(envval, &end, 10);
-    return (end == envval) || (ulValue > ulMax)? ulDefault : ulMax;
+    value = SDL_strtoul(envval, &end, 10);
+    return (end == envval) || (value > maxvalue)? defvalue : maxvalue;
 }
 
-static VOID _MCIError(PCSZ pszFunc, ULONG ulResult)
+static void _MCIError(const char *fn, ULONG result)
 {
-    CHAR acBuf[128];
+    CHAR buf[128];
 
-    mciGetErrorString(ulResult, acBuf, sizeof(acBuf));
-    SDL_SetError("[%s] %s", pszFunc, acBuf);
+    mciGetErrorString(result, buf, sizeof(buf));
+    SDL_SetError("[%s] %s", fn, buf);
 }
 
-static ULONG _mixSetup(ULONG ulBPS, ULONG ulFreq, ULONG ulChannels)
+static ULONG _mixSetup(ULONG bps, ULONG freq, ULONG channels)
 {
-    ULONG ulRC;
+    ULONG rc;
 
     sMCIMixSetup.ulFormatTag     = MCI_WAVE_FORMAT_PCM;
-    sMCIMixSetup.ulBitsPerSample = ulBPS;
-    sMCIMixSetup.ulSamplesPerSec = ulFreq;
-    sMCIMixSetup.ulChannels      = ulChannels;
+    sMCIMixSetup.ulBitsPerSample = bps;
+    sMCIMixSetup.ulSamplesPerSec = freq;
+    sMCIMixSetup.ulChannels      = channels;
     sMCIMixSetup.ulFormatMode    = MCI_PLAY;
     sMCIMixSetup.ulDeviceType    = MCI_DEVTYPE_WAVEFORM_AUDIO;
     sMCIMixSetup.pmixEvent       = AudioEvent;
 
-    ulRC = mciSendCommand(usAudioDeviceId, MCI_MIXSETUP,
-                          MCI_WAIT | MCI_MIXSETUP_INIT, &sMCIMixSetup, 0);
+    rc = mciSendCommand(usAudioDeviceId, MCI_MIXSETUP,
+                        MCI_WAIT | MCI_MIXSETUP_INIT, &sMCIMixSetup, 0);
     debug("Setup mixer [BPS: %u, Freq.: %u, Channels: %u]: %s",
           sMCIMixSetup.ulBitsPerSample, sMCIMixSetup.ulSamplesPerSec,
-          sMCIMixSetup.ulChannels, ulRC == MCIERR_SUCCESS ? "SUCCESS" : "FAIL");
-    return ulRC;
+          sMCIMixSetup.ulChannels, rc == MCIERR_SUCCESS ? "SUCCESS" : "FAIL");
+    return rc;
 }
 
-static LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG ulFlags)
+static LONG APIENTRY AudioEvent(ULONG status, PMCI_MIX_BUFFER pBuffer, ULONG flags)
 {
-    ULONG ulRC;
+    ULONG rc;
 
-    if (ulFlags != MIX_WRITE_COMPLETE) {
+    (void) status;
+
+    if (flags != MIX_WRITE_COMPLETE) {
         debug("flags = 0x%X", ulFlags);
         return 0; /* It seems, return value not matter */
     }
 
-    ulRC = DosRequestMutexSem(hmtxLock, 2000);
-    if (ulRC != NO_ERROR) {
-        debug("DosRequestMutexSem(), rc = %u", ulRC);
+    rc = DosRequestMutexSem(hmtxLock, 2000);
+    if (rc != NO_ERROR) {
+        debug("DosRequestMutexSem(), rc = %u", rc);
     }
 
-    if (fPause || ulRC != NO_ERROR) {
+    if (fPause || rc != NO_ERROR) {
         DosReleaseMutexSem(hmtxLock);
         memset(pBuffer->pBuffer, bSilence, pBuffer->ulBufferLength);
     } else if (sOnFlyCVT.needed) {
@@ -146,8 +148,8 @@ static LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG u
         DosReleaseMutexSem(hmtxLock);
     }
 
-    ulRC = sMCIMixSetup.pmixWrite(sMCIMixSetup.ulMixHandle, pBuffer, 1);
-    if (ulRC != MCIERR_SUCCESS) {
+    rc = sMCIMixSetup.pmixWrite(sMCIMixSetup.ulMixHandle, pBuffer, 1);
+    if (rc != MCIERR_SUCCESS) {
         debug("pmixWrite() failed");
     }
 
@@ -156,12 +158,12 @@ static LONG APIENTRY AudioEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG u
 
 int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 {
-    ULONG ulRC;
-    PSZ   pszEnv;
-    ULONG ulBPS;
-    ULONG ulIdx;
+    ULONG rc;
+    char* env;
+    ULONG bps;
+    ULONG idx;
     MCI_AMP_OPEN_PARMS sMCIAmpOpen = { 0 };
-    BOOL  fSharedDevice = _getEnvULong("SDL_AUDIO_SHARE", 1, 0);
+    BOOL  shared = _getEnvULong("SDL_AUDIO_SHARE", 1, 0);
 
     debug("Requested: Freq.: %u, Channels: %u, format: 0x%X", desired->freq,
           desired->channels, desired->format);
@@ -178,9 +180,9 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     }
 
     if (desired->freq == 0) {
-        pszEnv = SDL_getenv("SDL_AUDIO_FREQUENCY");
-        if (pszEnv != NULL)
-            desired->freq = SDL_atoi(pszEnv);
+        env = SDL_getenv("SDL_AUDIO_FREQUENCY");
+        if (env != NULL)
+            desired->freq = SDL_atoi(env);
     }
     if (desired->freq == 0)
         desired->freq = 22050;
@@ -189,9 +191,9 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
         desired->format = AUDIO_U16;
 
     if (desired->channels == 0) {
-        pszEnv = SDL_getenv("SDL_AUDIO_CHANNELS");
-        if (pszEnv)
-            desired->channels = (Uint8)SDL_atoi(pszEnv);
+        env = SDL_getenv("SDL_AUDIO_CHANNELS");
+        if (env)
+            desired->channels = (Uint8)SDL_atoi(env);
     }
 
     switch (desired->channels) {
@@ -208,9 +210,9 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     }
 
     if (desired->samples == 0) {
-        pszEnv = SDL_getenv("SDL_AUDIO_SAMPLES");
-        if (pszEnv)
-            desired->samples = (Uint16)SDL_atoi(pszEnv);
+        env = SDL_getenv("SDL_AUDIO_SAMPLES");
+        if (env)
+            desired->samples = (Uint16)SDL_atoi(env);
     }
     if (desired->samples == 0) {
         /* Pick a default of ~46 ms at desired frequency */
@@ -232,21 +234,21 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     pUserData = desired->userdata;
 
     /* Initialization */
-    ulRC = DosCreateMutexSem(NULL, &hmtxLock, 0, FALSE);
-    if (ulRC != NO_ERROR) {
-        SDL_SetError("DosRequestMutexSem(), rc = %u", ulRC);
+    rc = DosCreateMutexSem(NULL, &hmtxLock, 0, FALSE);
+    if (rc != NO_ERROR) {
+        SDL_SetError("DosRequestMutexSem(), rc = %u", rc);
         return -1;
     }
 
     /* Open audio device */
     sMCIAmpOpen.usDeviceID = 0;
     sMCIAmpOpen.pszDeviceType = (PSZ)MCI_DEVTYPE_AUDIO_AMPMIX;
-    ulRC = mciSendCommand(0, MCI_OPEN,
-          (fSharedDevice)? MCI_WAIT | MCI_OPEN_TYPE_ID | MCI_OPEN_SHAREABLE :
+    rc = mciSendCommand(0, MCI_OPEN,
+                 (shared)? MCI_WAIT | MCI_OPEN_TYPE_ID | MCI_OPEN_SHAREABLE :
                            MCI_WAIT | MCI_OPEN_TYPE_ID,
            &sMCIAmpOpen,  0);
-    if (ulRC != MCIERR_SUCCESS) {
-        _MCIError("MCI_OPEN", ulRC);
+    if (rc != MCIERR_SUCCESS) {
+        _MCIError("MCI_OPEN", rc);
         DosCloseMutexSem(hmtxLock);
         hmtxLock = NULLHANDLE;
         usAudioDeviceId = 0;
@@ -255,31 +257,31 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     usAudioDeviceId = sMCIAmpOpen.usDeviceID;
 
     /* Setup mixer */
-    ulBPS = desired->format & 0xFF; /* SDL audio format -> bits per sample */
-    ulRC = _mixSetup(ulBPS, desired->freq, desired->channels);
+    bps = desired->format & 0xFF; /* SDL audio format -> bits per sample */
+    rc = _mixSetup(bps, desired->freq, desired->channels);
 
     /* If requested audio format not supported - reduce parameters */
-    if (ulRC != MCIERR_SUCCESS && desired->freq > 44100) {
-        ulRC = _mixSetup(ulBPS, 44100, desired->channels);
-        if (ulRC != MCIERR_SUCCESS && desired->channels > 2) {
-            ulRC = _mixSetup(ulBPS, desired->freq, 2);
-            if (ulRC != MCIERR_SUCCESS && desired->freq > 44100)
-                ulRC = _mixSetup(ulBPS, 44100, 2);
+    if (rc != MCIERR_SUCCESS && desired->freq > 44100) {
+        rc = _mixSetup(bps, 44100, desired->channels);
+        if (rc != MCIERR_SUCCESS && desired->channels > 2) {
+            rc = _mixSetup(bps, desired->freq, 2);
+            if (rc != MCIERR_SUCCESS && desired->freq > 44100)
+                rc = _mixSetup(bps, 44100, 2);
         }
     }
 
-    if (ulRC != MCIERR_SUCCESS) {
-        _MCIError("MCI_MIXSETUP, MCI_MIXSETUP_INIT", ulRC);
+    if (rc != MCIERR_SUCCESS) {
+        _MCIError("MCI_MIXSETUP, MCI_MIXSETUP_INIT", rc);
         sMCIMixSetup.ulBitsPerSample = 0;
         SDL_AudioQuit();
         return -1;
     }
 
     if (sMCIMixSetup.ulBitsPerSample == 8) {
-        SDL_AudioFmt = AUDIO_U8;
+        OS2DART_AudioFmt = AUDIO_U8;
         bSilence = 0x80;
     } else {
-        SDL_AudioFmt = AUDIO_S16;
+        OS2DART_AudioFmt = AUDIO_S16;
         bSilence = 0x0;
     }
 
@@ -290,7 +292,7 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 
     if (obtained != NULL) {
         obtained->freq = sMCIMixSetup.ulSamplesPerSec;
-        obtained->format = SDL_AudioFmt;
+        obtained->format = OS2DART_AudioFmt;
         obtained->channels = sMCIMixSetup.ulChannels;
         obtained->silence = bSilence;
         obtained->samples = desired->samples;
@@ -298,11 +300,11 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
         obtained->size = desired->size;
     } else {
         if (desired->freq != sMCIMixSetup.ulSamplesPerSec ||
-            desired->format != SDL_AudioFmt ||
+            desired->format != OS2DART_AudioFmt ||
             desired->channels != sMCIMixSetup.ulChannels) {
             if (SDL_BuildAudioCVT(&sOnFlyCVT,
                                   desired->format, desired->channels,
-                                  desired->freq, SDL_AudioFmt,
+                                  desired->freq, OS2DART_AudioFmt,
                                   sMCIMixSetup.ulChannels,
                                   sMCIMixSetup.ulSamplesPerSec) < 0) {
                 debug("SDL_BuildAudioCVT() fail");
@@ -320,11 +322,11 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
                     SDL_AudioQuit();
                     return -1;
                 }
-                SDL_AudioFmt = sOnFlyCVT.src_format;
+                OS2DART_AudioFmt = sOnFlyCVT.src_format;
                 debug("On-fly audio converting prepared: "
                       "Freq.: %u, Channels: %u, format: 0x%X",
                       sMCIMixSetup.ulSamplesPerSec, sMCIMixSetup.ulChannels,
-                      SDL_AudioFmt);
+                      OS2DART_AudioFmt);
             }
         }
     }
@@ -339,30 +341,30 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
         return -1 ;
     }
 
-    ulRC = mciSendCommand(usAudioDeviceId, MCI_BUFFER,
-                          MCI_WAIT | MCI_ALLOCATE_MEMORY, &sMCIBuffer, 0);
-    if (ulRC != MCIERR_SUCCESS) {
-        _MCIError("MCI_BUFFER", ulRC);
+    rc = mciSendCommand(usAudioDeviceId, MCI_BUFFER,
+                        MCI_WAIT | MCI_ALLOCATE_MEMORY, &sMCIBuffer, 0);
+    if (rc != MCIERR_SUCCESS) {
+        _MCIError("MCI_BUFFER", rc);
         SDL_AudioQuit();
         return -1;
     }
 
     /* Fill all device buffers with data */
-    for (ulIdx = 0; ulIdx < sMCIBuffer.ulNumBuffers; ulIdx++) {
-        ((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[ulIdx].ulFlags        = 0;
-        ((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[ulIdx].ulBufferLength = sMCIBuffer.ulBufferSize;
-        ((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[ulIdx].ulUserParm     = sMCIBuffer.ulBufferSize;
+    for (idx = 0; idx < sMCIBuffer.ulNumBuffers; idx++) {
+        ((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[idx].ulFlags        = 0;
+        ((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[idx].ulBufferLength = sMCIBuffer.ulBufferSize;
+        ((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[idx].ulUserParm     = sMCIBuffer.ulBufferSize;
 
-        memset(((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[ulIdx].pBuffer,
+        memset(((PMCI_MIX_BUFFER)sMCIBuffer.pBufList)[idx].pBuffer,
                bSilence, sMCIBuffer.ulBufferSize);
     }
 
     fPause = TRUE;
     /* Write buffers to kick off the amp mixer */
-    ulRC = sMCIMixSetup.pmixWrite(sMCIMixSetup.ulMixHandle,
-                                  (PMCI_MIX_BUFFER)sMCIBuffer.pBufList,
-                                  sMCIBuffer.ulNumBuffers);
-    _MCIDebugError("MCI_BUFFER", ulRC);
+    rc = sMCIMixSetup.pmixWrite(sMCIMixSetup.ulMixHandle,
+                                (PMCI_MIX_BUFFER)sMCIBuffer.pBufList,
+                                sMCIBuffer.ulNumBuffers);
+    _MCIDebugError("MCI_BUFFER", rc);
 
     debug("Done");
     return 0;
@@ -371,7 +373,7 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 void SDLCALL SDL_AudioQuit(void)
 {
     MCI_GENERIC_PARMS sMCIGenericParms;
-    ULONG ulRC;
+    ULONG rc;
 
     debug("Enter");
 
@@ -381,30 +383,30 @@ void SDLCALL SDL_AudioQuit(void)
     fPause = TRUE;
 
     if (sMCIMixSetup.ulBitsPerSample != 0) {
-        ulRC = mciSendCommand(usAudioDeviceId, MCI_MIXSETUP,
-                              MCI_WAIT | MCI_MIXSETUP_DEINIT, &sMCIMixSetup, 0);
-        _MCIDebugError("MCI_MIXSETUP, MCI_MIXSETUP_DEINIT", ulRC);
+        rc = mciSendCommand(usAudioDeviceId, MCI_MIXSETUP,
+                            MCI_WAIT | MCI_MIXSETUP_DEINIT, &sMCIMixSetup, 0);
+        _MCIDebugError("MCI_MIXSETUP, MCI_MIXSETUP_DEINIT", rc);
         sMCIMixSetup.ulBitsPerSample = 0;
     }
 
     if (sMCIBuffer.pBufList != NULL) {
-        ulRC = mciSendCommand(usAudioDeviceId, MCI_BUFFER,
+        rc = mciSendCommand(usAudioDeviceId, MCI_BUFFER,
                               MCI_WAIT | MCI_DEALLOCATE_MEMORY, &sMCIBuffer, 0);
-        _MCIDebugError("MCI_BUFFER", ulRC);
+        _MCIDebugError("MCI_BUFFER", rc);
         SDL_free(sMCIBuffer.pBufList);
         sMCIBuffer.pBufList = NULL;
     }
 
     if (usAudioDeviceId != 0) {
-        ulRC = mciSendCommand(usAudioDeviceId, MCI_CLOSE, MCI_WAIT,
-                              &sMCIGenericParms, 0);
-        _MCIDebugError("MCI_CLOSE", ulRC);
+        rc = mciSendCommand(usAudioDeviceId, MCI_CLOSE, MCI_WAIT,
+                            &sMCIGenericParms, 0);
+        _MCIDebugError("MCI_CLOSE", rc);
         usAudioDeviceId = 0;
     }
 
-    ulRC = DosRequestMutexSem(hmtxLock, SEM_INDEFINITE_WAIT);
-    if (ulRC != NO_ERROR) {
-        debug("DosRequestMutexSem(), rc = %u", ulRC);
+    rc = DosRequestMutexSem(hmtxLock, SEM_INDEFINITE_WAIT);
+    if (rc != NO_ERROR) {
+        debug("DosRequestMutexSem(), rc = %u", rc);
     }
     else if (sOnFlyCVT.buf != NULL) {
         SDL_free(sOnFlyCVT.buf);
@@ -455,10 +457,10 @@ void SDLCALL SDL_PauseAudio(int pause_on)
 
 void SDLCALL SDL_LockAudio(void)
 {
-    ULONG ulRC = DosRequestMutexSem(hmtxLock, 2000);
+    ULONG rc = DosRequestMutexSem(hmtxLock, 2000);
 
-    if (ulRC != NO_ERROR) {
-        debug("DosRequestMutexSem(), rc = %u", ulRC);
+    if (rc != NO_ERROR) {
+        debug("DosRequestMutexSem(), rc = %u", rc);
     }
 }
 

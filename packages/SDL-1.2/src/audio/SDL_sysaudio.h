@@ -184,7 +184,7 @@ extern AudioBootStrap EPOCAudio_bootstrap;
 #endif
 
 #if SDL_AUDIO_DRIVER_DARTALT
-extern Uint16 SDL_AudioFmt;
+extern Uint16 OS2DART_AudioFmt;
 #else
 /* This is the current audio device */
 extern SDL_AudioDevice *current_audio;

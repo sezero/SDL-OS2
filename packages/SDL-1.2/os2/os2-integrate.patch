@@ -38,7 +38,7 @@ index b5d4d8b..3e3cd83 100644
  	}
  	/* Mix the user-level audio format */
 +#if SDL_AUDIO_DRIVER_DARTALT
-+	format = SDL_AudioFmt;
++	format = OS2DART_AudioFmt;
 +#else
  	if ( current_audio ) {
  		if ( current_audio->convert.needed ) {
@@ -60,7 +60,7 @@ index fa29a2b..6d9b9ea 100644
  #endif
  
 +#if SDL_AUDIO_DRIVER_DARTALT
-+extern Uint16 SDL_AudioFmt;
++extern Uint16 OS2DART_AudioFmt;
 +#else
  /* This is the current audio device */
  extern SDL_AudioDevice *current_audio;

@@ -1,7 +1,22 @@
+# Open Watcom makefile to build SDL_sound for OS/2
+# wmake -f Makefile.os2
+#
+# Remember to edit DEPS_INC and DEPS_LIB below to meet
+# your own environment!.
+
+# if you want to build against SDL-1.2, change USE_SDL2 to no
+USE_SDL2= no
+# change DEPS_INC in order to point to the dependency headers.
+DEPS_INC=-I"../../h/SDL" -I"../../h"
+# change DEPS_LIB in order to point to the dependency libraries.
+DEPS_LIB=../../lib
+
+!ifeq USE_SDL2 yes
+LIBNAME = SDL2snd
+!else
 LIBNAME = SDLsound
+!endif
 VERSION = 1.0.4
-INCPATH = ../../h
-LIBPATH = ../../lib
 
 LIBFILE = $(LIBNAME).lib
 DLLFILE = $(LIBNAME).dll
@@ -25,7 +40,8 @@ CFLAGS_BASE+= -DNDEBUG
 # warnings:
 CFLAGS_BASE+= -wx
 # include paths:
-CFLAGS_BASE+= -I$(%WATCOM)/h/os2 -I$(%WATCOM)/h -I. -I"$(INCPATH)" -I"$(INCPATH)/SDL"
+CFLAGS_BASE+= -I"$(%WATCOM)/h/os2" -I"$(%WATCOM)/h"
+CFLAGS_BASE+= -I. $(DEPS_INC)
 CFLAGS = $(CFLAGS_BASE) -I"decoders/timidity"
 # to build a dll:
 CFLAGS+= -bd
@@ -35,6 +51,7 @@ CFLAGS+= -DBUILD_SDL -DSDL_SOUND_DLL_EXPORTS
 #this is noted as experimental:
 #CFLAGS+= -DSOUND_USE_ALTCVT=1
 
+CFLAGS+= -DHAVE_ASSERT_H=1
 CFLAGS+= -DSOUND_SUPPORTS_MPG123 &
          -DSOUND_SUPPORTS_MIKMOD &
          -DSOUND_SUPPORTS_WAV &
@@ -42,13 +59,19 @@ CFLAGS+= -DSOUND_SUPPORTS_MPG123 &
          -DSOUND_SUPPORTS_AU &
          -DSOUND_SUPPORTS_OGG &
          -DSOUND_SUPPORTS_VOC &
+         -DSOUND_SUPPORTS_SHN &
          -DSOUND_SUPPORTS_RAW &
          -DSOUND_SUPPORTS_FLAC &
          -DSOUND_SUPPORTS_MIDI
 # -DSOUND_SUPPORTS_SPEEX
 # -DSOUND_SUPPORTS_MODPLUG
 
-LIBS = SDL12.lib FLAC.lib vorbisfile.lib vorbis.lib ogg.lib mpg123.lib mikmod.lib $(TIMILIB)
+!ifeq USE_SDL2 yes
+LIBSDL = SDL2.lib
+!else
+LIBSDL = SDL12.lib
+!endif
+LIBS = $(LIBSDL) FLAC.lib vorbisfile.lib vorbis.lib ogg.lib mpg123.lib mikmod.lib $(TIMILIB)
 # speex.lib
 # modplug.lib
 
@@ -75,7 +98,7 @@ $(LNKFILE):
   @for %i in ($(OBJS)) do @%append $@ FILE %i
   @%append $@ OPTION QUIET
   @%append $@ OPTION DESCRIPTION '@$#icculus org:$(VERSION)$#@Simple DirectMedia Layer, abstract soundfile decoder'
-  @%append $@ LIBPATH $(LIBPATH)
+  @%append $@ LIBPATH $(DEPS_LIB)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
   @%append $@ OPTION MAP=$^&.map
   @%append $@ OPTION ELIMINATE
@@ -93,11 +116,11 @@ playsound_simple.obj: examples/playsound_simple.c
 
 playsound.exe: $(LIBFILE) playsound.obj
   @echo * Link: $@
-  wlink SYS os2v2 LIBPATH $(LIBPATH) LIBR {$(LIBFILE) SDL12.lib} op q op el F {playsound.obj}  N playsound.exe
+  wlink SYS os2v2 LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) $(LIBSDL)} op q op el F {playsound.obj} N playsound.exe
 
 playsound_simple.exe: $(LIBFILE) playsound_simple.obj
   @echo * Link: $@
-  wlink SYS os2v2 LIBPATH $(LIBPATH) LIBR {$(LIBFILE) SDL12.lib} op q op el F {playsound_simple.obj}  N playsound_simple.exe
+  wlink SYS os2v2 LIBPATH $(DEPS_LIB) LIBR {$(LIBFILE) $(LIBSDL)} op q op el F {playsound_simple.obj} N playsound_simple.exe
 
 .c: decoders/timidity;
 timidity.lib: $(TIMIOBJS)
@@ -107,9 +130,10 @@ clean: .SYMBOLIC
   @echo * Clean: $(TITLENAME)
   @if exist *.obj rm *.obj
   @if exist *.err rm *.err
-  @if exist *.map rm *.map
-  @if exist *.exe rm *.exe
   @if exist $(TIMILIB) rm $(TIMILIB)
   @if exist $(LNKFILE) rm $(LNKFILE)
+distclean: .SYMBOLIC clean
   @if exist $(DLLFILE) rm $(DLLFILE)
   @if exist $(LIBFILE) rm $(LIBFILE)
+  @if exist *.map rm *.map
+  @if exist *.exe rm *.exe

@@ -1,5 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(README)
+AC_INIT
+AC_CONFIG_MACRO_DIR([acinclude])
+AC_CONFIG_SRCDIR([SDLnet.c])
 
 dnl Set various version strings - taken gratefully from the GTk sources
 
@@ -45,7 +47,6 @@ dnl Setup for automake
 AM_INIT_AUTOMAKE(SDL_net, $VERSION)
 
 dnl Check for tools
-AC_PROG_LIBTOOL
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -81,13 +82,10 @@ AM_CONDITIONAL(USE_VERSION_RC, test x$use_version_rc = xtrue)
 dnl Figure out which networking libraries to use
 case "$host" in
     *mingw32ce*)
-        INETLIB="-lwinsock -lws2"
-	;;
-    x86_64-*-mingw*)
-        INETLIB="-lws2_32 -liphlpapi"
+        INETLIB="-lws2 -liphlpapi"
         ;;
     *-*-cygwin* | *-*-mingw*)
-        INETLIB="-lwsock32 -liphlpapi"
+        INETLIB="-lws2_32 -liphlpapi"
         ;;
     sparc*-*-solaris*)
         INETLIB="-lsocket -lnsl"
@@ -120,7 +118,7 @@ LIBS="$LIBS $SDL_LIBS"
 dnl Check for GUI library for the chat client
 have_GUI=no
 AC_ARG_ENABLE(gui,
-[  --enable-gui            Try to build the GUI test programs [default=yes]],
+[AS_HELP_STRING([--enable-gui],[Try to build the GUI test programs [default=yes]])],
               , enable_gui=yes)
 if test x$enable_gui = xyes; then
     AC_LANG_PUSH(C++)
@@ -141,6 +139,7 @@ CXXFLAGS="$CXXFLAGS $CFLAGS"
 AC_SUBST([WINDRES])
 
 # Finally create all the generated files
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile SDL_net.spec SDL_net.qpg SDL_net.pc
 ])
+AC_OUTPUT

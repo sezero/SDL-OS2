@@ -30,38 +30,7 @@
 
 #ifdef LOAD_PNG
 
-/*=============================================================================
-        File: SDL_png.c
-     Purpose: A PNG loader and saver for the SDL library      
-    Revision: 
-  Created by: Philippe Lavoie          (2 November 1998)
-              lavoie@zeus.genie.uottawa.ca
- Modified by: 
-
- Copyright notice:
-          Copyright (C) 1998 Philippe Lavoie
- 
-          This library is free software; you can redistribute it and/or
-          modify it under the terms of the GNU Library General Public
-          License as published by the Free Software Foundation; either
-          version 2 of the License, or (at your option) any later version.
- 
-          This library is distributed in the hope that it will be useful,
-          but WITHOUT ANY WARRANTY; without even the implied warranty of
-          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-          Library General Public License for more details.
- 
-          You should have received a copy of the GNU Library General Public
-          License along with this library; if not, write to the Free
-          Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-    Comments: The load and save routine are basically the ones you can find
-             in the example.c file from the libpng distribution.
-
-  Changes:
-    5/17/99 - Modified to use the new SDL data sources - Sam Lantinga
-
-=============================================================================*/
+/* This code was originally written by Philippe Lavoie (2 November 1998) */
 
 #include "SDL_endian.h"
 
@@ -342,15 +311,16 @@ int IMG_isPNG(SDL_RWops *src)
 	int is_PNG;
 	Uint8 magic[4];
 
-	if ( !src )
+	if ( !src ) {
 		return 0;
+	}
 	start = SDL_RWtell(src);
 	is_PNG = 0;
 	if ( SDL_RWread(src, magic, 1, sizeof(magic)) == sizeof(magic) ) {
-                if ( magic[0] == 0x89 &&
-                     magic[1] == 'P' &&
-                     magic[2] == 'N' &&
-                     magic[3] == 'G' ) {
+		if ( magic[0] == 0x89 &&
+		     magic[1] == 'P' &&
+		     magic[2] == 'N' &&
+		     magic[3] == 'G' ) {
 			is_PNG = 1;
 		}
 	}
@@ -516,13 +486,13 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 	}
 
 	if(ckey != -1) {
-	        if(color_type != PNG_COLOR_TYPE_PALETTE)
+		if(color_type != PNG_COLOR_TYPE_PALETTE)
 			/* FIXME: Should these be truncated or shifted down? */
-		        ckey = SDL_MapRGB(surface->format,
-			                 (Uint8)transv->red,
-			                 (Uint8)transv->green,
-			                 (Uint8)transv->blue);
-	        SDL_SetColorKey(surface, SDL_SRCCOLORKEY, ckey);
+			ckey = SDL_MapRGB(surface->format,
+					  (Uint8)transv->red,
+					  (Uint8)transv->green,
+					  (Uint8)transv->blue);
+		SDL_SetColorKey(surface, SDL_SRCCOLORKEY, ckey);
 	}
 
 	/* Create the array of pointers to image data */
@@ -573,8 +543,8 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 done:	/* Clean up and return */
 	if ( png_ptr ) {
 		lib.png_destroy_read_struct(&png_ptr,
-		                        info_ptr ? &info_ptr : (png_infopp)0,
-								(png_infopp)0);
+					info_ptr ? &info_ptr : (png_infopp)0,
+					(png_infopp)0);
 	}
 	if ( row_pointers ) {
 		free(row_pointers);
@@ -587,7 +557,7 @@ done:	/* Clean up and return */
 		}
 		IMG_SetError(error);
 	}
-	return(surface); 
+	return(surface);
 }
 
 #else

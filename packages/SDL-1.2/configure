@@ -1680,8 +1680,8 @@ Optional Features:
   --enable-mintaudio      support Atari audio driver [default=yes]
   --enable-nasm           use nasm assembly blitters on x86 [default=yes]
   --enable-altivec        use altivec assembly blitters on PPC [default=yes]
-  --enable-arm-simd       use SIMD assembly blitters on ARM [default=no]
-  --enable-arm-neon       use NEON assembly blitters on ARM [default=no]
+  --enable-arm-simd       use SIMD assembly blitters on ARM [default=yes]
+  --enable-arm-neon       use NEON assembly blitters on ARM [default=yes]
   --enable-ipod           configure SDL to work with iPodLinux [default=no]
   --enable-video-nanox    use nanox video driver [default=no]
   --enable-nanox-debug    print debug messages [default=no]
@@ -17016,7 +17016,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_dmedia" >&5
 $as_echo "$have_dmedia" >&6; }
-        # Set up files for the audio library
+
         if test x$have_dmedia = xyes; then
             $as_echo "#define SDL_AUDIO_DRIVER_DMEDIA 1" >>confdefs.h
 
@@ -17068,7 +17068,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
         CFLAGS="$save_CFLAGS"
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_mme" >&5
 $as_echo "$have_mme" >&6; }
-        # Set up files for the audio library
+
         if test x$have_mme = xyes; then
             $as_echo "#define SDL_AUDIO_DRIVER_MMEAUDIO 1" >>confdefs.h
 
@@ -18164,7 +18164,7 @@ CheckARM()
 if test "${enable_arm_simd+set}" = set; then :
   enableval=$enable_arm_simd; enable_arm_simd=$enableval
 else
-  enable_arm_simd=no
+  enable_arm_simd=yes
 fi
 
     if test x$enable_video = xyes -a x$enable_assembly = xyes -a x$enable_arm_simd = xyes; then
@@ -18212,7 +18212,7 @@ CheckNEON()
 if test "${enable_arm_neon+set}" = set; then :
   enableval=$enable_arm_neon; enable_arm_neon=$enableval
 else
-  enable_arm_neon=no
+  enable_arm_neon=yes
 fi
 
     if test x$enable_video = xyes -a x$enable_assembly = xyes -a x$enable_arm_neon = xyes; then
@@ -22257,6 +22257,7 @@ case "$host" in
         if test x$have_directx = xyes; then
             EXTRA_LDFLAGS="$EXTRA_LDFLAGS -ldxguid"
         fi
+        BUILD_LDFLAGS="$BUILD_LDFLAGS -Wc,-static-libgcc"
         # The Win32 platform requires special setup
         SOURCES="$SOURCES $srcdir/src/main/win32/*.rc"
         SDLMAIN_SOURCES="$srcdir/src/main/win32/*.c"

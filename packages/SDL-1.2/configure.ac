@@ -405,7 +405,7 @@ CheckDMEDIA()
         have_dmedia=yes
         ])
         AC_MSG_RESULT($have_dmedia)
-        # Set up files for the audio library
+
         if test x$have_dmedia = xyes; then
             AC_DEFINE(SDL_AUDIO_DRIVER_DMEDIA)
             SOURCES="$SOURCES $srcdir/src/audio/dmedia/*.c"
@@ -442,7 +442,7 @@ CheckMME()
         ])
         CFLAGS="$save_CFLAGS"
         AC_MSG_RESULT($have_mme)
-        # Set up files for the audio library
+
         if test x$have_mme = xyes; then
             AC_DEFINE(SDL_AUDIO_DRIVER_MMEAUDIO)
             SOURCES="$SOURCES $srcdir/src/audio/mme/*.c"
@@ -884,8 +884,8 @@ dnl Check for ARM instruction support using gas syntax
 CheckARM()
 {
     AC_ARG_ENABLE(arm-simd,
-[AS_HELP_STRING([--enable-arm-simd], [use SIMD assembly blitters on ARM [default=no]])],
-                  enable_arm_simd=$enableval, enable_arm_simd=no)
+[AS_HELP_STRING([--enable-arm-simd], [use SIMD assembly blitters on ARM [default=yes]])],
+                  enable_arm_simd=$enableval, enable_arm_simd=yes)
     if test x$enable_video = xyes -a x$enable_assembly = xyes -a x$enable_arm_simd = xyes; then
         save_CFLAGS="$CFLAGS"
         have_arm_simd=no
@@ -919,8 +919,8 @@ dnl Check for ARM NEON instruction support using gas syntax
 CheckNEON()
 {
     AC_ARG_ENABLE(arm-neon,
-[AS_HELP_STRING([--enable-arm-neon], [use NEON assembly blitters on ARM [default=no]])],
-                  enable_arm_neon=$enableval, enable_arm_neon=no)
+[AS_HELP_STRING([--enable-arm-neon], [use NEON assembly blitters on ARM [default=yes]])],
+                  enable_arm_neon=$enableval, enable_arm_neon=yes)
     if test x$enable_video = xyes -a x$enable_assembly = xyes -a x$enable_arm_neon = xyes; then
         save_CFLAGS="$CFLAGS"
         have_arm_neon=no
@@ -2738,6 +2738,7 @@ case "$host" in
         if test x$have_directx = xyes; then
             EXTRA_LDFLAGS="$EXTRA_LDFLAGS -ldxguid"
         fi
+        BUILD_LDFLAGS="$BUILD_LDFLAGS -Wc,-static-libgcc"
         # The Win32 platform requires special setup
         SOURCES="$SOURCES $srcdir/src/main/win32/*.rc"
         SDLMAIN_SOURCES="$srcdir/src/main/win32/*.c"
@@ -2797,7 +2798,7 @@ case "$host" in
                     AC_DEFINE(SDL_LOADSO_DLOPEN)
                     SOURCES="$SOURCES $srcdir/src/loadso/dlopen/*.c"
                 ;;
-            esac    
+            esac
             have_loadso=yes
         fi
         # The BeOS platform requires special setup.

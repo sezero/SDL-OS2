@@ -4,8 +4,7 @@ AC_INIT(SDL_gfxPrimitives.c)
 AC_CONFIG_MACRO_DIR([m4])
 
 dnl SDL version required
-
-SDL_VERSION=1.2.0
+SDL_VERSION=1.2.7
 AC_SUBST(SDL_VERSION)
 
 dnl Setup for automake

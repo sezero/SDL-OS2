@@ -20,7 +20,7 @@ libSDL_gfx_la_SOURCES =		\
 	SDL_imageFilter.c \
 	SDL_gfxBlitFunc.c
 
-DEFS = @DEFS@ -DBUILD_DLL
+DEFS = @DEFS@
 libSDL_gfx_la_LDFLAGS = 	\
 	-no-undefined -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 

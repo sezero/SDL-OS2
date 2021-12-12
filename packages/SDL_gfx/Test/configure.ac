@@ -15,7 +15,6 @@ SDL_VERSION=1.2.0
 dnl Check for compilers
 AC_PROG_MAKE_SET
 AC_PROG_CC
-AC_PROG_CXX
 AC_PROG_INSTALL
 
 dnl Check for compiler environment
@@ -24,16 +23,12 @@ AC_C_CONST
 dnl Set for C compiler by default
 AC_LANG_C
 
-dnl Setup target flagsw
+dnl Setup target flags
 case "$target" in
     *-*-cygwin* | *-*-mingw32*)
-	CFLAGS="$CFLAGS -DWIN32"
         if test "$build" != "$target"; then # cross-compiling
             ac_default_prefix=/usr/local/cross-tools/i386-mingw32msvc
         fi
-        ;;
-    *)
-	dnl nothing to do
         ;;
 esac
 
@@ -49,10 +44,10 @@ case "$target" in
         MATHLIB=""
         ;;
     *-*-aix*)
-	MATHLIB="-lm"
-        if test x$ac_cv_prog_gcc = xyes; then
+        MATHLIB="-lm"
+        if test x$ac_cv_c_compiler_gnu = xyes; then
             CFLAGS="-mthreads"
-	fi
+        fi
         ;;
     *)
         MATHLIB="-lm"

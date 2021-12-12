@@ -292,10 +292,6 @@ To create a Windows DLL using the xmingw32 cross-compiler:
 	cross-make install
 \endverbatim
 
-Make sure the -DBUILD_DLL is used (and only then) when creating the DLLs.
-Make sure -DWIN32 is used when compiling the sources (creating or using
-the DLLs.
-
 Specify the path to your cross-compiled 'sdl-config', and invoke
 './configure' with the '--host' and '--build' arguments. For example,
 to cross-compile a .DLL from GNU/Linux:

@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
 
 	printf ("Result: %i of %i passed OK.\n", ok_count, total_count);
 
-#ifdef WIN32 
+#ifdef _WIN32
 	printf("Press Enter to continue ...");
 	pause();
 #endif

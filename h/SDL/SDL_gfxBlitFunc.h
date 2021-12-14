@@ -38,8 +38,8 @@ extern    "C" {
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <SDL.h>
-#include <SDL_video.h>
+#include "SDL.h"
+#include "SDL_video.h"
 
 
 	extern const unsigned int GFX_ALPHA_ADJUST_ARRAY[256];
@@ -60,6 +60,8 @@ extern    "C" {
 #  else
 #    define SDL_GFXBLITFUNC_SCOPE   extern
 #  endif
+#elif defined(SDLGFX_SYM_VISIBILITY)
+#    define SDL_GFXBLITFUNC_SCOPE __attribute__((visibility("default")))
 #endif
 #ifndef SDL_GFXBLITFUNC_SCOPE
 #  define SDL_GFXBLITFUNC_SCOPE extern
@@ -100,20 +102,20 @@ extern    "C" {
 	*/
 #define GFX_RGBA_FROM_PIXEL(pixel, fmt, r, g, b, a)				\
 	{									\
-	r = ((pixel&fmt->Rmask)>>fmt->Rshift)<<fmt->Rloss; 		\
-	g = ((pixel&fmt->Gmask)>>fmt->Gshift)<<fmt->Gloss; 		\
-	b = ((pixel&fmt->Bmask)>>fmt->Bshift)<<fmt->Bloss; 		\
-	a = ((pixel&fmt->Amask)>>fmt->Ashift)<<fmt->Aloss;	 	\
+	r = ((pixel&fmt->Rmask)>>fmt->Rshift)<<fmt->Rloss;		\
+	g = ((pixel&fmt->Gmask)>>fmt->Gshift)<<fmt->Gloss;		\
+	b = ((pixel&fmt->Bmask)>>fmt->Bshift)<<fmt->Bloss;		\
+	a = ((pixel&fmt->Amask)>>fmt->Ashift)<<fmt->Aloss;		\
 	}
 
 	/*!
 	\brief Disassemble buffer pointer into a pixel and separate RGBA values.
 	*/
-#define GFX_DISASSEMBLE_RGBA(buf, bpp, fmt, pixel, r, g, b, a)			   \
-	do {									   \
-	pixel = *((Uint32 *)(buf));			   		   \
-	GFX_RGBA_FROM_PIXEL(pixel, fmt, r, g, b, a);			   \
-	pixel &= ~fmt->Amask;						   \
+#define GFX_DISASSEMBLE_RGBA(buf, bpp, fmt, pixel, r, g, b, a)			\
+	do {									\
+	pixel = *((Uint32 *)(buf));					\
+	GFX_RGBA_FROM_PIXEL(pixel, fmt, r, g, b, a);			\
+	pixel &= ~fmt->Amask;						\
 	} while(0)
 
 	/*!
@@ -122,9 +124,9 @@ extern    "C" {
 #define GFX_PIXEL_FROM_RGBA(pixel, fmt, r, g, b, a)				\
 	{									\
 	pixel = ((r>>fmt->Rloss)<<fmt->Rshift)|				\
-	((g>>fmt->Gloss)<<fmt->Gshift)|				\
-	((b>>fmt->Bloss)<<fmt->Bshift)|				\
-	((a<<fmt->Aloss)<<fmt->Ashift);				\
+	((g>>fmt->Gloss)<<fmt->Gshift) |				\
+	((b>>fmt->Bloss)<<fmt->Bshift) |				\
+	((a<<fmt->Aloss)<<fmt->Ashift) ;				\
 	}
 
 	/*!
@@ -132,10 +134,10 @@ extern    "C" {
 	*/
 #define GFX_ASSEMBLE_RGBA(buf, bpp, fmt, r, g, b, a)			\
 	{									\
-	Uint32 pixel;					\
+	Uint32 pixel_;					\
 	\
-	GFX_PIXEL_FROM_RGBA(pixel, fmt, r, g, b, a);	\
-	*((Uint32 *)(buf)) = pixel;			\
+	GFX_PIXEL_FROM_RGBA(pixel_, fmt, r, g, b, a);	\
+	*((Uint32 *)(buf)) = pixel_;			\
 	}
 
 	/*!
@@ -154,17 +156,15 @@ extern    "C" {
 	This is a very useful loop for optimizing blitters.
 	*/
 #define GFX_DUFFS_LOOP4(pixel_copy_increment, width)			\
-	{ int n = (width+3)/4;							\
-	switch (width & 3) {						\
-	case 0: do {	pixel_copy_increment;				\
-	case 3:		pixel_copy_increment;				\
-	case 2:		pixel_copy_increment;				\
-	case 1:		pixel_copy_increment;				\
-	} while ( --n > 0 );					\
-	}								\
+	{ int n = (width+3)/4;						\
+	  switch (width & 3) {						\
+	  case 0: do {	pixel_copy_increment;				\
+	  case 3:	pixel_copy_increment;				\
+	  case 2:	pixel_copy_increment;				\
+	  case 1:	pixel_copy_increment;				\
+	   } while (--n > 0);						\
+	  }								\
 	}
-
-
 
 	/* Ends C function definitions when using C++ */
 #ifdef __cplusplus

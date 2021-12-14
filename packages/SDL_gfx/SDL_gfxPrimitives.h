@@ -65,6 +65,8 @@ extern "C" {
 #  else
 #    define SDL_GFXPRIMITIVES_SCOPE   extern
 #  endif
+#elif defined(SDLGFX_SYM_VISIBILITY)
+#    define SDL_GFXPRIMITIVES_SCOPE __attribute__((visibility("default")))
 #endif
 #ifndef SDL_GFXPRIMITIVES_SCOPE
 #  define SDL_GFXPRIMITIVES_SCOPE extern

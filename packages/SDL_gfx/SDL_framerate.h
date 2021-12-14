@@ -83,6 +83,8 @@ extern "C" {
 #  else
 #    define SDL_FRAMERATE_SCOPE   extern 
 #  endif
+#elif defined(SDLGFX_SYM_VISIBILITY)
+#    define SDL_FRAMERATE_SCOPE __attribute__((visibility("default")))
 #endif
 #ifndef SDL_FRAMERATE_SCOPE
 #  define SDL_FRAMERATE_SCOPE extern

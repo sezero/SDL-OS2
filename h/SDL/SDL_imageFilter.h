@@ -51,6 +51,8 @@ extern "C" {
 #  else
 #    define SDL_IMAGEFILTER_SCOPE   extern
 #  endif
+#elif defined(SDLGFX_SYM_VISIBILITY)
+#    define SDL_IMAGEFILTER_SCOPE __attribute__((visibility("default")))
 #endif
 #ifndef SDL_IMAGEFILTER_SCOPE
 #  define SDL_IMAGEFILTER_SCOPE extern

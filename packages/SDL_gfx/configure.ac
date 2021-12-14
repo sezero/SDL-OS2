@@ -133,6 +133,32 @@ fi
 AC_MSG_CHECKING(whether MMX can be enabled)
 AC_MSG_RESULT($enable_mmx)
 
+dnl symbol visibility
+AC_MSG_CHECKING([if compiler supports visibility attributes])
+saved_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fvisibility=hidden -Werror"
+AC_LANG_PUSH([C])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	__attribute__((visibility("default"))) int foo(void);
+	__attribute__((visibility("hidden")))  int bar(void);
+	int foo(void) { return 0; }
+	int bar(void) { return 1; }]], [])],
+	[have_visibility=yes],[have_visibility=no])
+AC_LANG_POP([C])
+AC_MSG_RESULT([$have_visibility])
+CFLAGS="$saved_CFLAGS"
+case $host_os in
+    mingw*|cygwin*|emx*|amigaos*|aros*|morphos*)
+	if test $have_visibility = yes; then
+	   AC_MSG_NOTICE([ignoring -fvisibility flags for $host_os])
+	fi
+	have_visibility=no
+	;;
+esac
+if test $have_visibility = yes; then
+   CFLAGS="$CFLAGS -DSDLGFX_SYM_VISIBILITY -fvisibility=hidden"
+fi
+
 dnl Check for SDL
 AM_PATH_SDL($SDL_VERSION,
             :,

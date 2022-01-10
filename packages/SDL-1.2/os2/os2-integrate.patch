@@ -2,7 +2,7 @@ diff --git a/Makefile.os2 b/Makefile.os2
 index 59e4502..eddef31 100644
 --- a/Makefile.os2
 +++ b/Makefile.os2
-@@ -47,7 +47,8 @@ PMGRE_LIB = $(LIBPATH)/pmgre.lib
+@@ -49,7 +49,8 @@ PMGRE_LIB = $(LIBPATH)/pmgre.lib
  PMGRE_EXP = os2/pmgre/pmgre.exp
  
  audioobjs = SDL_audiocvt.obj SDL_mixer.obj SDL_mixer_MMX_VC.obj SDL_wave.obj &

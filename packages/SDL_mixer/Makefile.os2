@@ -13,8 +13,8 @@ USE_OGG=yes
 USE_TREMOR=no
 # flac music support
 USE_FLAC=yes
-# mp3 music support (using libmad)
-#USE_MP3=yes
+# mp3 music support (using libmad - Note: GPL license!)
+USE_LIBMAD=no
 # mp3 music support (using mpg123)
 USE_MPG123=yes
 # midi music support (using timidity)
@@ -22,7 +22,7 @@ USE_TIMIDITY=yes
 # midi music support (using fluidsynth)
 USE_FLUIDSYNTH=no
 # tracker music support (using libmikmod)
-USE_MOD=yes
+USE_MIKMOD=yes
 # tracker music support (using libmodplug)
 USE_MODPLUG=no
 
@@ -90,7 +90,7 @@ CFLAGS+= -DFLAC_MUSIC
 LIBS+= FLAC.lib
 !endif
 
-!ifeq USE_MP3 yes
+!ifeq USE_LIBMAD yes
 CFLAGS+= -DMP3_MAD_MUSIC
 LIBS+= mad.lib
 !endif
@@ -99,7 +99,7 @@ CFLAGS+= -DMP3_MUSIC
 LIBS+= mpg123.lib
 !endif
 
-!ifeq USE_MOD yes
+!ifeq USE_MIKMOD yes
 CFLAGS+= -DMOD_MUSIC
 LIBS+= mikmod.lib
 !endif
@@ -124,11 +124,7 @@ $(LNKFILE):
   @%append $@ NAME $(LIBNAME)
   @for %i in ($(OBJS)) do @%append $@ FILE %i
   @%append $@ OPTION QUIET
-!ifdef %osdir
-  @$(%osdir)\KLIBC\BIN\date +"OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$#$#1$#$# %F               $(%HOSTNAME)::::::@@Simple DirectMedia Layer Mixer'" >>$^@
-!else
   @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer Mixer'
-!endif
   @%append $@ LIBPATH $(LIBPATH)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
   @%append $@ OPTION MAP=$*

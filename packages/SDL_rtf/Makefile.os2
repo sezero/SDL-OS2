@@ -15,7 +15,7 @@ OBJS = $(SRCS:.c=.obj)
 
 LIBS = SDL12.lib
 
-CFLAGS_BASE = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oteanbmier -ei -j
+CFLAGS_BASE = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oeatxh -ei -j
 # warnings:
 CFLAGS_BASE+= -wx
 # newer OpenWatcom versions enable W303 by default
@@ -44,11 +44,7 @@ $(LNKFILE):
   @%append $@ NAME $(LIBNAME)
   @for %i in ($(OBJS)) do @%append $@ FILE %i
   @%append $@ OPTION QUIET
-!ifdef %osdir
-  @$(%osdir)\KLIBC\BIN\date +"OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$#$#1$#$# %F               $(%HOSTNAME)::::::@@Simple DirectMedia Layer, RTF decoding add-on'" >>$^@
-!else
-  @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer, RTF decoding add-on'
-!endif
+  @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer RTF decoding add-on'
   @%append $@ LIBPATH $(LIBPATH)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
   @%append $@ OPTION MAP=$*
@@ -70,9 +66,9 @@ clean: .SYMBOLIC
   @echo * Clean: $(TITLENAME)
   @if exist *.obj rm *.obj
   @if exist *.err rm *.err
+  @if exist $(LNKFILE) rm $(LNKFILE)
+distclean: clean .SYMBOLIC
   @if exist *.map rm *.map
   @if exist *.exe rm *.exe
-  @if exist $(LNKFILE) rm $(LNKFILE)
   @if exist $(DLLFILE) rm $(DLLFILE)
   @if exist $(LIBFILE) rm $(LIBFILE)
-

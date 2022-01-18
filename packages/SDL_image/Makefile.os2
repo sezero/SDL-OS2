@@ -14,7 +14,7 @@ SRCS = IMG.c IMG_bmp.c IMG_gif.c IMG_jpg.c IMG_lbm.c IMG_pcx.c IMG_png.c &
 
 LIBS = libpng.lib libtiff.lib zlib.lib jpeg.lib webpdec.lib SDL12.lib
 
-CFLAGS_BASE = -bt=os2 -ei -d0 -q -5s -fp5 -fpi87 -sg -s -oilrtfm
+CFLAGS_BASE = -bt=os2 -ei -d0 -q -5s -fp5 -fpi87 -sg -oeatxh
 # warnings:
 CFLAGS_BASE+= -wx -wcd=202
 # newer OpenWatcom versions enable W303 by default
@@ -54,11 +54,7 @@ $(LNKFILE):
   @%append $@ NAME $(LIBNAME)
   @for %i in ($(OBJS)) do @%append $@ FILE %i
   @%append $@ OPTION QUIET
-!ifdef %osdir
-  @$(%osdir)\KLIBC\BIN\date +"OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@$#$#1$#$# %F               $(%HOSTNAME)::::::@@Simple DirectMedia Layer Image Library'" >>$^@
-!else
   @%append $@ OPTION DESCRIPTION '@$#libsdl org:$(VERSION)$#@Simple DirectMedia Layer Image Library'
-!endif
   @%append $@ LIBPATH $(LIBPATH)
   @for %i in ($(LIBS)) do @%append $@ LIB %i
   @%append $@ OPTION MAP=$*
@@ -80,8 +76,10 @@ clean: .SYMBOLIC
   @echo * Clean: $(TITLENAME)
   @if exist *.obj rm *.obj
   @if exist *.err rm *.err
-  @if exist *.map rm *.map
-  @if exist *.exe rm *.exe
   @if exist $(LNKFILE) rm $(LNKFILE)
+
+distclean: clean .SYMBOLIC
+  @if exist *.exe rm *.exe
+  @if exist *.map rm *.map
   @if exist $(DLLFILE) rm $(DLLFILE)
   @if exist $(LIBFILE) rm $(LIBFILE)

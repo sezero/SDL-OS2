@@ -46,6 +46,7 @@ dnl AC_CANONICAL_HOST
 
 dnl Check for tools
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 if test -z "$host_alias"; then
@@ -99,10 +100,7 @@ if test x$enable_dependency_tracking = xyes; then
     #if !defined(__GNUC__) || __GNUC__ < 3
     #error Dependency tracking requires GCC 3.0 or newer
     #endif
-    ],[
-    ],[
-    have_gcc_mmd_mt=yes
-    ])
+    ],[], [have_gcc_mmd_mt=yes])
     AC_MSG_RESULT($have_gcc_mmd_mt)
 
     if test x$have_gcc_mmd_mt = xyes; then
@@ -114,7 +112,7 @@ case "$host" in
     *mingw32ce*)
         #VERSION_SOURCES="$srcdir/version.rc"
         EXE=".exe"
-	;;
+        ;;
     *-*-cygwin* | *-*-mingw*)
         VERSION_SOURCES="$srcdir/version.rc"
         EXE=".exe"
@@ -147,12 +145,47 @@ $srcdir/music.c"
 dnl set this to use on systems that use lib64 instead of lib
 base_libdir=`echo \${libdir} | sed 's/.*\/\(.*\)/\1/; q'`
 
+dnl See if GCC's -Wall is supported.
+CheckWarnAll()
+{
+    AC_MSG_CHECKING(for GCC -Wall option)
+    have_gcc_Wall=no
+
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$save_CFLAGS -Wall"
+    AC_TRY_COMPILE([int x = 0;],, [have_gcc_Wall=yes])
+    AC_MSG_RESULT($have_gcc_Wall)
+    CFLAGS="$save_CFLAGS"
+
+    if test x$have_gcc_Wall = xyes; then
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
+
+dnl Haiku headers use multicharacter constants all over the place. Ignore these warnings when using -Wall.
+        AC_MSG_CHECKING(for necessary GCC -Wno-multichar option)
+        need_gcc_Wno_multichar=no
+        case "$host" in
+            *-*-beos* | *-*-haiku*)
+                need_gcc_Wno_multichar=yes
+                ;;
+        esac
+        AC_MSG_RESULT($need_gcc_Wno_multichar)
+        if test x$need_gcc_Wno_multichar = xyes; then
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -Wno-multichar"
+        fi
+    fi
+}
+
 dnl See if GCC's -fvisibility=hidden is supported (gcc4 and later, usually).
-dnl  Details of this flag are here: http://gcc.gnu.org/wiki/Visibility
 CheckVisibilityHidden()
 {
     AC_MSG_CHECKING(for GCC -fvisibility=hidden option)
     have_gcc_fvisibility=no
+    case "$host" in
+    *-*-cygwin* | *-*-mingw* | *-*-os2*)
+        AC_MSG_RESULT([ignored for $host_os])
+        return
+        ;;
+    esac
 
     visibility_CFLAGS="-fvisibility=hidden"
     save_CFLAGS="$CFLAGS"
@@ -161,10 +194,7 @@ CheckVisibilityHidden()
     #if !defined(__GNUC__) || __GNUC__ < 4
     #error SDL only uses visibility attributes in GCC 4 or newer
     #endif
-    ],[
-    ],[
-    have_gcc_fvisibility=yes
-    ])
+    ],, [have_gcc_fvisibility=yes])
     AC_MSG_RESULT($have_gcc_fvisibility)
     CFLAGS="$save_CFLAGS"
 
@@ -202,12 +232,19 @@ AM_PATH_SDL($SDL_VERSION,
 EXTRA_CFLAGS="$EXTRA_CFLAGS $SDL_CFLAGS"
 EXTRA_LDFLAGS="$EXTRA_LDFLAGS $SDL_LIBS"
 
+dnl check for GCC warning options
+CheckWarnAll
+
+dnl check for GCC visibility attributes
+CheckVisibilityHidden
+
 dnl Check for math library
 AC_CHECK_LIB(m, pow, [LIBM="-lm"])
 
-dnl Check command-line options
+AC_CHECK_HEADERS([signal.h], [EXTRA_CFLAGS="$EXTRA_CFLAGS -DHAVE_SIGNAL_H"])
+AC_CHECK_FUNCS(setbuf, [EXTRA_CFLAGS="$EXTRA_CFLAGS -DHAVE_SETBUF"])
 
-CheckVisibilityHidden
+dnl Check command-line options
 
 AC_ARG_ENABLE([music-cmd],
 [AS_HELP_STRING([--enable-music-cmd], [support an external music player [default=yes]])],
@@ -271,7 +308,7 @@ int main(int argc, char **argv)
   printf("no\n*** libmikmod is older than %d.%d.%d, not using.\n",maj,min,rev);
   return 1;
 }
-], [], [have_libmikmod=no], [echo $ac_n "cross compiling; assumed OK... $ac_c"])
+], [],[have_libmikmod=no],[echo $ac_n "cross compiling; assumed OK... $ac_c"])
     fi
 
     if test x$have_libmikmod = xyes; then
@@ -296,9 +333,10 @@ int main(int argc, char **argv)
             EXTRA_CFLAGS="$EXTRA_CFLAGS -DMOD_DYNAMIC=\\\"$mikmod_lib\\\""
         else
             EXTRA_LDFLAGS="$EXTRA_LDFLAGS `$LIBMIKMOD_CONFIG --libs`"
+            PC_LIBS="$PC_LIBS `$LIBMIKMOD_CONFIG --libs`"
         fi
     else
-        AC_MSG_WARN([*** Unable to find MikMod library (http://mikmod.raphnet.net/)])
+        AC_MSG_WARN([*** Unable to find MikMod library (http://mikmod.sourceforge.net/)])
     fi
     LIBS="$LIBS_SAVED"
     CFLAGS="$CFLAGS_SAVED"
@@ -311,6 +349,7 @@ if test x$enable_music_mod_modplug = xyes; then
     PKG_CHECK_MODULES([MODPLUG], [libmodplug >= 0.8.7], [dnl
             have_libmodplug_hdr=yes
             have_libmodplug_lib=yes
+            have_libmodplug_pc=yes
         ], [dnl
             AC_CHECK_HEADER([libmodplug/modplug.h], [have_libmodplug_hdr=yes])
             AC_CHECK_LIB([modplug], [ModPlug_Load], [have_libmodplug_lib=yes;MODPLUG_LIBS="-lmodplug"])
@@ -321,13 +360,18 @@ if test x$enable_music_mod_modplug = xyes; then
         SOURCES="$SOURCES $srcdir/music_modplug.c"
         EXTRA_CFLAGS="$EXTRA_CFLAGS -DMODPLUG_MUSIC $MODPLUG_CFLAGS"
         EXTRA_LDFLAGS="$EXTRA_LDFLAGS $MODPLUG_LIBS"
+        if test x$have_libmodplug_pc = xyes; then
+            PC_REQUIRES="$PC_REQUIRES libmodplug"
+        else
+            PC_LIBS="$PC_LIBS $MODPLUG_LIBS"
+        fi
     else
         AC_MSG_WARN([*** Unable to find ModPlug library (http://modplug-xmms.sourceforge.net/)])
     fi
 fi
 
 if test x$have_libmikmod != xyes -a x$have_libmodplug != xyes ; then
-	AC_MSG_WARN([MOD support disabled])
+    AC_MSG_WARN([MOD support disabled])
 fi
 
 AC_ARG_ENABLE([music-midi],
@@ -354,14 +398,17 @@ if test x$enable_music_midi = xyes; then
             *-*-cygwin* | *-*-mingw*)
                 use_music_native_midi=yes
                 EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lwinmm"
+                PC_LIBS="$PC_LIBS -lwinmm"
                 ;;
             *-*-darwin*)
                 use_music_native_midi=yes
                 EXTRA_LDFLAGS="$EXTRA_LDFLAGS -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,CoreServices"
+                PC_LIBS="$PC_LIBS -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,CoreServices"
                 ;;
             *-*-haiku*)
                 use_music_native_midi=yes_cpp
                 EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lmidi" 
+                PC_LIBS="$PC_LIBS -lmidi"
                 ;;
         esac
         if test x$use_music_native_midi = xyes; then
@@ -380,8 +427,14 @@ if test x$enable_music_midi = xyes; then
 [AS_HELP_STRING([--enable-music-fluidsynth-shared], [dynamically load FluidSynth support [default=yes]])],
                   [], [enable_music_fluidsynth_shared=yes])
     if test x$enable_music_fluidsynth_midi = xyes; then
-        AC_CHECK_HEADER([fluidsynth.h], [have_fluidsynth_hdr=yes])
-        AC_CHECK_LIB([fluidsynth], [fluid_player_add_mem], [have_fluidsynth_lib=yes])
+        PKG_CHECK_MODULES([FLUIDSYNTH], [fluidsynth], [dnl
+                have_fluidsynth_hdr=yes
+                have_fluidsynth_lib=yes
+                have_fluidsynth_pc=yes
+            ], [dnl
+                AC_CHECK_HEADER([fluidsynth.h], [have_fluidsynth_hdr=yes])
+                AC_CHECK_LIB([fluidsynth], [fluid_player_add_mem], [have_fluidsynth_lib=yes;FLUIDSYNTH_LIBS="-lfluidsynth"])
+            ])
         if test x$have_fluidsynth_hdr = xyes -a x$have_fluidsynth_lib = xyes; then
             case "$host" in
                 *-*-darwin*)
@@ -401,12 +454,17 @@ if test x$enable_music_midi = xyes; then
                     ;;
             esac
             SOURCES="$SOURCES $srcdir/dynamic_fluidsynth.c $srcdir/music_fluidsynth.c"
-            EXTRA_CFLAGS="$EXTRA_CFLAGS -DUSE_FLUIDSYNTH_MIDI"
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -DUSE_FLUIDSYNTH_MIDI $FLUIDSYNTH_CFLAGS"
             if test x$enable_music_fluidsynth_shared = xyes && test x$fluidsynth_lib != x; then
                 echo "-- dynamic libfluidsyth -> $fluidsynth_lib"
                 EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLUIDSYNTH_DYNAMIC=\\\"$fluidsynth_lib\\\""
             else
-                EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lfluidsynth"
+                EXTRA_LDFLAGS="$EXTRA_LDFLAGS $FLUIDSYNTH_LIBS"
+                if test x$have_fluidsynth_pc = xyes; then
+                    PC_REQUIRES="$PC_REQUIRES fluidsynth"
+                else
+                    PC_LIBS="$PC_LIBS $FLUIDSYNTH_LIBS"
+                fi
             fi
         else
             AC_MSG_WARN([*** Unable to find FluidSynth library (http://www.fluidsynth.org/)])
@@ -427,8 +485,14 @@ AC_ARG_ENABLE([music-ogg-shared],
 if test x$enable_music_ogg = xyes; then
     LIBS_SAVED="$LIBS"
     if test x$enable_music_ogg_tremor = xyes; then
-        AC_CHECK_HEADER([tremor/ivorbisfile.h], [have_tremor_hdr=yes])
-        AC_CHECK_LIB([vorbisidec], [ov_open_callbacks], [have_tremor_lib=yes], [], [-logg])
+        PKG_CHECK_MODULES([TREMOR], [vorbisidec], [dnl
+                have_tremor_hdr=yes
+                have_tremor_lib=yes
+                have_tremor_pc=yes
+            ], [dnl
+                AC_CHECK_HEADER([tremor/ivorbisfile.h], [have_tremor_hdr=yes])
+                AC_CHECK_LIB([vorbisidec], [ov_open_callbacks], [have_tremor_lib=yes;TREMOR_LIBS="-lvorbisidec -logg"], [], [-logg])
+            ])
         if test x$have_tremor_hdr = xyes -a x$have_tremor_lib = xyes; then
             case "$host" in
                 *-*-darwin*)
@@ -448,20 +512,31 @@ if test x$enable_music_ogg = xyes; then
                     ;;
             esac
             SOURCES="$SOURCES $srcdir/*_ogg.c"
-            EXTRA_CFLAGS="$EXTRA_CFLAGS -DOGG_MUSIC -DOGG_USE_TREMOR"
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -DOGG_MUSIC -DOGG_USE_TREMOR $TREMOR_CFLAGS"
             if test x$enable_music_ogg_shared = xyes && test x$ogg_lib != x; then
                 echo "-- dynamic libvorbisidec -> $ogg_lib"
                 EXTRA_CFLAGS="$EXTRA_CFLAGS -DOGG_DYNAMIC=\\\"$ogg_lib\\\""
             else
-                EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lvorbisidec"
+                EXTRA_LDFLAGS="$EXTRA_LDFLAGS $TREMOR_LIBS"
+                if test x$have_tremor_pc = xyes; then
+                    PC_REQUIRES="$PC_REQUIRES vorbisidec"
+                else
+                    PC_LIBS="$PC_LIBS $TREMOR_LIBS"
+                fi
             fi
         else
             AC_MSG_WARN([*** Unable to find Ogg Vorbis Tremor library (http://www.xiph.org/)])
             AC_MSG_WARN([Ogg Vorbis support disabled])
         fi
     else
-        AC_CHECK_HEADER([vorbis/vorbisfile.h], [have_ogg_hdr=yes])
-        AC_CHECK_LIB([vorbisfile], [ov_open_callbacks], [have_ogg_lib=yes], [], [-lvorbis -logg -lm])
+        PKG_CHECK_MODULES([VORBIS], [vorbisfile], [dnl
+                have_ogg_hdr=yes
+                have_ogg_lib=yes
+                have_ogg_pc=yes
+            ], [dnl
+                AC_CHECK_HEADER([vorbis/vorbisfile.h], [have_ogg_hdr=yes])
+                AC_CHECK_LIB([vorbisfile], [ov_open_callbacks], [have_ogg_lib=yes;VORBIS_LIBS="-lvorbisfile -lvorbis -logg -lm"], [], [-lvorbis -logg -lm])
+            ])
         if test x$have_ogg_hdr = xyes -a x$have_ogg_lib = xyes; then
             case "$host" in
                 *-*-darwin*)
@@ -478,12 +553,17 @@ if test x$enable_music_ogg = xyes; then
                     ;;
             esac
             SOURCES="$SOURCES $srcdir/*_ogg.c"
-            EXTRA_CFLAGS="$EXTRA_CFLAGS -DOGG_MUSIC"
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -DOGG_MUSIC $VORBIS_CFLAGS"
             if test x$enable_music_ogg_shared = xyes && test x$ogg_lib != x; then
                 echo "-- dynamic libvorbisfile -> $ogg_lib"
                 EXTRA_CFLAGS="$EXTRA_CFLAGS -DOGG_DYNAMIC=\\\"$ogg_lib\\\""
             else
-                EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lvorbisfile -lvorbis -logg -lm"
+                EXTRA_LDFLAGS="$EXTRA_LDFLAGS $VORBIS_LIBS"
+                if test x$have_ogg_pc = xyes; then
+                    PC_REQUIRES="$PC_REQUIRES vorbisfile"
+                else
+                    PC_LIBS="$PC_LIBS $VORBIS_LIBS"
+                fi
             fi
         else
             AC_MSG_WARN([*** Unable to find Ogg Vorbis library (http://www.xiph.org/)])
@@ -521,9 +601,15 @@ if test x$enable_music_flac = xyes; then
     fi
 
     if test x$have_flac_ver = xyes; then
-        AC_CHECK_HEADER([FLAC/stream_decoder.h], [have_flac_hdr=yes])
-        AC_CHECK_LIB([FLAC], [FLAC__stream_decoder_new], [have_flac_lib=yes])
-        if test x$have_flac_hdr = xyes -a x$have_flac_lib = xyes; then    
+        PKG_CHECK_MODULES([FLAC], [flac], [dnl
+                have_flac_hdr=yes
+                have_flac_lib=yes
+                have_flac_pc=yes
+            ], [dnl
+                AC_CHECK_HEADER([FLAC/stream_decoder.h], [have_flac_hdr=yes])
+                AC_CHECK_LIB([FLAC], [FLAC__stream_decoder_new], [have_flac_lib=yes;FLAC_LIBS="-lFLAC"])
+            ])
+        if test x$have_flac_hdr = xyes -a x$have_flac_lib = xyes; then
             case "$host" in
                 *-*-darwin*)
                     flac_lib=[`find_lib libFLAC.dylib`]
@@ -539,12 +625,17 @@ if test x$enable_music_flac = xyes; then
                     ;;
             esac
             SOURCES="$SOURCES $srcdir/*_flac.c"
-            EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLAC_MUSIC"
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLAC_MUSIC $FLAC_CFLAGS"
             if test x$enable_music_flac_shared = xyes && test x$flac_lib != x; then
                 echo "-- dynamic libFLAC -> $flac_lib"
                 EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLAC_DYNAMIC=\\\"$flac_lib\\\""
             else
-                EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lFLAC"
+                EXTRA_LDFLAGS="$EXTRA_LDFLAGS $FLAC_LIBS"
+                if test x$have_flac_pc = xyes; then
+                    PC_REQUIRES="$PC_REQUIRES flac"
+                else
+                    PC_LIBS="$PC_LIBS $FLAC_LIBS"
+                fi
             fi
         fi
     else
@@ -552,9 +643,6 @@ if test x$enable_music_flac = xyes; then
         AC_MSG_WARN([FLAC support disabled])
     fi
 fi
-
-AC_CHECK_HEADERS([signal.h], [EXTRA_CFLAGS="$EXTRA_CFLAGS -DHAVE_SIGNAL_H"])
-AC_CHECK_FUNCS(setbuf, [EXTRA_CFLAGS="$EXTRA_CFLAGS -DHAVE_SETBUF"])
 
 AC_ARG_ENABLE(music-mp3,
 [AS_HELP_STRING([--enable-music-mp3], [enable MP3 music via libmpg123 [default=yes]])],
@@ -564,8 +652,14 @@ AC_ARG_ENABLE([music-mp3-shared],
               [], [enable_music_mp3_shared=yes])
 have_mpg123=no
 if test x$enable_music_mp3 = xyes; then
-    AC_CHECK_HEADER([mpg123.h], [have_mpg123_hdr=yes])
-    AC_CHECK_LIB([mpg123], [mpg123_replace_reader_handle], [have_mpg123_lib=yes])
+    PKG_CHECK_MODULES([MPG123], [libmpg123], [dnl
+            have_mpg123_hdr=yes
+            have_mpg123_lib=yes
+            have_mpg123_pc=yes
+        ], [dnl
+            AC_CHECK_HEADER([mpg123.h], [have_mpg123_hdr=yes])
+            AC_CHECK_LIB([mpg123], [mpg123_replace_reader_handle], [have_mpg123_lib=yes;MPG123_LIBS="-lmpg123"])
+        ])
     if test x$have_mpg123_hdr = xyes -a x$have_mpg123_lib = xyes; then
         have_mpg123=yes
         case "$host" in
@@ -580,12 +674,17 @@ if test x$enable_music_mp3 = xyes; then
                 ;;
         esac
         SOURCES="$SOURCES $srcdir/*_mp3.c $srcdir/*_mpg.c"
-        EXTRA_CFLAGS="$EXTRA_CFLAGS -DMP3_MUSIC"
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -DMP3_MUSIC $MPG123_CFLAGS"
         if test x$enable_music_mp3_shared = xyes && test x$mpg123_lib != x; then
             echo "-- dynamic libmpg123 -> $mpg123_lib"
             EXTRA_CFLAGS="$EXTRA_CFLAGS -DMPG123_DYNAMIC=\\\"$mpg123_lib\\\""
         else
-            EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lmpg123"
+            EXTRA_LDFLAGS="$EXTRA_LDFLAGS $MPG123_LIBS"
+            if test x$have_mpg123_pc = xyes; then
+                PC_REQUIRES="$PC_REQUIRES libmpg123"
+            else
+                PC_LIBS="$PC_LIBS $MPG123_LIBS"
+            fi
         fi
     else
         AC_MSG_WARN([*** Unable to find mpg123 library (https://www.mpg123.de)])
@@ -609,6 +708,7 @@ if test x$enable_music_mp3_mad_gpl = xyes; then
         SOURCES="$SOURCES $srcdir/music_mad.c"
         EXTRA_CFLAGS="$EXTRA_CFLAGS -DMP3_MAD_MUSIC"
         EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lmad"
+        PC_LIBS="$PC_LIBS -lmad"
     else
         AC_MSG_WARN([*** Unable to find MAD library (http://www.underbit.com/products/mad/)])
     fi
@@ -680,6 +780,8 @@ AC_SUBST(WINDRES)
 AC_SUBST(SDL_VERSION)
 AC_SUBST(SDL_CFLAGS)
 AC_SUBST(SDL_LIBS)
+AC_SUBST(PC_REQUIRES)
+AC_SUBST(PC_LIBS)
 
 AC_CONFIG_FILES([
     Makefile SDL_mixer.spec SDL_mixer.qpg SDL_mixer.pc
@@ -697,7 +799,7 @@ $PLAYWAVE_DEPENDS
 
 -include \$(PLAYMUS_OBJECTS:.lo=.d)
 $PLAYMUS_DEPENDS
-__EOF__ 
+__EOF__
 ], [
 DEPENDS="$DEPENDS"
 VERSION_DEPENDS="$VERSION_DEPENDS"

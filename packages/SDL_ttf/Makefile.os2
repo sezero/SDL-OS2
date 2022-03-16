@@ -16,6 +16,8 @@ OBJS = $(SRCS:.c=.obj)
 LIBS = freetype.lib zlib.lib SDL12.lib
 
 CFLAGS_BASE = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oeatxh -ei -j
+# for alloca():
+CFLAGS_BASE+= -DHAVE_ALLOCA=1
 # warnings:
 CFLAGS_BASE+= -wx
 # newer OpenWatcom versions enable W303 by default

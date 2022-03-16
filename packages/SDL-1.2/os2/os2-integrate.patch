@@ -1,8 +1,8 @@
 diff --git a/Makefile.os2 b/Makefile.os2
-index 59e4502..eddef31 100644
+index a3f9d50..cd6d066 100644
 --- a/Makefile.os2
 +++ b/Makefile.os2
-@@ -49,7 +49,8 @@ PMGRE_LIB = $(LIBPATH)/pmgre.lib
+@@ -51,7 +51,8 @@ PMGRE_LIB = $(LIBPATH)/pmgre.lib
  PMGRE_EXP = os2/pmgre/pmgre.exp
  
  audioobjs = SDL_audiocvt.obj SDL_mixer.obj SDL_mixer_MMX_VC.obj SDL_wave.obj &
@@ -30,7 +30,7 @@ index 56eb787..47b250c 100644
  /* Enable various cdrom drivers */
  #define SDL_CDROM_OS2	1
 diff --git a/src/audio/SDL_mixer.c b/src/audio/SDL_mixer.c
-index b5d4d8b..3e3cd83 100644
+index b5d4d8b..0d5dd26 100644
 --- a/src/audio/SDL_mixer.c
 +++ b/src/audio/SDL_mixer.c
 @@ -98,6 +98,9 @@ void SDL_MixAudio (Uint8 *dst, const Uint8 *src, Uint32 len, int volume)
@@ -52,7 +52,7 @@ index b5d4d8b..3e3cd83 100644
  
  		case AUDIO_U8: {
 diff --git a/src/audio/SDL_sysaudio.h b/src/audio/SDL_sysaudio.h
-index fa29a2b..6d9b9ea 100644
+index fa29a2b..4fb8b36 100644
 --- a/src/audio/SDL_sysaudio.h
 +++ b/src/audio/SDL_sysaudio.h
 @@ -183,7 +183,11 @@ extern AudioBootStrap DART_bootstrap;

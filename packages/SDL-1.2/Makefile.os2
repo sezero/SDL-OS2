@@ -140,10 +140,10 @@ $(LNKFILE):
 clean: .SYMBOLIC
 	@echo * Clean: $(LIBNAME) $(VERSION)
 	@if exist *.obj rm *.obj
+	@if exist *.map rm *.map
+	@if exist *.exp rm *.exp
 	@if exist $(LNKFILE) rm $(LNKFILE)
 
 distclean: clean .SYMBOLIC
-	@if exist *.map rm *.map
-	@if exist *.exp rm *.exp
 	@if exist $(DLLFILE) rm $(DLLFILE)
 	@if exist $(LIBFILE) rm $(LIBFILE)

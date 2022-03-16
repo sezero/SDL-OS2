@@ -159,11 +159,11 @@ static LONG APIENTRY AudioEvent(ULONG status, PMCI_MIX_BUFFER pBuffer, ULONG fla
 int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 {
     ULONG rc;
-    char* env;
+    const char* env;
     ULONG bps;
     ULONG idx;
-    MCI_AMP_OPEN_PARMS sMCIAmpOpen = { 0 };
-    BOOL  shared = _getEnvULong("SDL_AUDIO_SHARE", 1, 0);
+    MCI_AMP_OPEN_PARMS sMCIAmpOpen;
+    BOOL  shared;
 
     debug("Requested: Freq.: %u, Channels: %u, format: 0x%X", desired->freq,
           desired->channels, desired->format);
@@ -241,6 +241,8 @@ int SDLCALL SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     }
 
     /* Open audio device */
+    memset(&sMCIAmpOpen, 0, sizeof(sMCIAmpOpen));
+    shared = _getEnvULong("SDL_AUDIO_SHARE", 1, 0);
     sMCIAmpOpen.usDeviceID = 0;
     sMCIAmpOpen.pszDeviceType = (PSZ)MCI_DEVTYPE_AUDIO_AMPMIX;
     rc = mciSendCommand(0, MCI_OPEN,
@@ -473,4 +475,4 @@ void SDL_Audio_SetCaption(const char *caption)
 {
 }
 
-#endif
+#endif /* SDL_AUDIO_DRIVER_DARTALT */

@@ -49,12 +49,8 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-if test -z "$host_alias"; then
-    hostaliaswindres=
-else
-    hostaliaswindres="$host_alias-windres"
-fi
-AC_CHECK_PROGS(WINDRES, [windres $hostaliaswindres $host_os-windres])
+LT_PROG_RC
+PKG_PROG_PKG_CONFIG
 
 dnl Set up the compiler and linker flags
 case "$host" in
@@ -123,6 +119,8 @@ case "$host" in
             # Look for the location of the tools and install there
             if test "$BUILD_PREFIX" != ""; then
                 ac_default_prefix=$BUILD_PREFIX
+            elif test "$MINGW_PREFIX" != ""; then
+                ac_default_prefix=$MINGW_PREFIX
             fi
         fi
         ;;
@@ -143,6 +141,7 @@ $srcdir/mixer.c \
 $srcdir/music.c"
 
 dnl set this to use on systems that use lib64 instead of lib
+base_bindir=`echo \${bindir} | sed 's/.*\/\(.*\)/\1/; q'`
 base_libdir=`echo \${libdir} | sed 's/.*\/\(.*\)/\1/; q'`
 
 dnl See if GCC's -Wall is supported.
@@ -212,7 +211,7 @@ find_lib()
     if test "$cross_compiling" = yes; then
         host_lib_path=""
     else
-        host_lib_path="/usr/$base_libdir /usr/local/$base_libdir"
+        host_lib_path="$ac_default_prefix/$base_libdir $ac_default_prefix/$base_bindir /usr/$base_libdir /usr/local/$base_libdir"
     fi
     for path in $env_lib_path $gcc_bin_path $gcc_lib_path $host_lib_path; do
         lib=[`ls -- $path/$1 2>/dev/null | sed -e '/\.so\..*\./d' -e 's,.*/,,' | sort | tail -1`]
@@ -582,10 +581,18 @@ AC_ARG_ENABLE([music-flac-shared],
               [dynamically load FLAC support [default=yes]])],
               [], [enable_music_flac_shared=yes])
 if test x$enable_music_flac = xyes; then
-    AC_CHECK_HEADER([FLAC/export.h], [have_flac_export=yes])
-    if test x$have_flac_export = xyes; then
-        LIBS_SAVED="$LIBS"
-        LIBS="-lFLAC"
+    PKG_CHECK_MODULES([FLAC], [flac], [dnl
+            have_flac_hdr=yes
+            have_flac_lib=yes
+            have_flac_pc=yes
+        ], [dnl
+            AC_CHECK_HEADER([FLAC/stream_decoder.h], [have_flac_hdr=yes])
+            AC_CHECK_LIB([FLAC], [FLAC__stream_decoder_new], [have_flac_lib=yes;FLAC_LIBS="-lFLAC"])
+        ])
+
+    if test x$have_flac_hdr = xyes -a x$have_flac_lib = xyes; then
+        save_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS $FLAC_CFLAGS"
         AC_MSG_CHECKING([for libflac so-name version >= $libflac_ver])
         AC_TRY_COMPILE([
 #include "FLAC/export.h"
@@ -596,46 +603,35 @@ if test x$enable_music_flac = xyes; then
 #error "old-flac"
 #endif
 ], have_flac_ver=yes, have_flac_ver=no)
-        LIBS="$LIBS_SAVED"
+        CFLAGS="$save_CFLAGS"
         AC_MSG_RESULT($have_flac_ver)
     fi
-
     if test x$have_flac_ver = xyes; then
-        PKG_CHECK_MODULES([FLAC], [flac], [dnl
-                have_flac_hdr=yes
-                have_flac_lib=yes
-                have_flac_pc=yes
-            ], [dnl
-                AC_CHECK_HEADER([FLAC/stream_decoder.h], [have_flac_hdr=yes])
-                AC_CHECK_LIB([FLAC], [FLAC__stream_decoder_new], [have_flac_lib=yes;FLAC_LIBS="-lFLAC"])
-            ])
-        if test x$have_flac_hdr = xyes -a x$have_flac_lib = xyes; then
-            case "$host" in
-                *-*-darwin*)
-                    flac_lib=[`find_lib libFLAC.dylib`]
-                    ;;
-                *-*-cygwin* | *-*-mingw*)
-                    flac_lib=[`find_lib "libFLAC-*.dll"`]
-                    ;;
-                *)
-                    flac_lib=[`find_lib "libFLAC[0-9]*.so.*"`]
-                    if test x$flac_lib = x; then
-                        flac_lib=[`find_lib "libFLAC.so.*"`]
-                    fi
-                    ;;
-            esac
-            SOURCES="$SOURCES $srcdir/*_flac.c"
-            EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLAC_MUSIC $FLAC_CFLAGS"
-            if test x$enable_music_flac_shared = xyes && test x$flac_lib != x; then
-                echo "-- dynamic libFLAC -> $flac_lib"
-                EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLAC_DYNAMIC=\\\"$flac_lib\\\""
-            else
-                EXTRA_LDFLAGS="$EXTRA_LDFLAGS $FLAC_LIBS"
-                if test x$have_flac_pc = xyes; then
-                    PC_REQUIRES="$PC_REQUIRES flac"
-                else
-                    PC_LIBS="$PC_LIBS $FLAC_LIBS"
+        case "$host" in
+            *-*-darwin*)
+                flac_lib=[`find_lib libFLAC.dylib`]
+                ;;
+            *-*-cygwin* | *-*-mingw*)
+                flac_lib=[`find_lib "libFLAC*.dll"`]
+                ;;
+            *)
+                flac_lib=[`find_lib "libFLAC[0-9]*.so.*"`]
+                if test x$flac_lib = x; then
+                    flac_lib=[`find_lib "libFLAC.so.*"`]
                 fi
+                ;;
+        esac
+        SOURCES="$SOURCES $srcdir/*_flac.c"
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLAC_MUSIC $FLAC_CFLAGS"
+        if test x$enable_music_flac_shared = xyes && test x$flac_lib != x; then
+            echo "-- dynamic libFLAC -> $flac_lib"
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -DFLAC_DYNAMIC=\\\"$flac_lib\\\""
+        else
+            EXTRA_LDFLAGS="$EXTRA_LDFLAGS $FLAC_LIBS"
+            if test x$have_flac_pc = xyes; then
+                PC_REQUIRES="$PC_REQUIRES flac"
+            else
+                PC_LIBS="$PC_LIBS $FLAC_LIBS"
             fi
         fi
     else
@@ -741,10 +737,10 @@ DEPENDS=`echo "$DEPENDS" | sed 's,\\$,\\\\$,g'`
 
 VERSION_OBJECTS=`echo $VERSION_SOURCES`
 VERSION_DEPENDS=`echo $VERSION_SOURCES`
-VERSION_OBJECTS=`echo "$VERSION_OBJECTS" | sed 's,[[^ ]]*/\([[^ ]]*\)\.rc,$(objects)/\1.o,g'`
+VERSION_OBJECTS=`echo "$VERSION_OBJECTS" | sed 's,[[^ ]]*/\([[^ ]]*\)\.rc,$(objects)/\1.lo,g'`
 VERSION_DEPENDS=`echo "$VERSION_DEPENDS" | sed 's,\([[^ ]]*\)/\([[^ ]]*\)\.rc,\\
-$(objects)/\2.o: \1/\2.rc \$(objects)/.created\\
-	\$(WINDRES) \$< \$@,g'`
+$(objects)/\2.lo: \1/\2.rc \$(objects)/.created\\
+	\$(LIBTOOL) --tag=RC --mode=compile \$(RC) \$< -o \$@,g'`
 VERSION_DEPENDS=`echo "$VERSION_DEPENDS" | sed 's,\\$,\\\\$,g'`
 
 PLAYWAVE_SOURCES="$srcdir/playwave.c"
@@ -776,7 +772,6 @@ AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(BUILD_LDFLAGS)
 AC_SUBST(EXTRA_LDFLAGS)
 AC_SUBST(EXE)
-AC_SUBST(WINDRES)
 AC_SUBST(SDL_VERSION)
 AC_SUBST(SDL_CFLAGS)
 AC_SUBST(SDL_LIBS)

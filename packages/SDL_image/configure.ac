@@ -39,6 +39,7 @@ AC_SUBST(LT_RELEASE)
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
+AC_SUBST(LT_EXTRA)
 
 dnl Detect the canonical build and host environments
 AC_CANONICAL_HOST
@@ -49,15 +50,11 @@ AM_INIT_AUTOMAKE([foreign tar-ustar])
 dnl Check for tools
 AC_PROG_CC
 AC_PROG_OBJC
+AC_CHECK_TOOL(RC,[windres],[:])
 AC_C_INLINE
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-if test -z "$host_alias"; then
-    hostaliaswindres=
-else
-    hostaliaswindres="$host_alias-windres"
-fi
-AC_CHECK_PROGS(WINDRES, [windres $hostaliaswindres $host_os-windres])
+PKG_PROG_PKG_CONFIG
 
 case "$host" in
     *-*-beos*)
@@ -75,9 +72,8 @@ case "$host" in
                 ac_default_prefix=$MINGW_PREFIX
             fi
         fi
-        if test x$WINDRES != x; then
-            use_version_rc=true
-        fi
+        use_version_rc=true
+        LT_EXTRA="-Wl,version.o"
         ;;
     *-*-darwin*)
         AC_ARG_ENABLE([imageio], [AS_HELP_STRING([--enable-imageio], [use native Mac OS X frameworks for loading images [default=yes]])],
@@ -215,7 +211,17 @@ AC_ARG_ENABLE([webpdec], [AS_HELP_STRING([--enable-webpdec], [support loading WE
 AC_ARG_ENABLE([webp-shared], [AS_HELP_STRING([--enable-webp-shared], [dynamically load WEBP support [default=yes]])],
  [], [enable_webp_shared=yes])
 
-if (test x$enable_jpg = xyes || test x$enable_tif = xyes) && test x$enable_imageio != xyes; then
+dnl Check for SDL
+SDL_VERSION=1.2.10
+AC_SUBST(SDL_VERSION)
+AM_PATH_SDL($SDL_VERSION,
+            :,
+           AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
+)
+CFLAGS="$CFLAGS $SDL_CFLAGS"
+LIBS="$LIBS $SDL_LIBS"
+
+if test x$enable_jpg = xyes -a x$enable_imageio != xyes; then
     PKG_CHECK_MODULES([LIBJPEG], [libjpeg], [dnl
         have_jpg_hdr=yes
         have_jpg_lib=yes
@@ -472,17 +478,6 @@ if test x$enable_png = xyes -a x$have_png_hdr = xyes -a x$have_png_lib = xyes; t
     fi
 fi
 
-dnl Check for SDL
-SDL_VERSION=1.2.10
-AC_SUBST(SDL_VERSION)
-AM_PATH_SDL($SDL_VERSION,
-            :,
-           AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
-)
-CFLAGS="$CFLAGS $SDL_CFLAGS"
-LIBS="$LIBS $SDL_LIBS"
-
-AC_SUBST([WINDRES])
 AC_SUBST([IMG_LIBS])
 AC_SUBST([PC_LIBS])
 AC_SUBST([PC_REQUIRES])

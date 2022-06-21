@@ -1,0 +1,48 @@
+# Open Watcom makefile to build a static GUIlib.lib for OS/2
+# wmake -f Makefile.os2
+#
+LIBNAME = GUIlib
+VERSION = 1.2.1
+
+LIBFILE = $(LIBNAME).lib
+INCPATH = ../../../h
+
+SRCS =	GUI.cpp			&
+	GUI_C.cpp		&
+	GUI_area.cpp		&
+	GUI_button.cpp		&
+	GUI_font.cpp		&
+	GUI_generic.cpp		&
+	GUI_image.cpp		&
+	GUI_loadimage.cpp	&
+	GUI_menu.cpp		&
+	GUI_output.cpp		&
+	GUI_scrollbar.cpp	&
+	GUI_termwin.cpp		&
+	GUI_widget.cpp
+
+OBJS = $(SRCS:.cpp=.obj)
+
+LIBS = SDL12.lib
+
+CFLAGS_BASE = -bt=os2 -d0 -q -bm -5s -fp5 -fpi87 -sg -oeatxh -ei -j
+# warnings:
+CFLAGS_BASE+= -w3
+# include paths:
+CFLAGS_BASE+= -I"$(%WATCOM)/h/os2" -I"$(%WATCOM)/h" -I$(INCPATH)/SDL
+CFLAGS = $(CFLAGS_BASE)
+
+all: $(LIBFILE)
+
+$(LIBFILE): $(OBJS)
+  wlib -q -b -n -c -pa -s -t -zld -ii -io $@ $(OBJS)
+
+.cpp.obj:
+  wpp386 $(CFLAGS) -fo=$^@ $<
+
+clean: .SYMBOLIC
+  @if exist *.obj rm *.obj
+  @if exist *.err rm *.err
+
+distclean: .SYMBOLIC clean
+  @if exist $(LIBFILE) rm $(LIBFILE)

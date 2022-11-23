@@ -6509,7 +6509,7 @@ void _murphyIteration(SDL_gfxMurphyIterator *m, Uint8 miter,
 	int ftmp1, ftmp2;
 	Uint16 m1x, m1y, m2x, m2y;	
 	Uint16 fix, fiy, lax, lay, curx, cury;
-	Uint16 px[4], py[4];
+	Sint16 px[4], py[4];
 	SDL_gfxBresenhamIterator b;
 
 	if (miter > 1) {
@@ -6594,14 +6594,14 @@ void _murphyIteration(SDL_gfxMurphyIterator *m, Uint8 miter,
 				SDL_UnlockSurface(m->dst);
 			}
 
-			px[0] = m1x;
-			px[1] = m2x;
-			px[2] = ml1bx;
-			px[3] = ml2bx;
-			py[0] = m1y;
-			py[1] = m2y;
-			py[2] = ml1by;
-			py[3] = ml2by;			
+			px[0] = (Sint16)m1x;
+			px[1] = (Sint16)m2x;
+			px[2] = (Sint16)ml1bx;
+			px[3] = (Sint16)ml2bx;
+			py[0] = (Sint16)m1y;
+			py[1] = (Sint16)m2y;
+			py[2] = (Sint16)ml1by;
+			py[3] = (Sint16)ml2by;			
 			polygonColor(m->dst, px, py, 4, m->color);						
 		}
 	}

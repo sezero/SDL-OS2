@@ -195,6 +195,9 @@ int main(int argc, char *argv[])
 	IPaddress serverIP;
 	int i;
 
+	(void) argc;
+	(void) argv;
+
 	/* Initialize SDL */
 	if ( SDL_Init(0) < 0 ) {
 		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());

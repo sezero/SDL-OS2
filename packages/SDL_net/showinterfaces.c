@@ -27,9 +27,18 @@ int main(int argc, char *argv[])
 	IPaddress addresses[MAX_ADDRESSES];
 	int i, count;
 
+	(void) argc;
+	(void) argv;
+
+	if (SDLNet_Init() < 0) {
+		fprintf(stderr, "Couldn't initialize net: %s\n",
+				SDLNet_GetError());
+		return 1;
+	}
+
 	count = SDLNet_GetLocalAddresses(addresses, MAX_ADDRESSES);
 	printf("Found %d local addresses\n", count);
-	for ( i = 0; i < count; ++i ) {
+	for (i = 0; i < count; ++i) {
 		printf("%d: %d.%d.%d.%d - %s\n", i+1,
 			(addresses[i].host >> 0) & 0xFF,
 			(addresses[i].host >> 8) & 0xFF,
@@ -37,5 +46,8 @@ int main(int argc, char *argv[])
 			(addresses[i].host >> 24) & 0xFF,
 			SDLNet_ResolveIP(&addresses[i]));
 	}
+
+	SDLNet_Quit();
+
 	return 0;
 }

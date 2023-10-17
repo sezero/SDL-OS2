@@ -1,5 +1,5 @@
 LIBNAME = freetype
-VERSION = 2.4.11.el7
+VERSION = 2.4.11
 
 TITLENAME = $(LIBNAME) $(VERSION)
 
@@ -17,8 +17,9 @@ OBJS = $(SRCS:.c=.obj)
 INCPATH =-Iinclude
 CFLAGS = -bt=os2 -ei -d0 -q -bm -5s -fp5 -fpi87 -sg -oeatxh
 CFLAGS+= -wcd=124 -DFT2_BUILD_LIBRARY
-CFLAGS+= -DFT_CONFIG_OPTION_SYSTEM_ZLIB
-INCPATH+= -I"../zlib-1.2.8"
+# just use zlib included in ft2
+#CFLAGS+= -DFT_CONFIG_OPTION_SYSTEM_ZLIB
+#INCPATH+= -I"../zlib-1.2.8"
 CFLAGS+= $(INCPATH)
 
 $(LIBFILE): $(OBJS)
@@ -30,7 +31,7 @@ $(LIBFILE): $(OBJS)
 
 .c: src/autofit;src/base;src/bdf;src/cache;src/cff;src/cid;src/gzip;&
 src/lzw;src/pcf;src/pfr;src/psaux;src/pshinter;src/psnames;src/raster;&
-src/sfnt;src/smooth;src/truetype;src/type1;src/type42;src/winfonts;
+src/sfnt;src/smooth;src/truetype;src/type1;src/type42;src/winfonts;&
 
 .c.obj:
   wcc386 $(CFLAGS) -fo=$^@ $<

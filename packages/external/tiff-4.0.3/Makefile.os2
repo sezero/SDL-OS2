@@ -14,9 +14,9 @@ SRCS = tif_aux.c tif_close.c tif_codec.c tif_color.c tif_compress.c tif_dir.c &
 
 OBJS = $(SRCS:.c=.obj)
 
-CFLAGS = -bt=os2 -ei -d0 -q -bm -5s -fp5 -fpi87 -sg -oeatxh
+CFLAGS = -bt=os2 -ei -d0 -q -bm -5s -fp5 -fpi87 -sg -oeatxh -wx
 CFLAGS+= -DNDEBUG
-CFLAGS+= -I"../zlib-1.2.8"
+CFLAGS+= -Iwatcom
 
 .c: libtiff
 
@@ -24,13 +24,11 @@ $(LIBFILE): $(OBJS)
   @echo * Create library: $@...
   wlib -q -b -n -c -pa -s -t -zld -ii -io $@ $(OBJS)
 
-tif_read.obj: tif_read.c
-  wcc386 $(CFLAGS) -wcd=136 -fo=$^@ $<
-
 .c.obj:
   wcc386 $(CFLAGS) -fo=$^@ $<
 
 clean: .SYMBOLIC
   @if exist *.obj rm *.obj
+distclean: .SYMBOLIC clean
   @if exist *.err rm *.err
   @if exist $(LIBFILE) rm $(LIBFILE)

@@ -1,53 +1,42 @@
   Hello folks !
 
 
-This is libmikmod, version 3.1.22, a portable sound library for Unix.
+This is libmikmod, version 3.1.23, a portable sound library for Unix.
 Check out the file 'NEWS' for more history information.
 
 
 >> BUILDING LIBMIKMOD
 ---------------------
 
-- If you're not building libmikmod for OS/2, then you're lost in the
+- If you're not building libmikmod for Windows, then you're lost in the
   sources. Go up one directory, and read the main README file.
 
-So you're on a good old OS/2 system, aren't you ? With a customized
-Object Desktop or some equivalent tool collection ?
+So, you're on an angry fruit salad Windows system, aren't you ? With
+those so cute icons and an overflowed system tray ?
 
-I hope you've installed REXX support during the system installation. If
-you didn't, you lose. Run 'selective install' from the system setup
-folder, install REXX support, check it works, and come back here.
+Currently, libmikmod can be build under Windows with the Microsoft
+compiler, MinGW and Watcom compilers.
 
-Currently, libmikmod can be build under OS/2 only with the Watcom compiler
-(tested with OpenWatcom 1.9) or with the EMX compiler (not tested). You'll
-need the MMPM/2 toolkit (included in all the Warp toolkits) to compile the
-MMPM/2 driver. The Warp4 toolkit is required if you want to build the DART
-driver, too.
+You'll need the DirectX SDK (if not included with the compiler) to
+compile the DirectSound driver; version 5 or better is required. The
+standard Win32 SDK is enough for the winmm driver.
 
-You need long filenames to compile libmikmod, so you'll have to compile it
-on an HPFS drive, or an ext2fs drive, or a network drive where you can
-use decent-size filenames.
+Oh, I almost forgot: you need long filenames to compile libmikmod, but
+that should not be a problem nowadays.
 
-For EMX, run:
-    make -f Makefile.emx dll
 
-For Watcom, run:
-    wmake -f Makefile.wat
+-- Instructions for Microsoft Compiler
 
-and you'll get your mikmod2.dll and its import lib in this directory.
-Edit the makefiles in case you need to customize the build options, or
-you want to make a static library, and/or want to learn any details.
-
-If the build fails, I'd like to hear from you to correct the problem.
-
-To make you library ready to use, copy the file '..\include\mikmod.h'
-to your compiler include directory, and 'mikmod2.lib' to your compiler
-library directory. If you built a DLL, put the DLL (mikmod2.dll) in a
-directory which appears in your LIBPATH.
+Use 'VisualStudio' project files to build a dll and its import library:
+the project files are compatible with Visual Studio 2010 and newer.
+(If you really need, the 'VS8' (for MSVC 2005/2008) and 'MSVC6' project
+files are still there, too.) To make the library ready to use, copy the
+file 'mikmod.h' to your compiler include directory, and 'mikmod.lib` to
+your compiler libraries directory. You also have to put 'libmikmod.dll'
+somewhere in your PATH.
 
 HTML documentation of the library, for programmers, is located in the
 doc directory.
-
 
 >> THANKS
 ---------
@@ -85,7 +74,7 @@ copyright notice applies to these parts:
   documentation.  This software is provided "as is" without express or
   implied warranty.
 
-Note that none of these parts are used in the OS/2 version of the
+Note that none of these parts are used in the Win32 version of the
 libmikmod library.
 
 

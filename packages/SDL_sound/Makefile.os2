@@ -4,8 +4,8 @@
 # Remember to edit DEPS_INC and DEPS_LIB below to meet
 # your own environment!.
 
-# if you want to build against SDL-1.2, change USE_SDL2 to no
-USE_SDL2= no
+# if you want to build against SDL2, change USE_SDL2 to yes
+USE_SDL2=no
 # change DEPS_INC in order to point to the dependency headers.
 DEPS_INC=-I"../../h/SDL" -I"../../h"
 # change DEPS_LIB in order to point to the dependency libraries.

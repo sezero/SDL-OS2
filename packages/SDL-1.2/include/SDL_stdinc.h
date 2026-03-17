@@ -88,7 +88,7 @@
 # elif defined(__DMC__)
 #  include <stdlib.h>
 # elif defined(__AIX__)
-  #pragma alloca
+#pragma alloca
 # elif defined(__MRC__)
    void *alloca (unsigned);
 # else
@@ -258,6 +258,11 @@ extern DECLSPEC void SDLCALL SDL_qsort(void *base, size_t nmemb, size_t size,
 extern DECLSPEC void * SDLCALL SDL_memset(void *dst, int c, size_t len);
 #endif
 
+#if defined(__DREAMCAST__)
+#undef SDL_memset
+#define SDL_memset      memset_
+void * memset_(void *dest, const uint8_t val, size_t len);
+#endif
 #if defined(__GNUC__) && defined(__i386__)
 #define SDL_memset4(dst, val, len)				\
 do {								\
@@ -286,6 +291,12 @@ do {						\
 		} while ( --_n );		\
 	}					\
 } while(0)
+#endif
+
+#if defined(__DREAMCAST__)
+#undef SDL_memset4
+#define SDL_memset4      memset_32bit
+void * memset_32bit(void *dest, const uint32_t val, size_t len);
 #endif
 
 /* We can count on memcpy existing on Mac OS X and being well-tuned. */
@@ -320,6 +331,12 @@ extern DECLSPEC void * SDLCALL SDL_memcpy(void *dst, const void *src, size_t len
 #endif
 #endif
 
+#if defined(__DREAMCAST__)
+#undef SDL_memcpy
+#define SDL_memcpy      memcpy_
+void * memcpy_(void *dest, const void *src, size_t len);
+#endif
+
 /* We can count on memcpy existing on Mac OS X and being well-tuned. */
 #if defined(__MACH__) && defined(__APPLE__)
 #define SDL_memcpy4(dst, src, len) memcpy(dst, src, (len)*4)
@@ -337,6 +354,12 @@ do {								\
 #endif
 #ifndef SDL_memcpy4
 #define SDL_memcpy4(dst, src, len)	SDL_memcpy(dst, src, (len) << 2)
+#endif
+
+#if defined(__DREAMCAST__)
+#undef SDL_memcpy4
+#define SDL_memcpy4      memcpy_32bit
+void * memcpy_32bit(void *dest, const void *src, size_t len);
 #endif
 
 #if defined(__GNUC__) && defined(__i386__)
@@ -385,10 +408,22 @@ do {							\
 } while(0)
 #endif
 
+#if defined(__DREAMCAST__)
+#undef SDL_memmove
+#define SDL_memmove      memmove_
+void * memmove_(void *dest, const void *src, size_t len);
+#endif
+
 #ifdef HAVE_MEMCMP
 #define SDL_memcmp      memcmp
 #else
 extern DECLSPEC int SDLCALL SDL_memcmp(const void *s1, const void *s2, size_t len);
+#endif
+
+#if defined(__DREAMCAST__)
+#undef SDL_memcmp
+#define SDL_memcmp      memcmp_
+int memcmp_(const void *str1, const void *str2, size_t count);
 #endif
 
 #ifdef HAVE_STRLEN

@@ -36,8 +36,8 @@ struct WMcursor {
 #define _THIS	SDL_VideoDevice *this
 
 /* Functions prototypes */
-void GEM_wind_redraw(_THIS, int winhandle, const GRECT *inside);
-void GEM_align_work_area(_THIS, short windowid);
+void GEM_RedrawWindow(_THIS, int winhandle, const GRECT *inside);
+void GEM_AlignWorkArea(_THIS, short windowid);
 
 /* Private display data */
 
@@ -49,30 +49,37 @@ void GEM_align_work_area(_THIS, short windowid);
 #define SDL_NUMMODES	1		/* Fullscreen */
 
 struct SDL_PrivateVideoData {
+	/* Shared with SDL_geminit.c */
+	short vdi_handle;			/* VDI handle */
+	short bpp;					/* Colour depth */
+	short old_numcolors;		/* Number of colors in saved palette */
+	Uint16 old_palette[256][3];	/* Saved current palette */
+
+	short ap_id;
+	GRECT desk;					/* Desktop properties */
+	SDL_bool locked;			/* AES locked for fullscreen ? */
+	OBJECT *menubar;			/* Menu bar to force desktop to restore its menu bar when going from fullscreen */
+
+	/* Exclusive to SDL_gemvideo.h */
+
 	Uint16	buf2scr_ops;		/* Operations to get buffer to screen */
 	void *buffer1;				/* Our shadow buffers */
 	void *buffer2;
 
 	/* VDI infos */
-	short vdi_handle;			/* VDI handle */
 	short full_w, full_h;		/* Fullscreen size */
-	short bpp;					/* Colour depth */
 	short pixelsize;			/* Bytes per pixel */
-	short old_numcolors;		/* Number of colors in saved palette */
 	Uint16 pitch;				/* Line length */
 	Uint16 format;				/* Screen format */
 	void *screen;				/* Screen address */
 	Uint32 red, green, blue, alpha;	/* Screen components */
 	Uint32 screensize;
 	MFDB	dst_mfdb;		/* VDI MFDB for bitblt */
-	Uint16 old_palette[256][3];	/* Saved current palette */
 	Uint16 cur_palette[256][3];	/* SDL application palette */
 								/* Function to set/restore palette */
 	void (*setpalette)(_THIS, Uint16 newpal[256][3]);
 
 	/* GEM infos */
-	short ap_id;
-	GRECT desk;					/* Desktop properties */
 	short win_handle;			/* Our window handle */
 	int window_type;			/* Window type */
 	GRECT work;					/* Window work area x,y,w,h */
@@ -84,13 +91,10 @@ struct SDL_PrivateVideoData {
 	SDL_bool window_fulled;		/* Window maximized ? */
 	SDL_bool iconified;			/* Window iconified ? */
 	SDL_bool mouse_relative;	/* Report relative mouse movement */
-	SDL_bool locked;			/* AES locked for fullscreen ? */
 	SDL_bool lock_redraw;		/* Prevent redraw till buffers are setup */
 	SDL_bool cursor_hidden;		/* Mouse cursor hidden flag */
 	SDL_bool align_windows;		/* align windows to 16-pixel boundary */
 	short message[8];			/* To self-send an AES message */
-	void *menubar;				/* Menu bar save buffer when going fullscreen */
-	SDL_bool use_dev_mouse;		/* Use /dev/mouse ? */
 	WMcursor *cursor;			/* To restore cursor when leaving/entering window */
 	WMcursor *prev_cursor;		/* Previous cursor */
 
@@ -141,7 +145,6 @@ struct SDL_PrivateVideoData {
 #define GEM_icon			(this->hidden->icon)
 #define GEM_fullscreen		(this->hidden->fullscreen)
 #define GEM_menubar			(this->hidden->menubar)
-#define GEM_usedevmouse		(this->hidden->use_dev_mouse)
 #define GEM_cursor			(this->hidden->cursor)
 #define GEM_prev_cursor		(this->hidden->prev_cursor)
 

@@ -1,0 +1,87 @@
+Revert: "Patch from StepMania 3.9 (2006-09-01) to add `SDL_SetRefreshRate`."
+
+This reverts commit b6399e37a704e3a3e9e0b62b4266d80d090c88d7
+
+diff --git a/include/SDL_video.h b/include/SDL_video.h
+index 66b486a..aa0459c 100644
+--- a/include/SDL_video.h
++++ b/include/SDL_video.h
+@@ -942,15 +942,7 @@ extern DECLSPEC SDL_GrabMode SDLCALL SDL_WM_GrabInput(SDL_GrabMode mode);
+ /** @internal Not in public API at the moment - do not use! */
+ extern DECLSPEC int SDLCALL SDL_SoftStretch(SDL_Surface *src, SDL_Rect *srcrect,
+                                     SDL_Surface *dst, SDL_Rect *dstrect);
+-
+-#define SDL_REFRESH_DEFAULT 0
+-
+-/*
+- * Set the desired refresh rate, in Hz.  This takes effect on the next
+- * video mode change.
+- */
+-extern DECLSPEC void SDLCALL SDL_SetRefreshRate(int rate);
+-
++                    
+ /* Ends C function definitions when using C++ */
+ #ifdef __cplusplus
+ }
+diff --git a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
+index a98fdc3..e1c8bc8 100644
+--- a/src/video/SDL_sysvideo.h
++++ b/src/video/SDL_sysvideo.h
+@@ -422,8 +422,6 @@ extern VideoBootStrap DUMMY_bootstrap;
+ /* This is the current video device */
+ extern SDL_VideoDevice *current_video;
+ 
+-extern int refresh_rate;
+-
+ #define SDL_VideoSurface	(current_video->screen)
+ #define SDL_ShadowSurface	(current_video->shadow)
+ #define SDL_PublicSurface	(current_video->visible)
+diff --git a/src/video/SDL_video.c b/src/video/SDL_video.c
+index 4618f5d..00d2cb9 100644
+--- a/src/video/SDL_video.c
++++ b/src/video/SDL_video.c
+@@ -139,13 +139,6 @@ static VideoBootStrap *bootstrap[] = {
+ 
+ SDL_VideoDevice *current_video = NULL;
+ 
+-int refresh_rate = SDL_REFRESH_DEFAULT;
+-
+-void SDL_SetRefreshRate(int rate)
+-{
+-	refresh_rate = rate;
+-}
+-
+ /* Various local functions */
+ int SDL_VideoInit(const char *driver_name, Uint32 flags);
+ void SDL_VideoQuit(void);
+diff --git a/src/video/wincommon/SDL_sysevents.c b/src/video/wincommon/SDL_sysevents.c
+index 4b6b777..875e391 100644
+--- a/src/video/wincommon/SDL_sysevents.c
++++ b/src/video/wincommon/SDL_sysevents.c
+@@ -614,8 +614,6 @@ LRESULT CALLBACK WinMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+ 			if ( SDL_PublicSurface && 
+ 				(SDL_PublicSurface->flags & SDL_RESIZABLE) ) {
+ 				SDL_PrivateResize(w, h);
+-				SDL_VideoSurface->w = w;
+-				SDL_VideoSurface->h = h;
+ 			}
+ 		}
+ 		break;
+diff --git a/src/video/windib/SDL_dibvideo.c b/src/video/windib/SDL_dibvideo.c
+index d3a6413..009be31 100644
+--- a/src/video/windib/SDL_dibvideo.c
++++ b/src/video/windib/SDL_dibvideo.c
+@@ -760,11 +760,7 @@ SDL_Surface *DIB_SetVideoMode(_THIS, SDL_Surface *current,
+ 		settings.dmPelsWidth = width;
+ 		settings.dmPelsHeight = height;
+ 		settings.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
+-		if ( refresh_rate > 0 ) {
+-			settings.dmDisplayFrequency = refresh_rate;
+-			settings.dmFields |= DM_DISPLAYFREQUENCY;
+-		}
+-		else if ( width <= (int)SDL_desktop_mode.dmPelsWidth &&
++		if ( width <= (int)SDL_desktop_mode.dmPelsWidth &&
+ 		     height <= (int)SDL_desktop_mode.dmPelsHeight ) {
+ 			settings.dmDisplayFrequency = SDL_desktop_mode.dmDisplayFrequency;
+ 			settings.dmFields |= DM_DISPLAYFREQUENCY;
+

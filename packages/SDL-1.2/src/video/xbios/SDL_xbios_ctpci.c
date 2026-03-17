@@ -28,7 +28,6 @@
 	Patrice Mandin
 */
 
-#include <gem.h>
 #include <mint/cookie.h>
 #include <mint/falcon.h>
 
@@ -40,14 +39,6 @@
  * else enumerate all non virtual video modes
  */
 #define CTPCI_USE_TABLE
-
-/*
- * Blitting directly to screen used to be very slow as TT-RAM->CTPCI
- * burst mode was (?) not working. However speed tests on CTPCI TOS
- * 1.01 Beta 10 and CTPCI_1M firmware shows much better framerates
- * without the shadow buffer.
- */
-/* #define ENABLE_CTPCI_SHADOWBUF */
 
 typedef struct {
 	Uint16 modecode, width, height;
@@ -72,8 +63,6 @@ static const Uint8 mode_bpp[]={
 static int enum_actually_add;
 static SDL_VideoDevice *enum_this;
 #endif
-static SDL_bool aes_present = SDL_FALSE;
-static GRECT desktop;
 
 /*--- Functions ---*/
 
@@ -107,11 +96,8 @@ static unsigned long /*cdecl*/ enumfunc(SCREENINFO *inf, unsigned long flag)
 	modeinfo.width = inf->scrWidth;
 	modeinfo.height = inf->scrHeight;
 	modeinfo.depth = inf->scrPlanes;
-#ifdef ENABLE_CTPCI_SHADOWBUF
-	modeinfo.flags = XBIOSMODE_SHADOWCOPY;
-#else
 	modeinfo.flags = 0;
-#endif
+
 	SDL_XBIOS_AddMode(enum_this, enum_actually_add, &modeinfo);
 
 	return ENUMMODE_CONT;
@@ -136,11 +122,8 @@ static void listModes(_THIS, int actually_add)
 				modeinfo.width = mode_list[i].width;
 				modeinfo.height = mode_list[i].height;
 				modeinfo.depth = mode_bpp[j-3];
-#ifdef ENABLE_CTPCI_SHADOWBUF
-				modeinfo.flags = XBIOSMODE_SHADOWCOPY;
-#else
 				modeinfo.flags = 0;
-#endif
+
 				SDL_XBIOS_AddMode(this, actually_add, &modeinfo);
 			}
 		}
@@ -157,17 +140,6 @@ static void saveMode(_THIS, SDL_PixelFormat *vformat)
 {
 	SCREENINFO si = { 0 };
 
-	if (appl_init() >= 0) {
-		wind_update(BEG_UPDATE);
-		wind_update(BEG_MCTRL);
-
-		graf_mouse(M_OFF, NULL);
-
-		wind_get(0, WF_WORKXYWH, &desktop.g_x, &desktop.g_y, &desktop.g_w, &desktop.g_h);
-
-		aes_present = SDL_TRUE;
-	}
-
 	/* Read infos about current mode */
 	VsetScreen(-1, &XBIOS_oldvmode, VN_MAGIC, CMD_GETMODE);
 
@@ -182,16 +154,6 @@ static void saveMode(_THIS, SDL_PixelFormat *vformat)
 	XBIOS_oldvbase = (void*)si.frameadr;
 
 	vformat->BitsPerPixel = si.scrPlanes;
-
-	XBIOS_oldnumcol = 0;
-	if (si.scrFlags & SCRINFO_OK) {
-		if (si.scrPlanes <= 8) {
-			XBIOS_oldnumcol = 1<<si.scrPlanes;
-		}
-	}
-	if (XBIOS_oldnumcol) {
-		VgetRGB(0, XBIOS_oldnumcol, XBIOS_oldpalette);
-	}
 }
 
 static void setMode(_THIS, const xbiosmode_t *new_video_mode)
@@ -211,20 +173,6 @@ static void restoreMode(_THIS)
 {
 	VsetScreen(-1, XBIOS_oldvbase, VN_MAGIC, CMD_SETADR);
 	VsetScreen(-1, XBIOS_oldvmode, VN_MAGIC, CMD_SETMODE);
-	if (XBIOS_oldnumcol) {
-		VsetRGB(0, XBIOS_oldnumcol, XBIOS_oldpalette);
-	}
-
-	if (aes_present) {
-		graf_mouse(M_ON, NULL);
-		graf_mouse(ARROW, NULL);
-
-		wind_update(END_MCTRL);
-		wind_update(END_UPDATE);
-
-		form_dial(FMD_FINISH, 0, 0, 0, 0, desktop.g_x, desktop.g_y, desktop.g_w, desktop.g_h);
-		appl_exit();
-	}
 }
 
 static void swapVbuffers(_THIS)

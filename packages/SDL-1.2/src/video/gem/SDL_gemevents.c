@@ -42,7 +42,6 @@
 #include "../ataricommon/SDL_atarikeys.h"	/* for keyboard scancodes */
 #include "../ataricommon/SDL_atarievents_c.h"
 #include "../ataricommon/SDL_xbiosevents_c.h"
-#include "../ataricommon/SDL_ataridevmouse_c.h"
 
 /* Duration after which we consider key released */
 
@@ -131,7 +130,7 @@ void GEM_PumpEvents(_THIS)
 
 		/* Keyboard event ? */
 		if (resultat & MU_KEYBD) {
-			em_out.emo_kmeta |= (Kbshift(-1) & K_CAPSLOCK);	/* MU_KEYBD is not aware of CAPSLOCK */
+			em_out.emo_kmeta |= (Kbshift(-1) & (0x80 | K_CAPSLOCK));	/* MU_KEYBD is not aware of AltGr and CAPSLOCK */
 			do_keyboard_special(em_out.emo_kmeta, cur_tick);
 			if (prevkc != em_out.emo_kreturn) {
 				do_keyboard(em_out.emo_kreturn, cur_tick);
@@ -149,7 +148,7 @@ void GEM_PumpEvents(_THIS)
 
 	/* Update mouse state */
 	graf_mkstate(&mousex, &mousey, &mouseb, &em_out.emo_kmeta);
-	em_out.emo_kmeta |= (Kbshift(-1) & K_CAPSLOCK);	/* MU_KEYBD is not aware of CAPSLOCK */
+	em_out.emo_kmeta |= (Kbshift(-1) & (0x80 | K_CAPSLOCK));	/* MU_KEYBD is not aware of AltGr and CAPSLOCK */
 	do_keyboard_special(em_out.emo_kmeta, cur_tick);
 	do_mouse_motion(this, mousex, mousey);
 	do_mouse_buttons(this, mouseb);
@@ -224,10 +223,11 @@ static int do_messages(_THIS, short *message, short latest_msg_id)
 		case WM_ONTOP:
 			SDL_PrivateAppActive(1, SDL_APPINPUTFOCUS);
 			VDI_setpalette(this, VDI_curpalette);
+			SDL_Atari_InitializeConsoleSettings();
 			break;
 		case WM_REDRAW:
 			if (!GEM_lock_redraw) {
-				GEM_wind_redraw(this, message[3], (GRECT *)&message[4]);
+				GEM_RedrawWindow(this, message[3], (GRECT *)&message[4]);
 			}
 			break;
 		case WM_ICONIFY:
@@ -292,11 +292,12 @@ static int do_messages(_THIS, short *message, short latest_msg_id)
 		case WM_UNTOPPED:
 			SDL_PrivateAppActive(0, SDL_APPINPUTFOCUS);
 			VDI_setpalette(this, VDI_oldpalette);
+			SDL_Atari_RestoreConsoleSettings();
 			break;
 	}
 
 	if (update_work_area) {
-		GEM_align_work_area(this, message[3]);
+		GEM_AlignWorkArea(this, message[3]);
 
 		if (sdl_resize) {
 			SDL_PrivateResize(GEM_work.g_w, GEM_work.g_h);
@@ -332,6 +333,7 @@ static void do_keyboard_special(short ks, Uint32 tick)
 	UPDATE_SPECIAL_KEYS(K_CTRL, SCANCODE_LEFTCONTROL);
 	UPDATE_SPECIAL_KEYS(K_ALT, SCANCODE_LEFTALT);
 	UPDATE_SPECIAL_KEYS(K_CAPSLOCK, SCANCODE_CAPSLOCK);
+	UPDATE_SPECIAL_KEYS(0x80, SCANCODE_ALTGR);
 }
 
 static void do_mouse_motion(_THIS, short mx, short my)
@@ -355,11 +357,7 @@ static void do_mouse_motion(_THIS, short mx, short my)
 
 	/* Relative mouse motion ? */
 	if (GEM_mouse_relative) {
-		if (GEM_usedevmouse) {
-			SDL_AtariDevMouse_PostMouseEvents(this, SDL_FALSE);
-		} else {
-			SDL_AtariXbios_PostMouseEvents(this, SDL_FALSE);
-		}
+		SDL_AtariXbios_PostMouseEvents(this, SDL_FALSE);
 		return;
 	}
 
@@ -394,8 +392,7 @@ static void do_mouse_motion(_THIS, short mx, short my)
 
 static int atari_GetButton(int button)
 {
-	switch(button)
-	{
+	switch(button) {
 		case 0:
 		default:
 			return SDL_BUTTON_LEFT;

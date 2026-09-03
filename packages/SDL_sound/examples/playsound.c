@@ -730,7 +730,7 @@ int main(int argc, char **argv)
             new_sample = 0;
         } /* if */
 
-        if (strcmp(argv[i], "--rate") == 0 && argc > i + 1)
+        if (strcmp(argv[i], "--rate") == 0 && (argc > (i + 1)))
         {
             Sint32 r;
             use_specific_audiofmt = 1;
@@ -743,7 +743,7 @@ int main(int argc, char **argv)
             sound_desired.rate = (Uint32)r;
         } /* else if */
 
-        else if (strcmp(argv[i], "--format") == 0 && argc > i + 1)
+        else if (strcmp(argv[i], "--format") == 0 && (argc > (i + 1)))
         {
             use_specific_audiofmt = 1;
             sound_desired.format = str_to_fmt(argv[++i]);
@@ -790,12 +790,12 @@ int main(int argc, char **argv)
             global_state.predecode = 1;
         } /* else if */
 
-        else if (strcmp(argv[i], "--loop") == 0)
+        else if (strcmp(argv[i], "--loop") == 0 && argc > i + 1)
         {
             global_state.looping = atoi(argv[++i]);
         } /* else if */
 
-        else if (strcmp(argv[i], "--seek") == 0)
+        else if (strcmp(argv[i], "--seek") == 0 && argc > i + 1)
         {
             parse_seek_list(argv[++i]);
         } /* else if */

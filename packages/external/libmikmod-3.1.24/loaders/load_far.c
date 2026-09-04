@@ -108,18 +108,18 @@ static BOOL FAR_Test(void)
 
 static BOOL FAR_Init(void)
 {
-	if(!(mh1 = (FARHEADER1*)_mm_malloc(sizeof(FARHEADER1)))) return 0;
-	if(!(mh2 = (FARHEADER2*)_mm_malloc(sizeof(FARHEADER2)))) return 0;
-	if(!(pat = (FARNOTE*)_mm_malloc(256*16*4*sizeof(FARNOTE)))) return 0;
+	if(!(mh1 = (FARHEADER1*)_mik_malloc(sizeof(FARHEADER1)))) return 0;
+	if(!(mh2 = (FARHEADER2*)_mik_malloc(sizeof(FARHEADER2)))) return 0;
+	if(!(pat = (FARNOTE*)_mik_malloc(256*16*4*sizeof(FARNOTE)))) return 0;
 
 	return 1;
 }
 
 static void FAR_Cleanup(void)
 {
-	_mm_free(mh1);
-	_mm_free(mh2);
-	_mm_free(pat);
+	_mik_free(mh1);
+	_mik_free(mh2);
+	_mik_free(pat);
 }
 
 static UBYTE *FAR_ConvertTrack(FARNOTE* n,int rows)

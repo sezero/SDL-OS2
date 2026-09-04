@@ -102,16 +102,16 @@ static BOOL AMF_Test(void)
 
 static BOOL AMF_Init(void)
 {
-	if(!(mh=(AMFHEADER*)_mm_malloc(sizeof(AMFHEADER)))) return 0;
-	if(!(track=(AMFNOTE*)_mm_calloc(64,sizeof(AMFNOTE)))) return 0;
+	if(!(mh=(AMFHEADER*)_mik_malloc(sizeof(AMFHEADER)))) return 0;
+	if(!(track=(AMFNOTE*)_mik_calloc(64,sizeof(AMFNOTE)))) return 0;
 
 	return 1;
 }
 
 static void AMF_Cleanup(void)
 {
-	_mm_free(mh);
-	_mm_free(track);
+	_mik_free(mh);
+	_mik_free(track);
 }
 
 /* Some older version 1.0 AMFs contain an anomaly where the sample length is
@@ -423,8 +423,15 @@ static BOOL AMF_Load(BOOL curious)
 	if(mh->version>=11) {
 		memset(mh->panpos,0,32);
 		_mm_read_SBYTES(mh->panpos,(mh->version>=13)?32:16,modreader);
-	} else if(mh->version>=9)
+	} else if(mh->version>=9) {
 		_mm_read_UBYTES(channel_remap,16,modreader);
+		for(t = 0; t < 16 && t < mh->numchannels; t++) {
+			if(channel_remap[t] >= mh->numchannels) {
+				_mm_errno=MMERR_NOT_A_MODULE;
+				return 0;
+			}
+		}
+	}
 
 	if (mh->version>=13) {
 		mh->songbpm=_mm_read_UBYTE(modreader);
@@ -595,7 +602,7 @@ static BOOL AMF_Load(BOOL curious)
 	}
 
 	/* read track table */
-	if(!(track_remap=(UWORD*)_mm_calloc(mh->numtracks+1,sizeof(UWORD))))
+	if(!(track_remap=(UWORD*)_mik_calloc(mh->numtracks+1,sizeof(UWORD))))
 		return 0;
 	_mm_read_I_UWORDS(track_remap+1,mh->numtracks,modreader);
 	if(_mm_eof(modreader)) {

@@ -533,6 +533,8 @@ case $host_os in
 		libmikmod_driver_ds=no
 		AC_CHECK_HEADERS([dsound.h],[libmikmod_driver_ds=yes],[],[#include <windows.h>])
 	fi
+	# link statically to libgcc:
+	CFLAGS="$CFLAGS -static-libgcc"
 	;;
 
  *)	libmikmod_driver_win=no

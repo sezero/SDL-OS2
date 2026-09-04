@@ -251,9 +251,7 @@ enum {
     MMERR_MAC_START,
 
     /* 65-86 exist only in libmikmod3 */
-    ___filler_MMERR=(MMERR_MAC_START+22),
-
-    MMERR_ALSA_NOCONFIG,
+    MMERR_ALSA_NOCONFIG = 87,
     MMERR_ALSA_SETPARAMS,
     MMERR_ALSA_SETFORMAT,
     MMERR_ALSA_SETRATE,

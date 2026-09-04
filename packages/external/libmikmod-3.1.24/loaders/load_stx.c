@@ -130,9 +130,9 @@ static BOOL STX_Test(void)
 
 static BOOL STX_Init(void)
 {
-	if(!(stxbuf=(STXNOTE*)_mm_malloc(4*64*sizeof(STXNOTE)))) return 0;
-	if(!(mh=(STXHEADER*)_mm_malloc(sizeof(STXHEADER)))) return 0;
-	if(!(poslookup=(UBYTE*)_mm_malloc(sizeof(UBYTE)*256))) return 0;
+	if(!(stxbuf=(STXNOTE*)_mik_malloc(4*64*sizeof(STXNOTE)))) return 0;
+	if(!(mh=(STXHEADER*)_mik_malloc(sizeof(STXHEADER)))) return 0;
+	if(!(poslookup=(UBYTE*)_mik_malloc(sizeof(UBYTE)*256))) return 0;
 	memset(poslookup,-1,256);
 
 	return 1;
@@ -140,10 +140,10 @@ static BOOL STX_Init(void)
 
 static void STX_Cleanup(void)
 {
-	_mm_free(stxbuf);
-	_mm_free(paraptr);
-	_mm_free(poslookup);
-	_mm_free(mh);
+	_mik_free(stxbuf);
+	_mik_free(paraptr);
+	_mik_free(poslookup);
+	_mik_free(mh);
 }
 
 static BOOL STX_ReadPattern(void)
@@ -315,7 +315,7 @@ static BOOL STX_Load(BOOL curious)
 	of.flags      |= UF_S3MSLIDES;
 	of.bpmlimit    = 32;
 
-	if(!(paraptr=(UWORD*)_mm_malloc((of.numins+of.numpat)*sizeof(UWORD))))
+	if(!(paraptr=(UWORD*)_mik_malloc((of.numins+of.numpat)*sizeof(UWORD))))
 		return 0;
 
 	/* read the instrument+pattern parapointers */

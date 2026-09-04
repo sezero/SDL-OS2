@@ -53,14 +53,14 @@ static BOOL NS_IsThere(void)
 
 static int NS_Init(void)
 {
-	zerobuf=(SBYTE*)_mm_malloc(ZEROLEN);
+	zerobuf=(SBYTE*)_mik_malloc(ZEROLEN);
 	return VC_Init();
 }
 
 static void NS_Exit(void)
 {
 	VC_Exit();
-	_mm_free(zerobuf);
+	_mik_free(zerobuf);
 }
 
 static void NS_Update(void)

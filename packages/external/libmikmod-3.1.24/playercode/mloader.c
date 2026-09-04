@@ -67,7 +67,7 @@ MIKMODAPI CHAR* MikMod_InfoLoader(void)
 		len += 1 + (l->next ? 1 : 0) + strlen(l->version);
 
 	if(len)
-	  if((list=(CHAR*)_mm_malloc(len*sizeof(CHAR))) != NULL) {
+	  if((list=(CHAR*)_mik_malloc(len*sizeof(CHAR))) != NULL) {
 		CHAR *list_end = list;
 		list[0] = 0;
 		/* list all registered module loders */
@@ -107,7 +107,7 @@ BOOL ReadComment(UWORD len)
 	if(len) {
 		CHAR *ptr;
 
-		of.comment=(CHAR*)_mm_calloc(1,len+1);
+		of.comment=(CHAR*)_mik_calloc(1,len+1);
 		if(!of.comment) return 0;
 		_mm_read_UBYTES(of.comment,len,modreader);
 
@@ -136,9 +136,9 @@ BOOL ReadLinedComment(UWORD len,UWORD linelen)
 
 	numlines = (len + linelen - 1) / linelen;
 	cnt = (linelen + 1) * numlines;
-	buf = (CHAR *) _mm_calloc(1, len);
+	buf = (CHAR *) _mik_calloc(1, len);
 	if (!buf) return 0;
-	storage = (CHAR *) _mm_calloc(1, cnt + 1);
+	storage = (CHAR *) _mik_calloc(1, cnt + 1);
 	if (!storage) {
 		free(buf);
 		return 0;
@@ -175,7 +175,7 @@ BOOL AllocPositions(int total)
 		_mm_errno=MMERR_NOT_A_MODULE;
 		return 0;
 	}
-	if(!(of.positions=(UWORD*)_mm_calloc(total,sizeof(UWORD)))) return 0;
+	if(!(of.positions=(UWORD*)_mik_calloc(total,sizeof(UWORD)))) return 0;
 	return 1;
 }
 
@@ -188,8 +188,8 @@ BOOL AllocPatterns(void)
 		return 0;
 	}
 	/* Allocate track sequencing array */
-	if(!(of.patterns=(UWORD*)_mm_calloc((ULONG)(of.numpat+1)*of.numchn,sizeof(UWORD)))) return 0;
-	if(!(of.pattrows=(UWORD*)_mm_calloc(of.numpat+1,sizeof(UWORD)))) return 0;
+	if(!(of.patterns=(UWORD*)_mik_calloc((ULONG)(of.numpat+1)*of.numchn,sizeof(UWORD)))) return 0;
+	if(!(of.pattrows=(UWORD*)_mik_calloc(of.numpat+1,sizeof(UWORD)))) return 0;
 
 	for(t=0;t<=of.numpat;t++) {
 		of.pattrows[t]=64;
@@ -206,7 +206,7 @@ BOOL AllocTracks(void)
 		_mm_errno=MMERR_NOT_A_MODULE;
 		return 0;
 	}
-	if(!(of.tracks=(UBYTE **)_mm_calloc(of.numtrk,sizeof(UBYTE *)))) return 0;
+	if(!(of.tracks=(UBYTE **)_mik_calloc(of.numtrk,sizeof(UBYTE *)))) return 0;
 	return 1;
 }
 
@@ -218,7 +218,7 @@ BOOL AllocInstruments(void)
 		_mm_errno=MMERR_NOT_A_MODULE;
 		return 0;
 	}
-	if(!(of.instruments=(INSTRUMENT*)_mm_calloc(of.numins,sizeof(INSTRUMENT))))
+	if(!(of.instruments=(INSTRUMENT*)_mik_calloc(of.numins,sizeof(INSTRUMENT))))
 		return 0;
 
 	for(t=0;t<of.numins;t++) {
@@ -240,7 +240,7 @@ BOOL AllocSamples(void)
 		_mm_errno=MMERR_NOT_A_MODULE;
 		return 0;
 	}
-	if(!(of.samples=(SAMPLE*)_mm_calloc(of.numsmp,sizeof(SAMPLE)))) return 0;
+	if(!(of.samples=(SAMPLE*)_mik_calloc(of.numsmp,sizeof(SAMPLE)))) return 0;
 
 	for(u=0;u<of.numsmp;u++) {
 		of.samples[u].panning = 128; /* center */
@@ -283,7 +283,7 @@ CHAR *DupStr(CHAR* s,UWORD len,BOOL strict)
 
 	/* When the buffer wasn't completely empty, allocate a cstring and copy the
 	   buffer into that string, except for any control-chars */
-	if((d=(CHAR*)_mm_malloc(sizeof(CHAR)*(len+1))) != NULL) {
+	if((d=(CHAR*)_mik_malloc(sizeof(CHAR)*(len+1))) != NULL) {
 		for(t=0;t<len;t++) d[t]=(s[t]<32)?'.':s[t];
 		d[len]=0;
 	}
@@ -339,7 +339,7 @@ static void ML_FreeEx(MODULE *mf)
 
 static MODULE *ML_AllocUniMod(void)
 {
-	return (MODULE *) _mm_malloc(sizeof(MODULE));
+	return (MODULE *) _mik_malloc(sizeof(MODULE));
 }
 
 static void Player_Free_internal(MODULE *mf)

@@ -117,15 +117,15 @@ static BOOL DSM_Test(void)
 
 static BOOL DSM_Init(void)
 {
-	if(!(dsmbuf=(DSMNOTE *)_mm_malloc(DSM_MAXCHAN*64*sizeof(DSMNOTE)))) return 0;
-	if(!(mh=(DSMSONG *)_mm_calloc(1,sizeof(DSMSONG)))) return 0;
+	if(!(dsmbuf=(DSMNOTE *)_mik_malloc(DSM_MAXCHAN*64*sizeof(DSMNOTE)))) return 0;
+	if(!(mh=(DSMSONG *)_mik_calloc(1,sizeof(DSMSONG)))) return 0;
 	return 1;
 }
 
 static void DSM_Cleanup(void)
 {
-	_mm_free(dsmbuf);
-	_mm_free(mh);
+	_mik_free(dsmbuf);
+	_mik_free(mh);
 }
 
 static BOOL GetBlockHeader(void)
@@ -237,6 +237,7 @@ static BOOL DSM_Load(BOOL curious)
 	DSMINST s;
 	SAMPLE *q;
 	int cursmp=0,curpat=0,track=0;
+	unsigned int numtrk;
 
 	blocklp=0;
 	blockln=12;
@@ -268,7 +269,12 @@ static BOOL DSM_Load(BOOL curious)
 	of.modtype=_mm_strdup(DSM_Version);
 	of.numchn=mh->numtrk;
 	of.numpat=mh->numpat;
-	of.numtrk=of.numchn*of.numpat;
+	numtrk=of.numchn*of.numpat;
+	if(of.numchn>DSM_MAXCHAN || numtrk>65535) {
+		_mm_errno = MMERR_LOADING_HEADER;
+		return 0;
+	}
+	of.numtrk=(UWORD)numtrk;
 	of.songname=DupStr(mh->songname,28,1); /* make a cstr of songname */
 	of.reppos=0;
 	of.flags |= UF_PANNING;

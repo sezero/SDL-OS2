@@ -14094,6 +14094,8 @@ fi
 done
 
 	fi
+	# link statically to libgcc:
+	CFLAGS="$CFLAGS -static-libgcc"
 	;;
 
  *)	libmikmod_driver_win=no

@@ -17,14 +17,14 @@ CPPFLAGS=-DMIKMOD_BUILD -DHAVE_FCNTL_H -DHAVE_LIMITS_H -DHAVE_MALLOC_H
 #CPPFLAGS+= -DMIKMOD_DEBUG
 
 # MMPM/2 driver (will work with any OS/2 version starting from 2.1.)
-#CPPFLAGS+= -DDRV_OS2
+CPPFLAGS+= -DDRV_OS2
 # DART (Direct Audio Real Time) driver (uses less CPU time than the
 #                          standard MMPM/2 drivers, requires Warp4.)
-#CPPFLAGS+= -DDRV_DART
+CPPFLAGS+= -DDRV_DART
 # support for wav file output:
-#CPPFLAGS+= -DDRV_WAV
+CPPFLAGS+= -DDRV_WAV
 # support for output raw data to a file:
-#CPPFLAGS+= -DDRV_RAW
+CPPFLAGS+= -DDRV_RAW
 # support for output to stdout (not needed by everyone)
 #CPPFLAGS+= -DDRV_STDOUT
 

@@ -481,7 +481,7 @@ static SWORD Ultra_SampleLoad(struct SAMPLOAD *sload, int type)
 
 	SL_SampleSigned(sload);
 
-	if (!(smp->sample = (SWORD*)_mm_malloc((length+20)<<1))) {
+	if (!(smp->sample = (SWORD*)_mik_malloc((length+20)<<1))) {
 		_mm_errno = MMERR_SAMPLE_TOO_BIG;
 		return -1;
 	}

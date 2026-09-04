@@ -318,7 +318,7 @@ static int ALSA_Init_internal(void)
 	period_size = psize;
 	global_frame_size = channels * ((md_mode&DMODE_16BITS)? 2 : 1);
 
-	if (!(audiobuffer=(SBYTE*)_mm_malloc(period_size * global_frame_size))) {
+	if (!(audiobuffer=(SBYTE*)_mik_malloc(period_size * global_frame_size))) {
 		_mm_errno = MMERR_OUT_OF_MEMORY;
 		goto END;
 	}
@@ -355,7 +355,7 @@ static void ALSA_Exit_internal(void)
 		alsa_pcm_close(pcm_h);
 		pcm_h = NULL;
 	}
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 }
 
 static void ALSA_Exit(void)

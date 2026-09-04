@@ -136,16 +136,16 @@ static BOOL GDM_Test(void)
 
 static BOOL GDM_Init(void)
 {
-	if (!(gdmbuf=(GDMNOTE*)_mm_malloc(32*64*sizeof(GDMNOTE)))) return 0;
-	if (!(mh=(GDMHEADER*)_mm_malloc(sizeof(GDMHEADER)))) return 0;
+	if (!(gdmbuf=(GDMNOTE*)_mik_malloc(32*64*sizeof(GDMNOTE)))) return 0;
+	if (!(mh=(GDMHEADER*)_mik_malloc(sizeof(GDMHEADER)))) return 0;
 
 	return 1;
 }
 
 static void GDM_Cleanup(void)
 {
-	_mm_free(mh);
-	_mm_free(gdmbuf);
+	_mik_free(mh);
+	_mik_free(gdmbuf);
 }
 
 static BOOL GDM_ReadPattern(void)

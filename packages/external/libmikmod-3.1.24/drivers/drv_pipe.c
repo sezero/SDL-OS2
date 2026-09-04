@@ -71,7 +71,7 @@ static void pipe_CommandLine(CHAR *cmdline)
 	CHAR *ptr=MD_GetAtom("pipe",cmdline,0);
 
 	if(ptr) {
-		_mm_free(target);
+		_mik_free(target);
 		target=ptr;
 	}
 }
@@ -131,7 +131,7 @@ static int pipe_Init(void)
 #endif
 	if(!(pipeout=_mm_new_file_writer(pipefile)))
 		return 1;
-	if(!(audiobuffer=(SBYTE*)_mm_malloc(BUFFERSIZE)))
+	if(!(audiobuffer=(SBYTE*)_mik_malloc(BUFFERSIZE)))
 		return 1;
 
 	md_mode|=DMODE_SOFT_MUSIC|DMODE_SOFT_SNDFX;
@@ -147,7 +147,7 @@ static void pipe_Exit(void)
 #endif
 
 	VC_Exit();
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 	if(pipeout) {
 		_mm_delete_file_writer(pipeout);
 		pipeout=NULL;

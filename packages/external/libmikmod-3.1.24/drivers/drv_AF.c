@@ -138,10 +138,10 @@ static int AF_Init(void)
 	md_mixfreq=srate;				/* set mixing freq */
 
 	if (md_mode&DMODE_STEREO) {
-		if (!(audiobuffer=(SBYTE*)_mm_malloc(2*2*AFFragmentSize)))
+		if (!(audiobuffer=(SBYTE*)_mik_malloc(2*2*AFFragmentSize)))
 			return 1;
 	} else {
-		if (!(audiobuffer=(SBYTE*)_mm_malloc(2*AFFragmentSize)))
+		if (!(audiobuffer=(SBYTE*)_mik_malloc(2*AFFragmentSize)))
 			return 1;
 	}
 
@@ -157,7 +157,7 @@ static int AF_PlayStart(void)
 static void AF_Exit(void)
 {
 	VC_Exit();
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 	if (AFaud) {
 		AFCloseAudioConn(AFaud);
 		AFaud=NULL;

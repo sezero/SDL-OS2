@@ -122,16 +122,16 @@ static BOOL S69_Test(void)
 
 static BOOL S69_Init(void)
 {
-	if(!(s69pat=(S69NOTE *)_mm_malloc(64*8*sizeof(S69NOTE)))) return 0;
-	if(!(mh=(S69HEADER *)_mm_malloc(sizeof(S69HEADER)))) return 0;
+	if(!(s69pat=(S69NOTE *)_mik_malloc(64*8*sizeof(S69NOTE)))) return 0;
+	if(!(mh=(S69HEADER *)_mik_malloc(sizeof(S69HEADER)))) return 0;
 
 	return 1;
 }
 
 static void S69_Cleanup(void)
 {
-	_mm_free(s69pat);
-	_mm_free(mh);
+	_mik_free(s69pat);
+	_mik_free(mh);
 }
 
 static BOOL S69_LoadPatterns(void)
@@ -289,7 +289,7 @@ static BOOL S69_Load(BOOL curious)
 	for(i=36+35;(i>=36+0)&&(mh->message[i]==' ');i--) mh->message[i]=0;
 	for(i=72+35;(i>=72+0)&&(mh->message[i]==' ');i--) mh->message[i]=0;
 	if((mh->message[0])||(mh->message[36])||(mh->message[72]))
-		if((of.comment=(CHAR*)_mm_malloc(3*(36+1)+1)) != NULL) {
+		if((of.comment=(CHAR*)_mik_malloc(3*(36+1)+1)) != NULL) {
 			strncpy(of.comment,mh->message,36);
 			strcat(of.comment,"\r");
 			if (mh->message[36]) strncat(of.comment,mh->message+36,36);

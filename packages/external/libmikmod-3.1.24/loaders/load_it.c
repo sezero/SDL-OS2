@@ -193,11 +193,11 @@ static BOOL IT_Test(void)
 
 static BOOL IT_Init(void)
 {
-	if(!(mh=(ITHEADER*)_mm_malloc(sizeof(ITHEADER)))) return 0;
-	if(!(poslookup=(UBYTE*)_mm_malloc(256*sizeof(UBYTE)))) return 0;
-	if(!(itpat=(ITNOTE*)_mm_malloc(200*64*sizeof(ITNOTE)))) return 0;
-	if(!(mask=(UBYTE*)_mm_calloc(64,sizeof(UBYTE)))) return 0;
-	if(!(last=(ITNOTE*)_mm_calloc(64,sizeof(ITNOTE)))) return 0;
+	if(!(mh=(ITHEADER*)_mik_malloc(sizeof(ITHEADER)))) return 0;
+	if(!(poslookup=(UBYTE*)_mik_malloc(256*sizeof(UBYTE)))) return 0;
+	if(!(itpat=(ITNOTE*)_mik_malloc(256*64*sizeof(ITNOTE)))) return 0;
+	if(!(mask=(UBYTE*)_mik_calloc(64,sizeof(UBYTE)))) return 0;
+	if(!(last=(ITNOTE*)_mik_calloc(64,sizeof(ITNOTE)))) return 0;
 
 	return 1;
 }
@@ -206,13 +206,13 @@ static void IT_Cleanup(void)
 {
 	FreeLinear();
 
-	_mm_free(mh);
-	_mm_free(poslookup);
-	_mm_free(itpat);
-	_mm_free(mask);
-	_mm_free(last);
-	_mm_free(paraptr);
-	_mm_free(origpositions);
+	_mik_free(mh);
+	_mik_free(poslookup);
+	_mik_free(itpat);
+	_mik_free(mask);
+	_mik_free(last);
+	_mik_free(paraptr);
+	_mik_free(origpositions);
 }
 
 /* Because so many IT files have 64 channels as the set number used, but really
@@ -332,10 +332,10 @@ static BOOL IT_ReadPattern(UWORD patrows)
 	int row=0,flag,ch;
 	unsigned int blah;
 	ITNOTE *itt=itpat,dummy,*n,*l;
-	ITNOTE *ite=&itpat[200*64 -1];
+	ITNOTE *ite=&itpat[256*64 -1];
 	UBYTE *m;
 
-	memset(itt,255,200*64*sizeof(ITNOTE));
+	memset(itt,255,256*64*sizeof(ITNOTE));
 
 	do {
 		if(_mm_eof(modreader)) {
@@ -573,7 +573,7 @@ static BOOL IT_Load(BOOL curious)
 
 	/* read the order data */
 	if(!AllocPositions(mh->ordnum)) return 0;
-	if(!(origpositions=(UWORD*)_mm_calloc(mh->ordnum,sizeof(UWORD)))) return 0;
+	if(!(origpositions=(UWORD*)_mik_calloc(mh->ordnum,sizeof(UWORD)))) return 0;
 
 	for(t=0;t<mh->ordnum;t++) {
 		origpositions[t]=_mm_read_UBYTE(modreader);
@@ -589,7 +589,7 @@ static BOOL IT_Load(BOOL curious)
 	poslookupcnt=mh->ordnum;
 	S3MIT_CreateOrders(curious);
 
-	if(!(paraptr=(ULONG*)_mm_malloc((mh->insnum+mh->smpnum+of.numpat)*
+	if(!(paraptr=(ULONG*)_mik_malloc((mh->insnum+mh->smpnum+of.numpat)*
 	                               sizeof(ULONG)))) return 0;
 
 	/* read the instrument, sample, and pattern parapointers */
@@ -777,7 +777,6 @@ static BOOL IT_Load(BOOL curious)
 				}
 			} else {
 				/* load IT 2xx volume, pan and pitch envelopes */
-#if defined __STDC__ || defined _MSC_VER || defined __WATCOMC__ || defined MPW_C
 #define IT_LoadEnvelope(name,type) 										\
 				ih. name##flg   =_mm_read_UBYTE(modreader);				\
 				ih. name##pts   =_mm_read_UBYTE(modreader);				\
@@ -792,22 +791,6 @@ static BOOL IT_Load(BOOL curious)
 					ih. name##tick[lp]=_mm_read_I_UWORD(modreader);		\
 				}														\
 				_mm_skip_BYTE(modreader)
-#else
-#define IT_LoadEnvelope(name,type) 										\
-				ih. name/**/flg   =_mm_read_UBYTE(modreader);			\
-				ih. name/**/pts   =_mm_read_UBYTE(modreader);			\
-				if (ih. name/**/pts > ITENVCNT)							\
-					ih. name/**/pts = ITENVCNT;							\
-				ih. name/**/beg   =_mm_read_UBYTE(modreader);			\
-				ih. name/**/end   =_mm_read_UBYTE(modreader);			\
-				ih. name/**/susbeg=_mm_read_UBYTE(modreader);			\
-				ih. name/**/susend=_mm_read_UBYTE(modreader);			\
-				for(lp=0;lp<ITENVCNT;lp++) {							\
-					ih. name/**/node[lp]=_mm_read_/**/type (modreader);	\
-					ih. name/**/tick[lp]=_mm_read_I_UWORD(modreader);	\
-				}														\
-				_mm_skip_BYTE(modreader)
-#endif
 
 				IT_LoadEnvelope(vol,UBYTE);
 				IT_LoadEnvelope(pan,SBYTE);
@@ -869,7 +852,6 @@ static BOOL IT_Load(BOOL curious)
 					d->rpanvar = ih.rpanvar;
 				}
 
-#if defined __STDC__ || defined _MSC_VER || defined __WATCOMC__ || defined MPW_C
 #define IT_ProcessEnvelope(name) 										\
 				if(ih. name##flg&1) d-> name##flg|=EF_ON;				\
 				if(ih. name##flg&2) d-> name##flg|=EF_LOOP;				\
@@ -885,23 +867,6 @@ static BOOL IT_Load(BOOL curious)
 																		\
 				if((d-> name##flg&EF_ON)&&(d-> name##pts<2))			\
 					d-> name##flg&=~EF_ON
-#else
-#define IT_ProcessEnvelope(name) 									\
-				if(ih. name/**/flg&1) d-> name/**/flg|=EF_ON;		\
-				if(ih. name/**/flg&2) d-> name/**/flg|=EF_LOOP;		\
-				if(ih. name/**/flg&4) d-> name/**/flg|=EF_SUSTAIN;	\
-				d-> name/**/pts=ih. name/**/pts;					\
-				d-> name/**/beg=ih. name/**/beg;					\
-				d-> name/**/end=ih. name/**/end;					\
-				d-> name/**/susbeg=ih. name/**/susbeg;				\
-				d-> name/**/susend=ih. name/**/susend;				\
-																	\
-				for(u=0;u<ih. name/**/pts;u++)						\
-					d-> name/**/env[u].pos=ih. name/**/tick[u];		\
-																	\
-				if((d-> name/**/flg&EF_ON)&&(d-> name/**/pts<2))	\
-					d-> name/**/flg&=~EF_ON
-#endif
 
 				IT_ProcessEnvelope(vol);
 

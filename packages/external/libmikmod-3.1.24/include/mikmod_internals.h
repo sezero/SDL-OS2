@@ -37,6 +37,14 @@ extern "C" {
 
 #include <stdarg.h>
 
+#if defined(_MSC_VER)
+#pragma warning(disable:4389) /* signed/unsigned mismatch ( <, <=, >, >= ) */
+#pragma warning(disable:4018) /* signed/unsigned mismatch ( ==, != ) */
+#pragma warning(disable:4761) /* integral size mismatch in argument; conversion supplied (for MSVC6 and older.) */
+#pragma warning(disable:4244) /* conversion from 'type' to 'int', possible loss of data */
+#pragma warning(disable:4267) /* conversion from 'size_t' to 'type', possible loss of data */
+#endif
+
 #if defined(_MSC_VER) && !defined(__cplusplus) && !defined(HAVE_CONFIG_H)
 #define inline __inline
 #endif
@@ -88,14 +96,9 @@ extern MikMod_handler_t _mm_errorhandler;
 
 /*========== Memory allocation */
 
-/* _mm_malloc and _mm_free clash with Windows malloc.h */
-#undef _mm_malloc
-#undef _mm_calloc
-#undef _mm_free
-
-extern void* _mm_malloc(size_t);
-extern void* _mm_calloc(size_t,size_t);
-#define _mm_free(p) do { if (p) free(p); p = NULL; } while(0)
+extern void* _mik_malloc(size_t);
+extern void* _mik_calloc(size_t,size_t);
+#define _mik_free(p) do { if (p) free(p); p = NULL; } while(0)
 
 /*========== MT stuff */
 
@@ -752,5 +755,3 @@ extern BOOL Voice_Stopped_internal(SBYTE);
 #endif
 
 #endif
-
-/* ex:set ts=4: */

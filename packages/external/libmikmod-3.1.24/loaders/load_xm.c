@@ -149,13 +149,13 @@ static BOOL XM_Test(void)
 
 static BOOL XM_Init(void)
 {
-	if(!(mh=(XMHEADER *)_mm_malloc(sizeof(XMHEADER)))) return 0;
+	if(!(mh=(XMHEADER *)_mik_malloc(sizeof(XMHEADER)))) return 0;
 	return 1;
 }
 
 static void XM_Cleanup(void)
 {
-	_mm_free(mh);
+	_mik_free(mh);
 }
 
 static int XM_ReadNote(XMNOTE* n)
@@ -356,7 +356,7 @@ static BOOL LoadPatterns(BOOL dummypat)
 		of.pattrows[t]=ph.numrows;
 
 		if(ph.numrows) {
-			if(!(xmpat=(XMNOTE*)_mm_calloc(ph.numrows*of.numchn,sizeof(XMNOTE))))
+			if(!(xmpat=(XMNOTE*)_mik_calloc(ph.numrows*of.numchn,sizeof(XMNOTE))))
 				return 0;
 
 			/* when packsize is 0, don't try to load a pattern.. it's empty. */
@@ -395,7 +395,7 @@ static BOOL LoadPatterns(BOOL dummypat)
 
 	if(dummypat) {
 		of.pattrows[t]=64;
-		if(!(xmpat=(XMNOTE*)_mm_calloc(64*of.numchn,sizeof(XMNOTE)))) return 0;
+		if(!(xmpat=(XMNOTE*)_mik_calloc(64*of.numchn,sizeof(XMNOTE)))) return 0;
 		for(v=0;v<of.numchn;v++)
 			of.tracks[numtrk++]=XM_Convert(&xmpat[v*64],64);
 		free(xmpat);xmpat=NULL;
@@ -533,7 +533,6 @@ static BOOL LoadInstruments(void)
 					d->samplenumber[u]=pth.what[u]+of.numsmp;
 				d->volfade = pth.volfade;
 
-#if defined __STDC__ || defined _MSC_VER || defined __WATCOMC__ || defined MPW_C
 #define XM_ProcessEnvelope(name) 										\
 				for (u = 0; u < XMENVPTS; u++) {					\
 					d-> name##env[u].pos = pth. name##env[u << 1];		\
@@ -553,28 +552,6 @@ static BOOL LoadInstruments(void)
 																		\
 				if ((d-> name##flg&EF_ON)&&(d-> name##pts<2))			\
 					d-> name##flg&=~EF_ON
-#else
-#define XM_ProcessEnvelope(name) 											\
-				for (u = 0; u < XMENVPTS; u++) {						\
-					d-> name/**/env[u].pos = pth. name/**/env[u << 1];		\
-					d-> name/**/env[u].val = pth. name/**/env[(u << 1)+ 1];	\
-				}															\
-				if (pth. name/**/flg&1) d-> name/**/flg|=EF_ON;				\
-				if (pth. name/**/flg&2) d-> name/**/flg|=EF_SUSTAIN;		\
-				if (pth. name/**/flg&4) d-> name/**/flg|=EF_LOOP;			\
-				d-> name/**/susbeg=d-> name/**/susend=						\
-				                      pth. name/**/sus;						\
-				d-> name/**/beg=pth. name/**/beg;							\
-				d-> name/**/end=pth. name/**/end;							\
-				d-> name/**/pts=pth. name/**/pts;							\
-																			\
-				/* scale envelope */										\
-				for (p = 0; p < XMENVPTS; p++)									\
-					d-> name/**/env[p].val<<=2;								\
-																			\
-				if ((d-> name/**/flg&EF_ON)&&(d-> name/**/pts<2))			\
-					d-> name/**/flg&=~EF_ON
-#endif
 
 				XM_ProcessEnvelope(vol);
 				XM_ProcessEnvelope(pan);

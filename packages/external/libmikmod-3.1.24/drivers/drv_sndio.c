@@ -88,7 +88,7 @@ static int Sndio_Init(void)
 		return 1;
 	}
 
-	if (!(audiobuffer = (SBYTE *)_mm_malloc(fragsize))) {
+	if (!(audiobuffer = (SBYTE *)_mik_malloc(fragsize))) {
 		_mm_errno = MMERR_OUT_OF_MEMORY;
 		return 1;
 	}
@@ -135,7 +135,7 @@ static void Sndio_Exit(void)
 		hdl = NULL;
 	}
 	VC_Exit();
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 }
 
 static void Sndio_Update(void)

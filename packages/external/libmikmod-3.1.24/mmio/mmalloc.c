@@ -34,7 +34,7 @@
 #include "mikmod_internals.h"
 
 /* Same as malloc, but sets error variable _mm_error when fails */
-void* _mm_malloc(size_t size)
+void* _mik_malloc(size_t size)
 {
 	void *d;
 
@@ -46,7 +46,7 @@ void* _mm_malloc(size_t size)
 }
 
 /* Same as calloc, but sets error variable _mm_error when fails */
-void* _mm_calloc(size_t nitems,size_t size)
+void* _mik_calloc(size_t nitems,size_t size)
 {
 	void *d;
 
@@ -57,7 +57,7 @@ void* _mm_calloc(size_t nitems,size_t size)
 	return d;
 }
 
-/* like strdup(), but the result must be freed using _mm_free() */
+/* like strdup(), but the result must be freed using _mik_free() */
 char* _mm_strdup(const char *s)
 {
 	size_t l;
@@ -66,7 +66,7 @@ char* _mm_strdup(const char *s)
 	if (!s) return NULL;
 
 	l = strlen(s) + 1;
-	d = (char *) _mm_malloc(l);
+	d = (char *) _mik_malloc(l);
 	if (d) memcpy(d, s, l);
 	return d;
 }

@@ -125,6 +125,7 @@ static UBYTE ReadUltEvent(ULTEVENT* event)
 static BOOL ULT_Load(BOOL curious)
 {
 	int t,u,tracks=0;
+	unsigned int numtrk;
 	SAMPLE *q;
 	ULTSAMPLE s;
 	ULTHEADER mh;
@@ -210,9 +211,14 @@ static BOOL ULT_Load(BOOL curious)
 	noc=_mm_read_UBYTE(modreader);
 	nop=_mm_read_UBYTE(modreader);
 
-	of.numchn=++noc;
-	of.numpat=++nop;
-	of.numtrk=of.numchn*of.numpat;
+	of.numchn=noc+1;
+	of.numpat=nop+1;
+	numtrk=of.numchn*of.numpat;
+	if (numtrk>65535) {
+		_mm_errno = MMERR_LOADING_HEADER;
+		return 0;
+	}
+	of.numtrk=(UWORD)numtrk;
 
 	for(t=0;t<256;t++) {
 		if(of.positions[t]==255) {

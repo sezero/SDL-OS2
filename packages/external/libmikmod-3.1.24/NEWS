@@ -3,9 +3,22 @@ Summary of changes between libmikmod 3.1.23 and libmikmod 3.1.24:
 
 libmikmod v3.1.24 was released on ???. ??, ????.
 
+- Fix out-of-bounds writes in unimod v6 loader with crafted files.
+- Add bounding checks for DSMI AMF channel remap table.
+- Add limit check to numchan in DSM loader.
+- Fix IT pattern loader allocation to match maximum allowed row count
+- Fix ULT loader numchn, numpat, numtrk calculations corner cases.
+- Fix DSM and OKT loaders numtrk integer overflow with crafted files
+- Fixed windows builds against newer mingw-w64 versions.
 - Updated OS2 EMX makefile for KLIBC environment (build tested with
   cross-os2emx toolchain at https://github.com/komh/cross-os2emx )
 - A few other minor fixes and clean-ups.
+
+Thanks to:
+- Alice Rowan for the DSMI AMF channel remap table patch.
+- Dominik Riedweg for the unimod v6 bug report.
+- Tristan Madani for the IT pattern loader and DSM and OKT loader
+  integer overflow bug reports.
 
 
 Summary of changes between libmikmod 3.1.22 and libmikmod 3.1.23:
@@ -176,7 +189,7 @@ This is a minor maintenance release.
 
 
 Summary of changes between libmikmod 3.1.16 and libmikmod 3.1.17
-==========================================================================
+========================================================================
 
 libmikmod 3.1.17 was released on 20-Mar-2014.
 This is a minor bugfix / maintenance release.
@@ -189,7 +202,7 @@ This is a minor bugfix / maintenance release.
 
 
 Summary of changes between libmikmod 3.1.15 and libmikmod 3.1.16
-==========================================================================
+========================================================================
 
 libmikmod 3.1.16 was released on 05-Jan-2014.
 This is a minor bugfix / maintenance release.
@@ -205,7 +218,7 @@ This is a minor bugfix / maintenance release.
 
 
 Summary of changes between libmikmod 3.1.14 and libmikmod 3.1.15
-==========================================================================
+========================================================================
 
 libmikmod 3.1.15 was released on 28-Nov-2013.
 This is a minor bugfix / maintenance release.
@@ -220,7 +233,7 @@ This is a minor bugfix / maintenance release.
 
 
 Summary of changes between libmikmod 3.1.13 and libmikmod 3.1.14
-==========================================================================
+========================================================================
 
 libmikmod 3.1.14 was released on 14-Oct-2013.
 This is a minor bugfix / maintenance release.
@@ -232,6 +245,7 @@ This is a minor bugfix / maintenance release.
   not BOOL. (identical functionality but non-misleading.)
 - Provided new Visual Studio 6 and Visual Studio 2005 project files.
   The latter imports into newer Visual Studio versions, e.g. VS2012.
+
 
 Summary of changes between libmikmod 3.1.12 and libmikmod 3.1.13
 ========================================================================

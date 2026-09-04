@@ -98,16 +98,16 @@ static BOOL MTM_Test(void)
 
 static BOOL MTM_Init(void)
 {
-	if(!(mtmtrk=(MTMNOTE*)_mm_calloc(64,sizeof(MTMNOTE)))) return 0;
-	if(!(mh=(MTMHEADER*)_mm_malloc(sizeof(MTMHEADER)))) return 0;
+	if(!(mtmtrk=(MTMNOTE*)_mik_calloc(64,sizeof(MTMNOTE)))) return 0;
+	if(!(mh=(MTMHEADER*)_mik_malloc(sizeof(MTMHEADER)))) return 0;
 
 	return 1;
 }
 
 static void MTM_Cleanup(void)
 {
-	_mm_free(mtmtrk);
-	_mm_free(mh);
+	_mik_free(mtmtrk);
+	_mik_free(mh);
 }
 
 static UBYTE* MTM_Convert(void)

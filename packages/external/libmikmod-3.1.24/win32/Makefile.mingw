@@ -44,7 +44,7 @@ CPPFLAGS+=-DHAVE_FCNTL_H -DHAVE_MALLOC_H -DHAVE_LIMITS_H
 CFLAGS=-O2 -Wall
 CFLAGS+=-ffast-math
 #CFLAGS+=-g
-LDFLAGS=
+LDFLAGS= -static-libgcc
 
 COMPILE=$(CC) -c $(CFLAGS) $(CPPFLAGS) -I../win32 -I../include
 
@@ -63,8 +63,7 @@ DEFNAME=libmikmod-$(DLL_VER).def
 
 LIBS=$(LIBNAME) $(DLLNAME)
 
-OBJ=drv_ds.o  drv_win.o \
-    drv_raw.o drv_wav.o \
+OBJ=drv_ds.o  drv_win.o drv_raw.o drv_wav.o \
     drv_nos.o drv_stdout.o \
     load_669.o load_amf.o load_dsm.o load_far.o load_gdm.o \
     load_it.o load_imf.o load_m15.o load_med.o load_mod.o load_mtm.o load_okt.o \

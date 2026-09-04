@@ -151,7 +151,7 @@ static long _mm_FileReader_Tell(MREADER* reader)
 
 MREADER *_mm_new_file_reader(FILE* fp)
 {
-	MFILEREADER* reader=(MFILEREADER*)_mm_calloc(1,sizeof(MFILEREADER));
+	MFILEREADER* reader=(MFILEREADER*)_mik_calloc(1,sizeof(MFILEREADER));
 	if (reader) {
 		reader->core.Eof =&_mm_FileReader_Eof;
 		reader->core.Read=&_mm_FileReader_Read;
@@ -197,7 +197,7 @@ static int _mm_FileWriter_Put(MWRITER* writer,int value)
 
 MWRITER *_mm_new_file_writer(FILE* fp)
 {
-	MFILEWRITER* writer=(MFILEWRITER*)_mm_calloc(1,sizeof(MFILEWRITER));
+	MFILEWRITER* writer=(MFILEWRITER*)_mik_calloc(1,sizeof(MFILEWRITER));
 	if (writer) {
 		writer->core.Seek =&_mm_FileWriter_Seek;
 		writer->core.Tell =&_mm_FileWriter_Tell;

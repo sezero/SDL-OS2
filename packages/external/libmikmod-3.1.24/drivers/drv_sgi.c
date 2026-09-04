@@ -167,7 +167,7 @@ static int SGI_Init(void)
 		return 1;
 	}
 
-	if(!(audiobuffer=(SBYTE*)_mm_malloc(sgi_fragsize))) return 1;
+	if(!(audiobuffer=(SBYTE*)_mik_malloc(sgi_fragsize))) return 1;
 
 	return VC_Init();
 }
@@ -175,7 +175,7 @@ static int SGI_Init(void)
 static void SGI_Exit(void)
 {
 	VC_Exit();
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 }
 
 static void SGI_Update(void)

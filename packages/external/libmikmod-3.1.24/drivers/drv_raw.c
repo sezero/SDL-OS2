@@ -59,7 +59,7 @@ static void RAW_CommandLine(CHAR *cmdline)
 	CHAR *ptr=MD_GetAtom("file",cmdline,0);
 
 	if(ptr) {
-		_mm_free(filename);
+		_mik_free(filename);
 		filename=ptr;
 	}
 }
@@ -85,7 +85,7 @@ static int RAW_Init(void)
 	}
 	md_mode|=DMODE_SOFT_MUSIC|DMODE_SOFT_SNDFX;
 
-	if (!(audiobuffer=(SBYTE*)_mm_malloc(BUFFERSIZE))) {
+	if (!(audiobuffer=(SBYTE*)_mik_malloc(BUFFERSIZE))) {
 		fclose(rawout);
 		unlink(filename?filename:FILENAME);
 		rawout=NULL;
@@ -108,7 +108,7 @@ static void RAW_Exit(void)
 		fclose(rawout);
 		rawout=NULL;
 	}
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 }
 
 static void RAW_Update(void)

@@ -139,7 +139,7 @@ static int AIX_Init(void)
 		return 1;
 	}
 
-	if (!(audiobuffer=(SBYTE*)_mm_malloc(buffersize))) return 1;
+	if (!(audiobuffer=(SBYTE*)_mik_malloc(buffersize))) return 1;
 
 	return VC_Init();
 }
@@ -151,7 +151,7 @@ static void AIX_Exit(void)
 		close(fd);
 		fd=-1;
 	}
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 }
 
 static void AIX_Update(void)

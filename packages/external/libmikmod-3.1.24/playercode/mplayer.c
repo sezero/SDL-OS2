@@ -3468,9 +3468,9 @@ int Player_Init(MODULE* mod)
 	mod->relspd=0;
 
 	/* make sure the player doesn't start with garbage */
-	if (!(mod->control=(MP_CONTROL*)_mm_calloc(mod->numchn,sizeof(MP_CONTROL))))
+	if (!(mod->control=(MP_CONTROL*)_mik_calloc(mod->numchn,sizeof(MP_CONTROL))))
 		return 1;
-	if (!(mod->voice=(MP_VOICE*)_mm_calloc(md_sngchn,sizeof(MP_VOICE))))
+	if (!(mod->voice=(MP_VOICE*)_mik_calloc(md_sngchn,sizeof(MP_VOICE))))
 		return 1;
 
 	/* mod->numvoices was used during loading to clamp md_sngchn.

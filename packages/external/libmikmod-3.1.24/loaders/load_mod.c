@@ -205,15 +205,15 @@ static BOOL MOD_Test(void)
 
 static BOOL MOD_Init(void)
 {
-	if (!(mh = (MODULEHEADER *)_mm_malloc(sizeof(MODULEHEADER))))
+	if (!(mh = (MODULEHEADER *)_mik_malloc(sizeof(MODULEHEADER))))
 		return 0;
 	return 1;
 }
 
 static void MOD_Cleanup(void)
 {
-	_mm_free(mh);
-	_mm_free(patbuf);
+	_mik_free(mh);
+	_mik_free(patbuf);
 }
 
 /*
@@ -341,7 +341,7 @@ static BOOL ML_LoadPatterns(void)
 		return 0;
 
 	/* Allocate temporary buffer for loading and converting the patterns */
-	if (!(patbuf = (MODNOTE *)_mm_calloc(64U * of.numchn, sizeof(MODNOTE))))
+	if (!(patbuf = (MODNOTE *)_mik_calloc(64U * of.numchn, sizeof(MODNOTE))))
 		return 0;
 
 	if (trekker && of.numchn == 8) {

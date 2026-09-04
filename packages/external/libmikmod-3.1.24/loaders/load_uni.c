@@ -101,7 +101,7 @@ static char * readstring(void)
 
 	len=_mm_read_I_UWORD(modreader);
 	if(len) {
-		str=(char *) _mm_malloc(len+1);
+		str=(char *) _mik_malloc(len+1);
 		_mm_read_UBYTES(str,len,modreader);
 		str[len]=0;
 	}
@@ -132,7 +132,7 @@ static BOOL UNI_Init(void)
 
 static void UNI_Cleanup(void)
 {
-	_mm_free(wh);
+	_mik_free(wh);
 	s=NULL;
 }
 
@@ -148,7 +148,7 @@ static UBYTE* readtrack(void)
 		len=_mm_read_I_UWORD(modreader);
 
 	if(!len) return NULL;
-	if(!(t=(UBYTE*)_mm_malloc(len))) return NULL;
+	if(!(t=(UBYTE*)_mik_malloc(len))) return NULL;
 	_mm_read_UBYTES(t,len,modreader);
 
 	/* Check if the track is correct */
@@ -308,7 +308,6 @@ static BOOL loadinstr6(void)
 		i->rpanvar      = _mm_read_UBYTE(modreader);
 		i->volfade      = _mm_read_M_UWORD(modreader);
 
-#if defined __STDC__ || defined _MSC_VER || defined __WATCOMC__ || defined MPW_C
 #define UNI_LoadEnvelope6(name) 										\
 		i-> name##flg=_mm_read_UBYTE(modreader);						\
 		i-> name##pts=_mm_read_UBYTE(modreader);						\
@@ -316,23 +315,11 @@ static BOOL loadinstr6(void)
 		i-> name##susend=_mm_read_UBYTE(modreader);						\
 		i-> name##beg=_mm_read_UBYTE(modreader);						\
 		i-> name##end=_mm_read_UBYTE(modreader);						\
+		if (i-> name##pts > ENVPOINTS) goto fail;				\
 		for(w=0;w<(universion>=0x100?32:i-> name##pts);w++) {			\
 			i-> name##env[w].pos=_mm_read_M_SWORD(modreader);			\
 			i-> name##env[w].val=_mm_read_M_SWORD(modreader);			\
 		}
-#else
-#define UNI_LoadEnvelope6(name) 										\
-		i-> name/**/flg=_mm_read_UBYTE(modreader);						\
-		i-> name/**/pts=_mm_read_UBYTE(modreader);						\
-		i-> name/**/susbeg=_mm_read_UBYTE(modreader);					\
-		i-> name/**/susend=_mm_read_UBYTE(modreader);					\
-		i-> name/**/beg=_mm_read_UBYTE(modreader);						\
-		i-> name/**/end=_mm_read_UBYTE(modreader);						\
-		for (w=0;w<(universion>=0x100?32:i-> name/**/pts);w++) {		\
-			i-> name/**/env[w].pos=_mm_read_M_SWORD(modreader);			\
-			i-> name/**/env[w].val=_mm_read_M_SWORD(modreader);			\
-		}
-#endif
 
 		UNI_LoadEnvelope6(vol);
 		UNI_LoadEnvelope6(pan);
@@ -349,6 +336,7 @@ static BOOL loadinstr6(void)
 		i->insname=readstring();
 
 		if(_mm_eof(modreader)) {
+		fail:
 			_mm_errno = MMERR_LOADING_SAMPLEINFO;
 			return 0;
 		}
@@ -373,7 +361,6 @@ static BOOL loadinstr5(void)
 		for(u=0;u<96;u++)
 			i->samplenumber[u]=of.numsmp+_mm_read_UBYTE(modreader);
 
-#if defined __STDC__ || defined _MSC_VER || defined __WATCOMC__ || defined MPW_C
 #define UNI_LoadEnvelope5(name) 									\
 		i-> name##flg=_mm_read_UBYTE(modreader);					\
 		i-> name##pts=_mm_read_UBYTE(modreader);					\
@@ -385,19 +372,6 @@ static BOOL loadinstr5(void)
 			i-> name##env[u].pos=_mm_read_I_SWORD(modreader);		\
 			i-> name##env[u].val=_mm_read_I_SWORD(modreader);		\
 		}
-#else
-#define UNI_LoadEnvelope5(name) 									\
-		i-> name/**/flg=_mm_read_UBYTE(modreader);					\
-		i-> name/**/pts=_mm_read_UBYTE(modreader);					\
-		i-> name/**/susbeg=_mm_read_UBYTE(modreader);				\
-		i-> name/**/susend=i-> name/**/susbeg;						\
-		i-> name/**/beg=_mm_read_UBYTE(modreader);					\
-		i-> name/**/end=_mm_read_UBYTE(modreader);					\
-		for(u=0;u<12;u++) {											\
-			i-> name/**/env[u].pos=_mm_read_I_SWORD(modreader);		\
-			i-> name/**/env[u].val=_mm_read_I_SWORD(modreader);		\
-		}
-#endif
 
 		UNI_LoadEnvelope5(vol);
 		UNI_LoadEnvelope5(pan);
@@ -588,14 +562,14 @@ static BOOL UNI_Load(BOOL curious)
 		oldtype=readstring();
 	if(oldtype) {
 		size_t len=strlen(oldtype)+20;
-		if(!(modtype=(char*)_mm_malloc(len))) return 0;
+		if(!(modtype=(char*)_mik_malloc(len))) return 0;
 #ifdef HAVE_SNPRINTF
 		snprintf(modtype,len,"%s (was %s)",(universion>=0x100)?"APlayer":"MikCvt2",oldtype);
 #else
 		sprintf(modtype,"%s (was %s)",(universion>=0x100)?"APlayer":"MikCvt2",oldtype);
 #endif
 	} else {
-		if(!(modtype=(char*)_mm_malloc(10))) return 0;
+		if(!(modtype=(char*)_mik_malloc(10))) return 0;
 #ifdef HAVE_SNPRINTF
 		snprintf(modtype,10,"%s",(universion>=0x100)?"APlayer":"MikCvt3");
 #else

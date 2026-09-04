@@ -129,9 +129,9 @@ static BOOL S3M_Test(void)
 
 static BOOL S3M_Init(void)
 {
-	if(!(s3mbuf=(S3MNOTE*)_mm_malloc(32*64*sizeof(S3MNOTE)))) return 0;
-	if(!(mh=(S3MHEADER*)_mm_malloc(sizeof(S3MHEADER)))) return 0;
-	if(!(poslookup=(UBYTE*)_mm_malloc(sizeof(UBYTE)*256))) return 0;
+	if(!(s3mbuf=(S3MNOTE*)_mik_malloc(32*64*sizeof(S3MNOTE)))) return 0;
+	if(!(mh=(S3MHEADER*)_mik_malloc(sizeof(S3MHEADER)))) return 0;
+	if(!(poslookup=(UBYTE*)_mik_malloc(sizeof(UBYTE)*256))) return 0;
 	memset(poslookup,-1,256);
 
 	return 1;
@@ -139,11 +139,11 @@ static BOOL S3M_Init(void)
 
 static void S3M_Cleanup(void)
 {
-	_mm_free(s3mbuf);
-	_mm_free(paraptr);
-	_mm_free(poslookup);
-	_mm_free(mh);
-	_mm_free(origpositions);
+	_mik_free(s3mbuf);
+	_mik_free(paraptr);
+	_mik_free(poslookup);
+	_mik_free(mh);
+	_mik_free(origpositions);
 }
 
 /* Because so many s3m files have 16 channels as the set number used, but really
@@ -319,7 +319,7 @@ static BOOL S3M_Load(BOOL curious)
 
 	/* read the order data */
 	if(!AllocPositions(mh->ordnum)) return 0;
-	if(!(origpositions=(UWORD*)_mm_calloc(mh->ordnum,sizeof(UWORD)))) return 0;
+	if(!(origpositions=(UWORD*)_mik_calloc(mh->ordnum,sizeof(UWORD)))) return 0;
 
 	for(t=0;t<mh->ordnum;t++) {
 		origpositions[t]=_mm_read_UBYTE(modreader);
@@ -335,7 +335,7 @@ static BOOL S3M_Load(BOOL curious)
 	poslookupcnt=mh->ordnum;
 	S3MIT_CreateOrders(curious);
 
-	if(!(paraptr=(UWORD*)_mm_malloc((of.numins+of.numpat)*sizeof(UWORD))))
+	if(!(paraptr=(UWORD*)_mik_malloc((of.numins+of.numpat)*sizeof(UWORD))))
 		return 0;
 
 	/* read the instrument+pattern parapointers */

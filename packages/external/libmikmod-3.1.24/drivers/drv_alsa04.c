@@ -337,7 +337,7 @@ static int ALSA_Init_internal(void)
 				continue;
 			}
 
-			if (!(audiobuffer = (SBYTE*)_mm_malloc(fragmentsize))) {
+			if (!(audiobuffer = (SBYTE*)_mik_malloc(fragmentsize))) {
 				alsa_ctl_close(ctl_h);
 				return 1;
 			}
@@ -374,7 +374,7 @@ static void ALSA_Exit_internal(void)
 		alsa_pcm_close(pcm_h);
 		pcm_h=NULL;
 	}
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 }
 
 static void ALSA_Exit(void)

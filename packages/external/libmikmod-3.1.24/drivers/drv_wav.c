@@ -88,7 +88,7 @@ static void WAV_CommandLine(CHAR *cmdline)
 	CHAR *ptr=MD_GetAtom("file",cmdline,0);
 
 	if(ptr) {
-		_mm_free(filename);
+		_mik_free(filename);
 		filename=ptr;
 	}
 }
@@ -116,7 +116,7 @@ static int WAV_Init(void)
 		wavfile=NULL;
 		return 1;
 	}
-	if(!(audiobuffer=(SBYTE*)_mm_malloc(BUFFERSIZE))) {
+	if(!(audiobuffer=(SBYTE*)_mik_malloc(BUFFERSIZE))) {
 		_mm_delete_file_writer(wavout);
 		fclose(wavfile);unlink(filename?filename:FILENAME);
 		wavfile=NULL;wavout=NULL;

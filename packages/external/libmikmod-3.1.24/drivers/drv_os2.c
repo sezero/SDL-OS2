@@ -194,7 +194,7 @@ static int OS2_Init(void)
 	   sizes (16K for 44KHz, 16 bit stereo). */
 
 	/* Allocate buffer */
-	if (!(AudioBuffer = _mm_malloc(BufferSize * FRAGMENTS))) {
+	if (!(AudioBuffer = _mik_malloc(BufferSize * FRAGMENTS))) {
 		_mm_errno = MMERR_OUT_OF_MEMORY;
 		return 1;
 	}
@@ -295,7 +295,7 @@ static void OS2_Exit(void)
 		DeviceID = 0;
 	}
 	VC_Exit();
-	_mm_free(AudioBuffer);
+	_mik_free(AudioBuffer);
 }
 
 static int OS2_PlayStart(void)

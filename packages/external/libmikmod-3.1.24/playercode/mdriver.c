@@ -190,7 +190,7 @@ MIKMODAPI CHAR* MikMod_InfoDriver(void)
 		len += 4 + 1 + strlen(l->Version);
 
 	if(len)
-	  if((list=(CHAR*)_mm_malloc(len*sizeof(CHAR))) != NULL) {
+	  if((list=(CHAR*)_mik_malloc(len*sizeof(CHAR))) != NULL) {
 		CHAR *list_end = list;
 		list[0] = 0;
 		/* list all registered device drivers : */
@@ -664,9 +664,9 @@ int MikMod_SetNumVoices_internal(int music, int sfx)
 	}
 
 	if(md_sngchn+md_sfxchn)
-		md_sample=(SAMPLE**)_mm_calloc(md_sngchn+md_sfxchn,sizeof(SAMPLE*));
+		md_sample=(SAMPLE**)_mik_calloc(md_sngchn+md_sfxchn,sizeof(SAMPLE*));
 	if(md_sfxchn)
-		sfxinfo = (UBYTE *)_mm_calloc(md_sfxchn,sizeof(UBYTE));
+		sfxinfo = (UBYTE *)_mik_calloc(md_sfxchn,sizeof(UBYTE));
 
 	/* make sure the player doesn't start with garbage */
 	for(t=oldchn;t<md_numchn;t++)  Voice_Stop_internal(t);
@@ -877,12 +877,12 @@ CHAR *MD_GetAtom(CHAR *atomname,CHAR *cmdline,BOOL implicit)
 
 			if(*ptr=='=') {
 				for(buf=++ptr;(*ptr)&&((*ptr)!=',');ptr++);
-				ret=_mm_malloc((1+ptr-buf)*sizeof(CHAR));
+				ret=_mik_malloc((1+ptr-buf)*sizeof(CHAR));
 				if(ret)
 					strncpy(ret,buf,ptr-buf);
 			} else if((*ptr==',')||(!*ptr)) {
 				if(implicit) {
-					ret=_mm_malloc((1+ptr-buf)*sizeof(CHAR));
+					ret=_mik_malloc((1+ptr-buf)*sizeof(CHAR));
 					if(ret)
 						strncpy(ret,buf,ptr-buf);
 				}

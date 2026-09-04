@@ -190,23 +190,23 @@ static BOOL MED_Test(void)
 
 static BOOL MED_Init(void)
 {
-	if (!(me = (MEDEXP *)_mm_malloc(sizeof(MEDEXP))))
+	if (!(me = (MEDEXP *)_mik_malloc(sizeof(MEDEXP))))
 		return 0;
-	if (!(mh = (MEDHEADER *)_mm_malloc(sizeof(MEDHEADER))))
+	if (!(mh = (MEDHEADER *)_mik_malloc(sizeof(MEDHEADER))))
 		return 0;
-	if (!(ms = (MEDSONG *)_mm_malloc(sizeof(MEDSONG))))
+	if (!(ms = (MEDSONG *)_mik_malloc(sizeof(MEDSONG))))
 		return 0;
 	return 1;
 }
 
 static void MED_Cleanup(void)
 {
-	_mm_free(me);
-	_mm_free(mh);
-	_mm_free(ms);
-	_mm_free(ba);
-	_mm_free(mmd0pat);
-	_mm_free(mmd1pat);
+	_mik_free(me);
+	_mik_free(mh);
+	_mik_free(ms);
+	_mik_free(ba);
+	_mik_free(mmd0pat);
+	_mik_free(mmd1pat);
 }
 
 static UWORD MED_ConvertTempo(UWORD tempo)
@@ -492,7 +492,7 @@ static BOOL LoadMEDPatterns(void)
 	if (!AllocPatterns())
 		return 0;
 
-	if (!(mmd0pat = (MMD0NOTE *)_mm_calloc(of.numchn * (maxlines + 1), sizeof(MMD0NOTE))))
+	if (!(mmd0pat = (MMD0NOTE *)_mik_calloc(of.numchn * (maxlines + 1), sizeof(MMD0NOTE))))
 		return 0;
 
 	/* second read: read and convert patterns */
@@ -550,7 +550,7 @@ static BOOL LoadMMD1Patterns(void)
 	if (!AllocPatterns())
 		return 0;
 
-	if (!(mmd1pat = (MMD1NOTE *)_mm_calloc(of.numchn * (maxlines + 1), sizeof(MMD1NOTE))))
+	if (!(mmd1pat = (MMD1NOTE *)_mik_calloc(of.numchn * (maxlines + 1), sizeof(MMD1NOTE))))
 		return 0;
 
 	/* second read: really read and convert patterns */
@@ -688,7 +688,7 @@ static BOOL MED_Load(BOOL curious)
 	}
 
 	/* alloc and read the blockpointer array */
-	if (!(ba = (ULONG *)_mm_calloc(ms->numblocks, sizeof(ULONG))))
+	if (!(ba = (ULONG *)_mik_calloc(ms->numblocks, sizeof(ULONG))))
 		return 0;
 	_mm_fseek(modreader, mh->MEDBlockPP, SEEK_SET);
 	if (!_mm_read_M_ULONGS(ba, ms->numblocks, modreader)) {
@@ -733,7 +733,7 @@ static BOOL MED_Load(BOOL curious)
 		char *name;
 
 		_mm_fseek(modreader, me->songname, SEEK_SET);
-		name = (char *) _mm_malloc(me->songnamelen);
+		name = (char *) _mik_malloc(me->songnamelen);
 		_mm_read_UBYTES(name, me->songnamelen, modreader);
 		of.songname = DupStr(name, me->songnamelen, 1);
 		free(name);
@@ -894,7 +894,7 @@ static CHAR *MED_LoadTitle(void)
 		namelen = _mm_read_M_ULONG(modreader);
 
 		_mm_fseek(modreader, posit, SEEK_SET);
-		name = (CHAR*) _mm_malloc(namelen);
+		name = (CHAR*) _mik_malloc(namelen);
 		_mm_read_UBYTES(name, namelen, modreader);
 		retvalue = DupStr(name, namelen, 1);
 		free(name);

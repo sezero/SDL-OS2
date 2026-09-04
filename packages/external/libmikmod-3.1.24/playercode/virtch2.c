@@ -778,12 +778,12 @@ int VC2_Init(void)
 	if (!(md_mode&DMODE_HQMIXER))
 		return VC1_Init();
 
-	if(!(Samples=(SWORD**)_mm_calloc(MAXSAMPLEHANDLES,sizeof(SWORD*)))) {
+	if(!(Samples=(SWORD**)_mik_calloc(MAXSAMPLEHANDLES,sizeof(SWORD*)))) {
 		_mm_errno = MMERR_INITIALIZING_MIXER;
 		return 1;
 	}
 	if(!vc_tickbuf) {
-		if(!(vc_tickbuf=(SLONG*)_mm_calloc((TICKLSIZE+32),sizeof(SLONG)))) {
+		if(!(vc_tickbuf=(SLONG*)_mik_calloc((TICKLSIZE+32),sizeof(SLONG)))) {
 			_mm_errno = MMERR_INITIALIZING_MIXER;
 			return 1;
 		}
@@ -820,25 +820,25 @@ int VC2_PlayStart(void)
 	RVc7 = (7813L * md_mixfreq) / (REVERBERATION * 10);
 	RVc8 = (8828L * md_mixfreq) / (REVERBERATION * 10);
 
-	if(!(RVbufL1=(SLONG*)_mm_calloc((RVc1+1),sizeof(SLONG)))) return 1;
-	if(!(RVbufL2=(SLONG*)_mm_calloc((RVc2+1),sizeof(SLONG)))) return 1;
-	if(!(RVbufL3=(SLONG*)_mm_calloc((RVc3+1),sizeof(SLONG)))) return 1;
-	if(!(RVbufL4=(SLONG*)_mm_calloc((RVc4+1),sizeof(SLONG)))) return 1;
-	if(!(RVbufL5=(SLONG*)_mm_calloc((RVc5+1),sizeof(SLONG)))) return 1;
-	if(!(RVbufL6=(SLONG*)_mm_calloc((RVc6+1),sizeof(SLONG)))) return 1;
-	if(!(RVbufL7=(SLONG*)_mm_calloc((RVc7+1),sizeof(SLONG)))) return 1;
-	if(!(RVbufL8=(SLONG*)_mm_calloc((RVc8+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL1=(SLONG*)_mik_calloc((RVc1+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL2=(SLONG*)_mik_calloc((RVc2+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL3=(SLONG*)_mik_calloc((RVc3+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL4=(SLONG*)_mik_calloc((RVc4+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL5=(SLONG*)_mik_calloc((RVc5+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL6=(SLONG*)_mik_calloc((RVc6+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL7=(SLONG*)_mik_calloc((RVc7+1),sizeof(SLONG)))) return 1;
+	if(!(RVbufL8=(SLONG*)_mik_calloc((RVc8+1),sizeof(SLONG)))) return 1;
 
 	/* allocate reverb buffers for the right channel if in stereo mode only. */
 	if (vc_mode & DMODE_STEREO) {
-		if(!(RVbufR1=(SLONG*)_mm_calloc((RVc1+1),sizeof(SLONG)))) return 1;
-		if(!(RVbufR2=(SLONG*)_mm_calloc((RVc2+1),sizeof(SLONG)))) return 1;
-		if(!(RVbufR3=(SLONG*)_mm_calloc((RVc3+1),sizeof(SLONG)))) return 1;
-		if(!(RVbufR4=(SLONG*)_mm_calloc((RVc4+1),sizeof(SLONG)))) return 1;
-		if(!(RVbufR5=(SLONG*)_mm_calloc((RVc5+1),sizeof(SLONG)))) return 1;
-		if(!(RVbufR6=(SLONG*)_mm_calloc((RVc6+1),sizeof(SLONG)))) return 1;
-		if(!(RVbufR7=(SLONG*)_mm_calloc((RVc7+1),sizeof(SLONG)))) return 1;
-		if(!(RVbufR8=(SLONG*)_mm_calloc((RVc8+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR1=(SLONG*)_mik_calloc((RVc1+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR2=(SLONG*)_mik_calloc((RVc2+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR3=(SLONG*)_mik_calloc((RVc3+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR4=(SLONG*)_mik_calloc((RVc4+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR5=(SLONG*)_mik_calloc((RVc5+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR6=(SLONG*)_mik_calloc((RVc6+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR7=(SLONG*)_mik_calloc((RVc7+1),sizeof(SLONG)))) return 1;
+		if(!(RVbufR8=(SLONG*)_mik_calloc((RVc8+1),sizeof(SLONG)))) return 1;
 	}
 
 	RVRindex = 0;
@@ -877,7 +877,7 @@ int VC2_SetNumVoices(void)
 	if(!(vc_softchn=md_softchn)) return 0;
 
 	if(vinf) free(vinf);
-	if(!(vinf=_mm_calloc(vc_softchn,sizeof(VINFO)))) return 1;
+	if(!(vinf=_mik_calloc(vc_softchn,sizeof(VINFO)))) return 1;
 
 	for(t=0;t<vc_softchn;t++) {
 		vinf[t].frq=10000;

@@ -143,7 +143,7 @@ static int WIN_Init(void)
 	buffersize=md_mixfreq*samplesize*buffersize_ms/1000;
 
 	for (n=0;n<numbuffers;n++) {
-		buffer[n]=_mm_malloc(buffersize);
+		buffer[n]=_mik_malloc(buffersize);
 		header[n].lpData=buffer[n];
 		header[n].dwBufferLength=buffersize;
 		mmr=waveOutPrepareHeader(hwaveout,&header[n],sizeof(WAVEHDR));
@@ -170,7 +170,7 @@ static void WIN_Exit(void)
 		for (n=0;n<numbuffers;n++) {
 			if (header[n].dwFlags&WHDR_PREPARED)
 				waveOutUnprepareHeader(hwaveout,&header[n],sizeof(WAVEHDR));
-			_mm_free(buffer[n]);
+			_mik_free(buffer[n]);
 		}
 		while (waveOutClose(hwaveout)==WAVERR_STILLPLAYING) Sleep(10);
 		hwaveout=NULL;

@@ -250,13 +250,13 @@ static int OSS_Init_internal(void)
 	/* This call fails on Linux/PPC */
 	if((ioctl(sndfd,SNDCTL_DSP_GETOSPACE,&buffinf)<0))
 		ioctl(sndfd,SNDCTL_DSP_GETBLKSIZE,&buffinf.fragsize);
-	if(!(audiobuffer=(SBYTE*)_mm_malloc(buffinf.fragsize)))
+	if(!(audiobuffer=(SBYTE*)_mik_malloc(buffinf.fragsize)))
 		return 1;
 
 	buffersize = buffinf.fragsize;
 #else
 	ioctl(sndfd,SNDCTL_DSP_GETBLKSIZE,&buffersize);
-	if(!(audiobuffer=(SBYTE*)_mm_malloc(buffersize)))
+	if(!(audiobuffer=(SBYTE*)_mik_malloc(buffersize)))
 		return 1;
 #endif
 
@@ -298,7 +298,7 @@ static int OSS_Init(void)
 static void OSS_Exit_internal(void)
 {
 	VC_Exit();
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 }
 
 static void OSS_Exit(void)

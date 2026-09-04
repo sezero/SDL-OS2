@@ -241,14 +241,14 @@ static BOOL M15_Test(void)
 
 static BOOL M15_Init(void)
 {
-	if(!(mh=(MODULEHEADER*)_mm_calloc(1,sizeof(MODULEHEADER)))) return 0;
+	if(!(mh=(MODULEHEADER*)_mik_calloc(1,sizeof(MODULEHEADER)))) return 0;
 	return 1;
 }
 
 static void M15_Cleanup(void)
 {
-	_mm_free(mh);
-	_mm_free(patbuf);
+	_mik_free(mh);
+	_mik_free(patbuf);
 }
 
 /*
@@ -377,7 +377,7 @@ static BOOL M15_LoadPatterns(void)
 	if(!AllocTracks()) return 0;
 
 	/* Allocate temporary buffer for loading and converting the patterns */
-	if(!(patbuf=(MODNOTE*)_mm_calloc(64U*4,sizeof(MODNOTE)))) return 0;
+	if(!(patbuf=(MODNOTE*)_mik_calloc(64U*4,sizeof(MODNOTE)))) return 0;
 
 	for(t=0;t<of.numpat;t++) {
 		/* Load the pattern into the temp buffer and convert it */

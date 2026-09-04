@@ -233,7 +233,7 @@ static int Sun_Init(void)
 		return 1;
 	}
 
-	if (!(audiobuffer = (SBYTE *)_mm_malloc(fragsize)))
+	if (!(audiobuffer = (SBYTE *)_mik_malloc(fragsize)))
 		return 1;
 
 	play_precision = (md_mode & DMODE_16BITS) ? 16 : 8;
@@ -404,7 +404,7 @@ static int Sun_Init(void)
 static void Sun_Exit(void)
 {
 	VC_Exit();
-	_mm_free(audiobuffer);
+	_mik_free(audiobuffer);
 	if (sndfd >= 0) {
 		close(sndfd);
 		sndfd = -1;

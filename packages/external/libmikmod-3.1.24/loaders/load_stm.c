@@ -121,16 +121,16 @@ static BOOL STM_Test(void)
 
 static BOOL STM_Init(void)
 {
-	if(!(mh=(STMHEADER*)_mm_malloc(sizeof(STMHEADER)))) return 0;
-	if(!(stmbuf=(STMNOTE*)_mm_calloc(64U*4,sizeof(STMNOTE)))) return 0;
+	if(!(mh=(STMHEADER*)_mik_malloc(sizeof(STMHEADER)))) return 0;
+	if(!(stmbuf=(STMNOTE*)_mik_calloc(64U*4,sizeof(STMNOTE)))) return 0;
 
 	return 1;
 }
 
 static void STM_Cleanup(void)
 {
-	_mm_free(mh);
-	_mm_free(stmbuf);
+	_mik_free(mh);
+	_mik_free(stmbuf);
 }
 
 static void STM_ConvertNote(STMNOTE *n)

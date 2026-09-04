@@ -301,7 +301,7 @@ UBYTE* UniDup(void)
 	if (!UniExpand(unipc-unitt)) return NULL;
 	unibuf[unitt] = 0;
 
-	if(!(d=_mm_malloc(unipc))) return NULL;
+	if(!(d=_mik_malloc(unipc))) return NULL;
 	memcpy(d,unibuf,unipc);
 
 	return (UBYTE *)d;
@@ -311,7 +311,7 @@ BOOL UniInit(void)
 {
 	unimax = BUFPAGE;
 
-	if(!(unibuf=(UBYTE*)_mm_malloc(unimax*sizeof(UBYTE)))) return 0;
+	if(!(unibuf=(UBYTE*)_mik_malloc(unimax*sizeof(UBYTE)))) return 0;
 	return 1;
 }
 

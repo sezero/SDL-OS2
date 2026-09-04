@@ -56,7 +56,7 @@ typedef struct ITPACK {
 BOOL SL_Init(SAMPLOAD* s)
 {
 	if(!sl_buffer)
-		if(!(sl_buffer=(SWORD*)_mm_calloc(1,SLBUFSIZE*sizeof(SWORD)))) return 0;
+		if(!(sl_buffer=(SWORD*)_mik_calloc(1,SLBUFSIZE*sizeof(SWORD)))) return 0;
 
 	sl_rlength = s->length;
 	if(s->infmt & SF_16BITS) sl_rlength>>=1;
@@ -389,7 +389,7 @@ SAMPLOAD* SL_RegisterSample(SAMPLE* s,int type,MREADER* reader)
 		return NULL;
 	
 	/* Allocate and add structure to the END of the list */
-	if(!(news=(SAMPLOAD*)_mm_calloc(1, sizeof(SAMPLOAD)))) return NULL;
+	if(!(news=(SAMPLOAD*)_mik_calloc(1, sizeof(SAMPLOAD)))) return NULL;
 
 	if(cruise) {
 		while(cruise->next) cruise=cruise->next;

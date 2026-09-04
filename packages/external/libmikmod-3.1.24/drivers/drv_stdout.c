@@ -51,7 +51,7 @@ static BOOL stdout_IsThere(void)
 
 static int stdout_Init(void)
 {
-	if(!(audiobuffer=(SBYTE*)_mm_malloc(BUFFERSIZE)))
+	if(!(audiobuffer=(SBYTE*)_mik_malloc(BUFFERSIZE)))
 		return 1;
 #ifdef __EMX__
 	_fsetmode(stdout,"b");

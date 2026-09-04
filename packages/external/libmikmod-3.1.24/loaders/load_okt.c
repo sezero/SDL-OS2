@@ -283,7 +283,12 @@ static BOOL OKT_doPBOD(int patnum)
 	int u;
 
 	if (!patnum) {
-		of.numtrk = of.numpat * of.numchn;
+		const unsigned int numtrk = of.numpat * of.numchn;
+		if (numtrk > 65535) {
+			_mm_errno = MMERR_LOADING_PATTERN;
+			return 0;
+		}
+		of.numtrk = (UWORD)numtrk;
 
 		if (!AllocTracks() || !AllocPatterns())
 			return 0;
@@ -292,8 +297,8 @@ static BOOL OKT_doPBOD(int patnum)
 	/* Read pattern */
 	of.pattrows[patnum] = rows = _mm_read_M_UWORD(modreader);
 
-	if (!(okttrk = (OKTNOTE *) _mm_calloc(rows, sizeof(OKTNOTE))) ||
-	    !(patbuf = (char *)_mm_calloc(rows * of.numchn, sizeof(OKTNOTE))))
+	if (!(okttrk = (OKTNOTE *) _mik_calloc(rows, sizeof(OKTNOTE))) ||
+	    !(patbuf = (char *)_mik_calloc(rows * of.numchn, sizeof(OKTNOTE))))
 		return 0;
 	_mm_read_UBYTES(patbuf, rows * of.numchn * sizeof(OKTNOTE), modreader);
 	if (_mm_eof(modreader)) {
@@ -312,8 +317,8 @@ static BOOL OKT_doPBOD(int patnum)
 		if (!(of.tracks[patnum * of.numchn + i] = OKT_ConvertTrack(rows)))
 			return 0;
 	}
-	_mm_free(patbuf);
-	_mm_free(okttrk);
+	_mik_free(patbuf);
+	_mik_free(okttrk);
 	return 1;
 }
 
